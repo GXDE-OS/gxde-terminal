@@ -1,4 +1,4 @@
-Source: deepin-terminal
+Source: deepin-terminal-gtk
 Section: utils
 Priority: optional
 Maintainer: Deepin Packages Builder <packages@deepin.com>
@@ -30,7 +30,7 @@ Build-Depends:
 Standards-Version: 4.5.0
 Homepage: https://github.com/linuxdeepin/deepin-terminal-gtk
 
-Package: deepin-terminal
+Package: deepin-terminal-gtk
 Architecture: any
 Provides: x-terminal-emulator
 Depends: 

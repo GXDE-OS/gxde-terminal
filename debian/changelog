@@ -1,4 +1,4 @@
-deepin-terminal (6.0.13fake5.0.4.3-1) unstable; urgency=medium
+deepin-terminal-gtk (5.0.4.3-1) unstable; urgency=medium
 
   * Initial version 5.0.4.3.
   * Remove autobuild changelog.
