@@ -3,7 +3,7 @@ Categories=GNOME;GTK;DDE;Utility;System;TerminalEmulator; (GTK)
 Comment=Use the command line
 Exec=deepin-terminal-gtk
 GenericName=Terminal (GTK)
-Icon=deepin-terminal
+Icon=deepin-terminal-gtk
 Keywords=shell;prompt;command;commandline; (GTK)
 Name=Deepin Terminal (GTK)
 StartupNotify=true
@@ -175,7 +175,7 @@ Name[zh_HK]=Deepin 終端機 (GTK)
 Name[zh_TW]=Deepin Terminal (GTK)
 
 [NewWindow Shortcut Group]
-Exec=deepin-terminal
+Exec=deepin-terminal-gtk
 Name=New Window (GTK)
 
 # Translations:
@@ -197,7 +197,7 @@ Name[uk]=Нове вікно (GTK)
 Name[zh_CN]=新建窗口 (GTK)
 
 [Quake Shortcut Group]
-Exec=deepin-terminal --quake-mode
+Exec=deepin-terminal-gtk --quake-mode
 Name=Quake Terminal (GTK)
 
 # Translations:
