@@ -424,7 +424,7 @@ namespace Widgets {
                     int pid = window.get_pid();
                     if (pid != 0) {
                         string command = Utils.get_proc_file_content("/proc/%i/comm".printf(pid)).strip();
-                        if (command == "deepin-terminal") {
+                        if (command == "deepin-terminal-gtk") {
                             return true;
                         }
                     }

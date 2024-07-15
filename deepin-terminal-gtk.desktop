@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=GNOME;GTK;DDE;Utility;System;TerminalEmulator; (GTK)
 Comment=Use the command line
-Exec=deepin-terminal-gtk (GTK)
+Exec=deepin-terminal-gtk
 GenericName=Terminal (GTK)
 Icon=deepin-terminal
 Keywords=shell;prompt;command;commandline; (GTK)
