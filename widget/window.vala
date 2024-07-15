@@ -134,7 +134,7 @@ namespace Widgets {
                 });
 
             try{
-                set_icon_from_file(Utils.get_image_path("deepin-terminal.svg"));
+                set_icon_from_file(Utils.get_image_path("deepin-terminal-gtk.svg"));
             } catch(Error er) {
                 stdout.printf(er.message);
             }
