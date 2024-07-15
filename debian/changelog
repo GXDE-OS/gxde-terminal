@@ -1,3 +1,10 @@
+deepin-terminal-gtk (5.0.4.3gxde1) UNRELEASED; urgency=medium
+
+  * Change package name
+  * 
+
+ -- gfdgd_xi <3025613752@qq.com>  Mon, 15 Jul 2024 10:01:39 +0800
+
 deepin-terminal-gtk (5.0.4.3-1) unstable; urgency=medium
 
   * Initial version 5.0.4.3.
