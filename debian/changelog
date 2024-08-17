@@ -1,12 +1,12 @@
-deepin-terminal-gtk (5.0.4.3gxde2) UNRELEASED; urgency=medium
+gxde-terminal (5.0.4.3gxde2) UNRELEASED; urgency=medium
 
   * Support to run on deepin 23
   * 
   * 
 
  -- gfdgd_xi <3025613752@qq.com>  Tue, 16 Jul 2024 09:20:13 +0800
-
-deepin-terminal-gtk (5.0.4.3-1) unstable; urgency=medium
+ 
+gxde-terminal (5.0.4.3-1) unstable; urgency=medium
 
   * Initial version 5.0.4.3.
   * Remove autobuild changelog.

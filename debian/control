@@ -1,7 +1,7 @@
-Source: deepin-terminal-gtk
+Source: gxde-terminal
 Section: utils
 Priority: optional
-Maintainer: Deepin Packages Builder <packages@deepin.com>
+Maintainer: gfdgd_xi <3025613752@qq.com>
 Build-Depends: 
  debhelper-compat (=11),
  valac,
@@ -28,11 +28,10 @@ Build-Depends:
  libvte-2.91-dev,
  intltool (>= 0.35)
 Standards-Version: 4.5.0
-Homepage: https://github.com/linuxdeepin/deepin-terminal-gtk
+Homepage: https://github.com/linuxdeepin/gxde-terminal
 
-Package: deepin-terminal-gtk
+Package: gxde-terminal
 Architecture: any
-Provides: x-terminal-emulator
 Depends: 
  ${shlibs:Depends},
  ${misc:Depends},
@@ -40,6 +39,9 @@ Depends:
  expect,
  lrzsz,
  zssh
+Breaks: deepin-terminal-gtk
+Replaces: deepin-terminal-gtk
+Provides: deepin-terminal-gtk, x-terminal-emulator
 Description: sharpens your focus in the world of command line!
- Deepin Teminal is an advanced terminal emulator with window-splitting,
+ GXDE Teminal is an advanced terminal emulator with window-splitting,
  workspaces, remote management, Quake mode and other features.

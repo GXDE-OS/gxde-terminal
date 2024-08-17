@@ -67,7 +67,7 @@ interface QuakeDaemon : Object {
 }
 
 
-const string GETTEXT_PACKAGE = "deepin-terminal-gtk";
+const string GETTEXT_PACKAGE = "gxde-terminal";
 
 public class Application : Object {
 

@@ -4,7 +4,7 @@ minimum_perc = 80
 mode = developer
 
 [deepin-terminal.deepin-terminal]
-file_filter = po/<lang>/LC_MESSAGES/deepin-terminal-gtk.po
+file_filter = po/<lang>/LC_MESSAGES/gxde-terminal.po
 source_file = i18n/deepin-terminal.pot
 source_lang = en
 type = PO

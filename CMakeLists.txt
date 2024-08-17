@@ -1,6 +1,6 @@
 project("dterminal" C)
 
-set(target deepin-terminal-gtk)
+set(target gxde-terminal)
 
 cmake_minimum_required(VERSION 2.6)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -202,7 +202,7 @@ ENDFOREACH()
 
 FOREACH(lang ${dirlist})
 	SET(gmoFiles)
-	FOREACH(current_PO_FILE po/${lang}/LC_MESSAGES/deepin-terminal.po)
+        FOREACH(current_PO_FILE po/${lang}/LC_MESSAGES/gxde-terminal.po)
     	  SET(gmoFile ${CMAKE_CURRENT_BINARY_DIR}/${lang}-${target}.gmo)
     	  SET(INSTALL_DESTINATION share/locale/)
     	  ADD_CUSTOM_COMMAND(OUTPUT ${gmoFile}
