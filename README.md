@@ -1,10 +1,10 @@
-# Deepin Terminal
+# GXDE Terminal
 
-This is the old default terminal emulation application for Deepin  (**This repository is no longer maintained by the official Deepin team).  Welcome to the [new terminal](https://github.com/linuxdeepin/deepin-terminal).**
+This is the old default terminal emulation application for GXDE  (**This repository is no longer maintained by the official GXDE team).  Welcome to the [new terminal](https://github.com/linuxdeepin/gxde-terminal).**
 
 ## Disclaimer: 
 
-**This repository is no longer maintained by the official Deepin team; however, it is loved by the community, so we decided to keep it, and let the community decide where it goes.**
+**This repository is no longer maintained by the official GXDE team; however, it is loved by the community, so we decided to keep it, and let the community decide where it goes.**
 
 ## Dependencies
 
@@ -20,13 +20,13 @@ And you also need the [`deepin-menu`](https://github.com/linuxdeepin/deepin-menu
 
 ## Installation
 
-`mkdir build; cd build; cmake ..; make; ./deepin-terminal`
+`mkdir build; cd build; cmake ..; make; ./gxde-terminal`
 
 Tip: Use `cmake ../ -DUSE_VENDOR_LIB=off` if you don't want to use the vendor lib.
 
 ## Usage
 
-Below is keymap list for deepin-terminal:
+Below is keymap list for gxde-terminal:
 
 | Function					      | Shortcut                            |
 |---------------------------------|---------------------------------------------------------|
@@ -64,13 +64,13 @@ Below is keymap list for deepin-terminal:
 
 ## Config file
 Terminal's configure save at:
-~/.config/deepin/deepin-terminal/config.conf
+~/.config/deepin/gxde-terminal/config.conf
 
 Remote servers' configure save at:
-~/.config/deepin/deepin-terminal/server-config.conf
+~/.config/deepin/gxde-terminal/server-config.conf
 
 Customize command's configure save at:
-~/.config/deepin/deepin-terminal/command-config.conf
+~/.config/deepin/gxde-terminal/command-config.conf
 
 ## Advanced config
 #### cursor_shape
@@ -112,7 +112,7 @@ The max height of quake terminal, set it with 1.0 can make quake window with any
 Whether make quake window use fullscreen mode, default is false.
 
 #### remote_commands
-Remote command list to help deepin-terminal detect current environment whether in remote server, default is zssh.
+Remote command list to help gxde-terminal detect current environment whether in remote server, default is zssh.
 You can add new command in list, command separator use character ;
 like remote_commands=zssh;new_command;another_command;
 
@@ -157,21 +157,21 @@ Some tiling WM user may prefer let the tabbar at the window bottom, set `tabbar_
 Controls whether or not the terminal will beep when the child outputs the "bl" sequence. Default is `false`.
 
 #### always_hide_resize_grip
-When you are using deepin-terminal with not composited window manager, there will be a resize grip line at the bottom of the window for resizing the window. To disable the extra resize grip line, set `always_hide_resize_grip` to true.
+When you are using gxde-terminal with not composited window manager, there will be a resize grip line at the bottom of the window for resizing the window. To disable the extra resize grip line, set `always_hide_resize_grip` to true.
 
 #### allow_hyperlink
-Enable Hyperlinks (a.k.a. HTML-like anchors) in deepin-terminal, default is `false`. ([learn more](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda))
+Enable Hyperlinks (a.k.a. HTML-like anchors) in gxde-terminal, default is `false`. ([learn more](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda))
 
 #### prefer_deepin_menu
 Once enabled, will use deepin-menu if possible and use GTK native menu as a fallback. Set it to false will make it always show GTK native menu, default is `true`.
 
 ## Customize themes
-User can place its own theme file to `~/.config/deepin/deepin-terminal/themes` (create if path not exist), the theme file added to this location will available to use from the theme selection panel.
+User can place its own theme file to `~/.config/deepin/gxde-terminal/themes` (create if path not exist), the theme file added to this location will available to use from the theme selection panel.
 
 ## Customize search engine
-Deepin terminal build-in many search engine for engineer, such as Google, Bing, Baidu, GitHub, Stackover Flow, DuckDuckGo.
+GXDE terminal build-in many search engine for engineer, such as Google, Bing, Baidu, GitHub, Stackover Flow, DuckDuckGo.
 Anyway, if you want build your own search engine, just follow below command:
-* Create config file ~/.config/deepin/deepin-terminal/search-engine-config.conf with below content:
+* Create config file ~/.config/deepin/gxde-terminal/search-engine-config.conf with below content:
 
 ```
 [flickr]
@@ -187,7 +187,7 @@ api=http://images.google.com/search?q=%s
 
 * name mean human name of search engine, you can name it to anything you like
 
-* api mean search api for search engine, note, you need use %s replace search keyword, otherwise, deepin-terminal don't know how to concat search api url and search keyboard.
+* api mean search api for search engine, note, you need use %s replace search keyword, otherwise, gxde-terminal don't know how to concat search api url and search keyboard.
 
 ## Getting help
 
@@ -208,4 +208,4 @@ We encourage you to report issues and contribute changes
 
 ## License
 
-Deepin Terminal is licensed under [GPLv3](LICENSE).
+GXDE Terminal is licensed under [GPLv3](LICENSE).
