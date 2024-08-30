@@ -226,6 +226,7 @@ INSTALL (FILES hicolor/48x48/${target}.png DESTINATION share/icons/hicolor/48x48
 INSTALL (FILES hicolor/96x96/${target}.png DESTINATION share/icons/hicolor/96x96/apps)
 INSTALL (FILES hicolor/128x128/${target}.png DESTINATION share/icons/hicolor/128x128/apps)
 INSTALL (FILES hicolor/${target}.svg DESTINATION share/icons/hicolor/scalable/apps)
+INSTALL (FILES deepin-terminal-gtk DESTINATION bin/)
 INSTALL (DIRECTORY image DESTINATION share/${target} FILES_MATCHING PATTERN "*.png")
 INSTALL (DIRECTORY image DESTINATION share/${target} FILES_MATCHING PATTERN "*.svg")
 INSTALL (DIRECTORY theme DESTINATION share/${target} FILES_MATCHING PATTERN "*")
