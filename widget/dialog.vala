@@ -36,7 +36,7 @@ namespace Widgets {
         public int window_frame_margin_end = 50;
         public int window_frame_margin_start = 50;
         public int window_frame_margin_top = 50;
-        public int window_frame_radius = 5;
+        public int window_frame_radius = 8;
         public int window_init_height;
         public int window_init_width;
 

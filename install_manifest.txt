@@ -65,6 +65,7 @@
 /usr/share/icons/hicolor/96x96/apps/gxde-terminal.png
 /usr/share/icons/hicolor/128x128/apps/gxde-terminal.png
 /usr/share/icons/hicolor/scalable/apps/gxde-terminal.svg
+/usr/bin/deepin-terminal-gtk
 /usr/share/gxde-terminal/image/back_light_press.svg
 /usr/share/gxde-terminal/image/window_unmax_dark_press.svg
 /usr/share/gxde-terminal/image/quit_fullscreen_dark_normal.svg
