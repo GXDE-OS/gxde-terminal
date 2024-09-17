@@ -1,8 +1,8 @@
-gxde-terminal (5.0.4.3gxde3) UNRELEASED; urgency=medium
+gxde-terminal (5.0.4.3gxde4) UNRELEASED; urgency=medium
 
   * Repair problem with wine runner
 
- -- gfdgd_xi <3025613752@qq.com>  Sat, 31 Aug 2024 08:51:13 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Tue, 17 Sep 2024 14:48:52 +0800
 
 gxde-terminal (5.0.4.3-1) unstable; urgency=medium
 
