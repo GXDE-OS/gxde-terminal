@@ -1,6 +1,6 @@
-gxde-terminal (5.0.4.3gxde4) UNRELEASED; urgency=medium
+gxde-terminal (5.0.4.3gxde5) UNRELEASED; urgency=medium
 
-  * Repair problem with wine runner
+  * Repair default theme
 
  -- gfdgd_xi <3025613752@qq.com>  Tue, 17 Sep 2024 14:48:52 +0800
 
