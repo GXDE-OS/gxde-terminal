@@ -39,7 +39,7 @@ Depends:
  expect,
  lrzsz,
  zssh
-Breaks: deepin-terminal-gtk
+Conflicts: deepin-terminal-gtk
 Replaces: deepin-terminal-gtk, deepin-terminal
 Provides: deepin-terminal-gtk, x-terminal-emulator
 Description: sharpens your focus in the world of command line!

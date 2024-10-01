@@ -1,8 +1,8 @@
-gxde-terminal (5.0.4.3gxde5) UNRELEASED; urgency=medium
+gxde-terminal (5.0.4.3gxde6) UNRELEASED; urgency=medium
 
-  * Repair default theme
+  * 设置冲突
 
- -- gfdgd_xi <3025613752@qq.com>  Tue, 17 Sep 2024 14:48:52 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Tue, 01 Oct 2024 21:29:44 +0800
 
 gxde-terminal (5.0.4.3-1) unstable; urgency=medium
 
