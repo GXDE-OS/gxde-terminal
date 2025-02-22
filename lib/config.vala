@@ -363,22 +363,22 @@ namespace Config {
             check_boolean("advanced", "copy_on_select", false);
             check_boolean("advanced", "tabbar_at_the_bottom", false);
 
-            check_string("theme", "color_1", "#232323");
-            check_string("theme", "color_2", "#ff000f");  // string
-            check_string("theme", "color_3", "#8ce10b");
-            check_string("theme", "color_4", "#ffb900");
-            check_string("theme", "color_5", "#008df8");  // path
-            check_string("theme", "color_6", "#6d43a6");
-            check_string("theme", "color_7", "#00d8eb");
-            check_string("theme", "color_8", "#ffffff");
-            check_string("theme", "color_9", "#444444");
-            check_string("theme", "color_10", "#ff2740");  // error
-            check_string("theme", "color_11", "#abe15b");  // exec
-            check_string("theme", "color_12", "#ffd242");
-            check_string("theme", "color_13", "#0092ff");  // folder
-            check_string("theme", "color_14", "#9a5feb");
-            check_string("theme", "color_15", "#67fff0");
-            check_string("theme", "color_16", "#ffffff");
+            check_string("theme", "color_1", "#073642");
+            check_string("theme", "color_2", "#bdb76b");  // string
+            check_string("theme", "color_3", "#859900");
+            check_string("theme", "color_4", "#b58900");
+            check_string("theme", "color_5", "#ffd700");  // path
+            check_string("theme", "color_6", "#d33682");
+            check_string("theme", "color_7", "#2aa198");
+            check_string("theme", "color_8", "#eee8d5");
+            check_string("theme", "color_9", "#002b36");
+            check_string("theme", "color_10", "#8b0000");  // error
+            check_string("theme", "color_11", "#00ff00");  // exec
+            check_string("theme", "color_12", "#657b83");
+            check_string("theme", "color_13", "#1e90ff");  // folder
+            check_string("theme", "color_14", "#6c71c4");
+            check_string("theme", "color_15", "#93a1a1");
+            check_string("theme", "color_16", "#fdf6e3");
             check_string("theme", "background", "#000000");  // background
             check_string("theme", "foreground", "#00cd00");  // foreground
             check_string("theme", "tab", "#2CA7F8");         // tab
