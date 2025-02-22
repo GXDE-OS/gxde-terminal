@@ -144,32 +144,32 @@ namespace Config {
                 config_file.set_boolean("advanced", "allow_hyperlink", false);
                 config_file.set_boolean("advanced", "prefer_deepin_menu", true);
 
-                config_file.set_string("theme", "color_1", "#073642");
+                config_file.set_string("theme", "color_1", "#232323");
                 config_file.set_comment("theme", "color_1", "host");
-                config_file.set_string("theme", "color_2", "#bdb76b");
+                config_file.set_string("theme", "color_2", "#ff000f");
                 config_file.set_comment("theme", "color_2", "string");
-                config_file.set_string("theme", "color_3", "#859900");
+                config_file.set_string("theme", "color_3", "#8ce10b");
                 config_file.set_comment("theme", "color_3", "command");
-                config_file.set_string("theme", "color_4", "#b58900");
+                config_file.set_string("theme", "color_4", "#ffb900");
                 config_file.set_comment("theme", "color_4", "command");
-                config_file.set_string("theme", "color_5", "#ffd700");
+                config_file.set_string("theme", "color_5", "#008df8");
                 config_file.set_comment("theme", "color_5", "path");
-                config_file.set_string("theme", "color_6", "#d33682");
+                config_file.set_string("theme", "color_6", "#6d43a6");
                 config_file.set_comment("theme", "color_6", "variable");
-                config_file.set_string("theme", "color_7", "#2aa198");
+                config_file.set_string("theme", "color_7", "#00d8eb");
                 config_file.set_comment("theme", "color_7", "prompt");
-                config_file.set_string("theme", "color_8", "#eee8d5");
-                config_file.set_string("theme", "color_9", "#002b36");
-                config_file.set_string("theme", "color_10", "#8b0000");
+                config_file.set_string("theme", "color_8", "#ffffff");
+                config_file.set_string("theme", "color_9", "#444444");
+                config_file.set_string("theme", "color_10", "#ff2740");
                 config_file.set_comment("theme", "color_10", "error");
-                config_file.set_string("theme", "color_11", "#00ff00");
+                config_file.set_string("theme", "color_11", "#abe15b");
                 config_file.set_comment("theme", "color_11", "execute");
-                config_file.set_string("theme", "color_12", "#657b83");
-                config_file.set_string("theme", "color_13", "#1e90ff");
+                config_file.set_string("theme", "color_12", "#ffd242");
+                config_file.set_string("theme", "color_13", "#0092ff");
                 config_file.set_comment("theme", "color_13", "folder");
-                config_file.set_string("theme", "color_14", "#6c71c4");
-                config_file.set_string("theme", "color_15", "#93a1a1");
-                config_file.set_string("theme", "color_16", "#fdf6e3");
+                config_file.set_string("theme", "color_14", "#9a5feb");
+                config_file.set_string("theme", "color_15", "#67fff0");
+                config_file.set_string("theme", "color_16", "#ffffff");
                 config_file.set_string("theme", "background", "#000000");
                 config_file.set_string("theme", "foreground", "#00cd00");
                 config_file.set_string("theme", "tab", "#2CA7F8");
@@ -363,22 +363,22 @@ namespace Config {
             check_boolean("advanced", "copy_on_select", false);
             check_boolean("advanced", "tabbar_at_the_bottom", false);
 
-            check_string("theme", "color_1", "#073642");
-            check_string("theme", "color_2", "#bdb76b");  // string
-            check_string("theme", "color_3", "#859900");
-            check_string("theme", "color_4", "#b58900");
-            check_string("theme", "color_5", "#ffd700");  // path
-            check_string("theme", "color_6", "#d33682");
-            check_string("theme", "color_7", "#2aa198");
-            check_string("theme", "color_8", "#eee8d5");
-            check_string("theme", "color_9", "#002b36");
-            check_string("theme", "color_10", "#8b0000");  // error
-            check_string("theme", "color_11", "#00ff00");  // exec
-            check_string("theme", "color_12", "#657b83");
-            check_string("theme", "color_13", "#1e90ff");  // folder
-            check_string("theme", "color_14", "#6c71c4");
-            check_string("theme", "color_15", "#93a1a1");
-            check_string("theme", "color_16", "#fdf6e3");
+            check_string("theme", "color_1", "#232323");
+            check_string("theme", "color_2", "#ff000f");  // string
+            check_string("theme", "color_3", "#8ce10b");
+            check_string("theme", "color_4", "#ffb900");
+            check_string("theme", "color_5", "#008df8");  // path
+            check_string("theme", "color_6", "#6d43a6");
+            check_string("theme", "color_7", "#00d8eb");
+            check_string("theme", "color_8", "#ffffff");
+            check_string("theme", "color_9", "#444444");
+            check_string("theme", "color_10", "#ff2740");  // error
+            check_string("theme", "color_11", "#abe15b");  // exec
+            check_string("theme", "color_12", "#ffd242");
+            check_string("theme", "color_13", "#0092ff");  // folder
+            check_string("theme", "color_14", "#9a5feb");
+            check_string("theme", "color_15", "#67fff0");
+            check_string("theme", "color_16", "#ffffff");
             check_string("theme", "background", "#000000");  // background
             check_string("theme", "foreground", "#00cd00");  // foreground
             check_string("theme", "tab", "#2CA7F8");         // tab
