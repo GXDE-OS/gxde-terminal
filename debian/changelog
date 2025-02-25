@@ -1,7 +1,8 @@
-gxde-terminal (5.0.4.3gxde8) UNRELEASED; urgency=medium
+gxde-terminal (5.0.5) UNRELEASED; urgency=medium
 
   * 设置冲突
   * 改变默认主题
+  * 修复：首次连接远程服务器时无法正确链接
 
  -- gfdgd_xi <3025613752@qq.com>  Tue, 01 Oct 2024 21:29:44 +0800
 
