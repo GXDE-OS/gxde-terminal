@@ -140,6 +140,10 @@ namespace Widgets {
             }
         }
 
+        public bool is_x11_backend() {
+            return (Gdk.Display.get_default() is Gdk.X11.Display);
+        }
+
         public void transparent_window() {
             set_app_paintable(true); // set_app_paintable is necessary step to make window transparent.
             Gdk.Screen screen = Gdk.Screen.get_default();
@@ -414,21 +418,32 @@ namespace Widgets {
         }
 
         public bool have_terminal_at_same_workspace() {
-            var screen = Wnck.Screen.get_default();
-            screen.force_update();
+            if (is_x11_backend()) {
+                var screen = Wnck.Screen.get_default();
+                screen.force_update();
 
-            var active_workspace = screen.get_active_workspace();
-            foreach (Wnck.Window window in screen.get_windows()) {
-                var workspace = window.get_workspace();
-                if (workspace != null && workspace.get_number() == active_workspace.get_number()) {
-                    int pid = window.get_pid();
-                    if (pid != 0) {
-                        string command = Utils.get_proc_file_content("/proc/%i/comm".printf(pid)).strip();
-                        if (command == "gxde-terminal") {
-                            return true;
+                var active_workspace = screen.get_active_workspace();
+                foreach (Wnck.Window window in screen.get_windows()) {
+                    var workspace = window.get_workspace();
+                    if (workspace != null && workspace.get_number() == active_workspace.get_number()) {
+                        int pid = window.get_pid();
+                        if (pid != 0) {
+                            string command = Utils.get_proc_file_content("/proc/%i/comm".printf(pid)).strip();
+                            if (command == "gxde-terminal") {
+                                return true;
+                            }
                         }
                     }
                 }
+            }
+            else {
+                // Wayland环境下改用GTK窗口列表（示例实现）
+                /*foreach (var window in Gtk.Window.list_toplevels()) {
+                    if (window is TerminalWindow) { // 假设TerminalWindow是终端窗口的类
+                        // 检查窗口是否属于当前进程或其他条件
+                        return true;
+                    }
+                }*/
             }
 
             return false;

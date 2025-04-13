@@ -1,10 +1,11 @@
-gxde-terminal (5.0.5) UNRELEASED; urgency=medium
+gxde-terminal (5.1.0) UNRELEASED; urgency=medium
 
   * 设置冲突
   * 改变默认主题
   * 修复：首次连接远程服务器时无法正确链接
+  * 修复在 Wayland 下无法正常开启的问题
 
- -- gfdgd_xi <3025613752@qq.com>  Tue, 01 Oct 2024 21:29:44 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sun, 13 Apr 2025 10:31:09 +0800
 
 gxde-terminal (5.0.4.3-1) unstable; urgency=medium
 
