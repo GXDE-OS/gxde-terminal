@@ -858,7 +858,7 @@ namespace Widgets {
             // Exit terminal if got `child_exited' signal by command execute finish.
             if (child_has_exit && is_launch_command() && workspace_manager.is_first_term(this)) {
                 string keyname = Keymap.get_keyevent_name(key_event);
-                if (keyname == "Enter") {
+                if (keyname == "Enter" || keyname == "KP_Enter") {
                     // Exit key press callback if current terminal has exit.
                     exit();
 
