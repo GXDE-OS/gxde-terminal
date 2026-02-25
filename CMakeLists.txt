@@ -2,7 +2,7 @@ project("dterminal" C)
 
 set(target gxde-terminal)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.10)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(ExternalProject)
 include(ValaPrecompile)
