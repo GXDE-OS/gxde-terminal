@@ -31,8 +31,15 @@ using Wnck;
 using Widgets;
 
 namespace Widgets {
+    // Wayland窗口标题设置
     [CCode (cheader_filename = "wayland_decoration.h", cname = "gxde_force_client_side_decoration")]
     private extern void force_client_side_decoration (Gdk.Window window);
+
+    // Blur配置
+    [CCode (cheader_filename = "wayland_blur.h", cname = "gxde_set_blur_region")]
+    private extern void wayland_set_blur_region (Gdk.Window window, int x, int y, int width, int height);
+    [CCode (cheader_filename = "wayland_blur.h", cname = "gxde_clear_blur")]
+    private extern void wayland_clear_blur (Gdk.Window window);
 
     public class Window : Widgets.ConfigWindow {
         private bool csd_forced = false;
@@ -337,9 +344,12 @@ namespace Widgets {
         public void update_blur_status(bool force_update=false) {
             Gdk.Display current_display = get_window().get_display();
             if ((current_display as Gdk.X11.Display) == null) {
+                // 非 X11（Wayland）：X11 的 _KDE_NET_WM_BLUR_BEHIND_REGION 属性不可用，
+                // 改用 org_kde_kwin_blur 协议设置模糊区域。
+                update_blur_status_wayland(force_update);
                 return;
             }
-            
+
             try {
                 int width, height;
                 get_size(out width, out height);
@@ -417,6 +427,43 @@ namespace Widgets {
                         xdisplay.delete_property(xid, atom_NET_WM_DEEPIN_BLUR_REGION_ROUNDED);
                         xdisplay.delete_property(xid, atom_KDE_NET_WM_BLUR_BEHIND_REGION);
                     }
+                }
+            } catch (GLib.KeyFileError e) {
+                print("%s\n", e.message);
+            }
+        }
+
+        private void update_blur_status_wayland(bool force_update) {
+            try {
+                int width, height;
+                get_size(out width, out height);
+
+                if (width != resize_cache_width || height != resize_cache_height || force_update) {
+                    resize_cache_width = width;
+                    resize_cache_height = height;
+
+                    var blur_background = config.config_file.get_boolean("advanced", "blur_background");
+                    if (!blur_background) {
+                        wayland_clear_blur(get_window());
+                        return;
+                    }
+
+                    // 计算去掉阴影边距后的内容区域
+                    int x = 0, y = 0, w = width, h = height;
+                    if (!window_is_fullscreen() && !window_is_max() && screen_monitor.is_composited()) {
+                        x = window_frame_box.margin_start;
+                        y = window_frame_box.margin_top;
+                        w = width - window_frame_box.margin_start - window_frame_box.margin_end;
+                        h = height - window_frame_box.margin_top - window_frame_box.margin_bottom;
+                    }
+                    if (w < 0) {
+                        w = width;
+                    }
+                    if (h < 0) {
+                        h = height;
+                    }
+
+                    wayland_set_blur_region(get_window(), x, y, w, h);
                 }
             } catch (GLib.KeyFileError e) {
                 print("%s\n", e.message);

@@ -15,16 +15,13 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
-# Vala intermediate source (generated)
-/main.c
-/widget/*.c
-/lib/*.c
-!/lib/font.c
-!/lib/wayland_decoration.c
-
 # wayland-scanner
 /server-decoration-client-protocol.h
 /server-decoration-protocol.c
+/blur-client-protocol.h
+/blur-protocol.c
+/treeland-personalization-manager-v1-client-protocol.h
+/treeland-personalization-manager-v1-protocol.c
 
 # Build artifacts
 debian/.debhelper/

@@ -18,6 +18,8 @@ In debian, use below command to install running dependencies:
 
 And you also need the [`deepin-menu`](https://github.com/linuxdeepin/deepin-menu) package.
 
+**IMPORTANT**: MAKE SURE THAT `wayland-scanner` IS AVAILABLE ON YOUR SYSTEM!!
+
 ## Installation
 
 `mkdir build; cd build; cmake ..; make; ./gxde-terminal`

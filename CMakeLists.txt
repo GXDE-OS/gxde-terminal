@@ -46,6 +46,40 @@ add_custom_command(
     VERBATIM
 )
 
+# org_kde_kwin_blur
+set(WL_BLUR_XML ${CMAKE_CURRENT_SOURCE_DIR}/wayland/blur.xml)
+set(WL_BLUR_HEADER ${CMAKE_CURRENT_BINARY_DIR}/blur-client-protocol.h)
+set(WL_BLUR_CODE ${CMAKE_CURRENT_BINARY_DIR}/blur-protocol.c)
+add_custom_command(
+    OUTPUT ${WL_BLUR_HEADER}
+    COMMAND ${WAYLAND_SCANNER_EXECUTABLE} client-header ${WL_BLUR_XML} ${WL_BLUR_HEADER}
+    DEPENDS ${WL_BLUR_XML}
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT ${WL_BLUR_CODE}
+    COMMAND ${WAYLAND_SCANNER_EXECUTABLE} private-code ${WL_BLUR_XML} ${WL_BLUR_CODE}
+    DEPENDS ${WL_BLUR_XML} ${WL_BLUR_HEADER}
+    VERBATIM
+)
+
+# treeland_personalization_manager_v1
+set(WL_TL_XML ${CMAKE_CURRENT_SOURCE_DIR}/wayland/treeland-personalization-manager-v1.xml)
+set(WL_TL_HEADER ${CMAKE_CURRENT_BINARY_DIR}/treeland-personalization-manager-v1-client-protocol.h)
+set(WL_TL_CODE ${CMAKE_CURRENT_BINARY_DIR}/treeland-personalization-manager-v1-protocol.c)
+add_custom_command(
+    OUTPUT ${WL_TL_HEADER}
+    COMMAND ${WAYLAND_SCANNER_EXECUTABLE} client-header ${WL_TL_XML} ${WL_TL_HEADER}
+    DEPENDS ${WL_TL_XML}
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT ${WL_TL_CODE}
+    COMMAND ${WAYLAND_SCANNER_EXECUTABLE} private-code ${WL_TL_XML} ${WL_TL_CODE}
+    DEPENDS ${WL_TL_XML} ${WL_TL_HEADER}
+    VERBATIM
+)
+
 option(TEST_BUILD "Build with native testing" ON)
 option(USE_VENDOR_LIB "Backport support for debian stretch" ON)
 
@@ -207,7 +241,9 @@ else()
 endif()
 
 add_executable(${target} ${VALA_C} ${CMAKE_SOURCE_DIR}/project_path.c ${CMAKE_SOURCE_DIR}/lib/font.c
-	${CMAKE_SOURCE_DIR}/lib/wayland_decoration.c ${WL_DECO_CODE} ${WL_DECO_HEADER})
+	${CMAKE_SOURCE_DIR}/lib/wayland_decoration.c ${WL_DECO_CODE} ${WL_DECO_HEADER}
+	${CMAKE_SOURCE_DIR}/lib/wayland_blur.c ${WL_BLUR_CODE} ${WL_BLUR_HEADER}
+	${WL_TL_CODE} ${WL_TL_HEADER})
 
 if (USE_VENDOR_LIB)
 	target_link_libraries(${target} ${LIBS} ${CMAKE_SOURCE_DIR}/3rdparty/vte-0.52.1/src/.libs/libvte-2.91.a)
