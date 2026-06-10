@@ -46,6 +46,15 @@ namespace Widgets {
             screen.get_monitor_geometry(monitor, out rect);
 
             set_decorated(false);
+
+            // Wayland 下声明客户端装饰，避免默认 SSD 的合成器给下拉终端再加一条服务端标题栏
+            // （双标题栏）。X11 下为 no-op。详见 lib/wayland_decoration.c。
+            if (!(Gdk.Display.get_default() is Gdk.X11.Display)) {
+                realize.connect(() => {
+                        force_client_side_decoration(get_window());
+                    });
+            }
+
             set_keep_above(true);
 
             set_skip_taskbar_hint(true);

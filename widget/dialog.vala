@@ -53,6 +53,13 @@ namespace Widgets {
 
             set_decorated(false);
 
+            // Wayland窗口标题设置
+            if (!(Gdk.Display.get_default() is Gdk.X11.Display)) {
+                realize.connect(() => {
+                        force_client_side_decoration(get_window());
+                    });
+            }
+
             window_frame_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
             window_widget_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 

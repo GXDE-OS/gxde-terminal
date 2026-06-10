@@ -33,7 +33,7 @@ using Widgets;
 namespace Widgets {
     // Wayland窗口标题设置
     [CCode (cheader_filename = "wayland_decoration.h", cname = "gxde_force_client_side_decoration")]
-    private extern void force_client_side_decoration (Gdk.Window window);
+    internal extern void force_client_side_decoration (Gdk.Window window);
 
     // Blur配置
     [CCode (cheader_filename = "wayland_blur.h", cname = "gxde_set_blur_region")]

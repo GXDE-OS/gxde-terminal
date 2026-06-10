@@ -1,6 +1,6 @@
 gxde-terminal (5.1.2) UNRELEASED; urgency=medium
 
-  * 修复在Wayland下系统标题栏未被隐藏的问题
+  * 修复在Wayland下系统标题栏未被隐藏的问题（https://gitee.com/GXDE-OS/gxde-terminal/issues/IJTO44）
   * 新增Treeland/Wlcom/Kwin-wayland下的模糊支持
 
  -- CharOfString <markus_verify@126.com>  Wed, 10 Jun 2026 17:17:35 +0800
