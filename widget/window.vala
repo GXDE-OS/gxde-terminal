@@ -31,7 +31,11 @@ using Wnck;
 using Widgets;
 
 namespace Widgets {
+    [CCode (cheader_filename = "wayland_decoration.h", cname = "gxde_force_client_side_decoration")]
+    private extern void force_client_side_decoration (Gdk.Window window);
+
     public class Window : Widgets.ConfigWindow {
+        private bool csd_forced = false;
         public Gdk.RGBA top_line_dark_color;
         public Gdk.RGBA top_line_light_color;
         public Gtk.Box fullscreen_box;
@@ -151,10 +155,20 @@ namespace Widgets {
         }
 
         public void init_window() {
-            if (Utils.is_tiling_wm()) 
+            if (Utils.is_tiling_wm())
                 set_decorated(true);
-            else 
+            else
                 set_decorated(false);
+
+            if (!is_x11_backend()) {
+                realize.connect(() => {
+                        if (!csd_forced) {
+                            force_client_side_decoration(get_window());
+                            csd_forced = true;
+                        }
+                    }
+                );
+            }
 
             window_frame_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
             window_widget_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);

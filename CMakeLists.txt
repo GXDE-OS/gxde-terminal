@@ -24,6 +24,27 @@ pkg_check_modules(RSVG REQUIRED librsvg-2.0)
 pkg_check_modules(WNCK REQUIRED libwnck-3.0)
 pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
+
+find_program(WAYLAND_SCANNER_EXECUTABLE NAMES wayland-scanner)
+if(NOT WAYLAND_SCANNER_EXECUTABLE)
+    message(FATAL_ERROR "wayland-scanner NOT found, please install libwayland-bin/wayland-scanner.")
+endif()
+set(WL_DECO_XML ${CMAKE_CURRENT_SOURCE_DIR}/wayland/server-decoration.xml)
+set(WL_DECO_HEADER ${CMAKE_CURRENT_BINARY_DIR}/server-decoration-client-protocol.h)
+set(WL_DECO_CODE ${CMAKE_CURRENT_BINARY_DIR}/server-decoration-protocol.c)
+add_custom_command(
+    OUTPUT ${WL_DECO_HEADER}
+    COMMAND ${WAYLAND_SCANNER_EXECUTABLE} client-header ${WL_DECO_XML} ${WL_DECO_HEADER}
+    DEPENDS ${WL_DECO_XML}
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT ${WL_DECO_CODE}
+    COMMAND ${WAYLAND_SCANNER_EXECUTABLE} private-code ${WL_DECO_XML} ${WL_DECO_CODE}
+    DEPENDS ${WL_DECO_XML} ${WL_DECO_HEADER}
+    VERBATIM
+)
 
 option(TEST_BUILD "Build with native testing" ON)
 option(USE_VENDOR_LIB "Backport support for debian stretch" ON)
@@ -97,6 +118,9 @@ set(INCLUDE_PATHS
 	${RSVG_INCLUDE_DIRS}
 	${JsonGlib_INCLUDE_DIRS}
 	${LIBSECRET_INCLUDE_DIRS}
+	${WAYLAND_CLIENT_INCLUDE_DIRS}
+	${CMAKE_CURRENT_SOURCE_DIR}/lib
+	${CMAKE_CURRENT_BINARY_DIR}
 )
 
 if (USE_VENDOR_LIB)
@@ -120,6 +144,7 @@ set(LIBS
 	${XTST_LIBRARIES}
 	${FONTCONFIG_LIBRARY}
 	${M_LIBRARIES}
+	${WAYLAND_CLIENT_LIBRARIES}
 	stdc++
 	m
 	z
@@ -181,7 +206,8 @@ else()
 	)
 endif()
 
-add_executable(${target} ${VALA_C} ${CMAKE_SOURCE_DIR}/project_path.c ${CMAKE_SOURCE_DIR}/lib/font.c)
+add_executable(${target} ${VALA_C} ${CMAKE_SOURCE_DIR}/project_path.c ${CMAKE_SOURCE_DIR}/lib/font.c
+	${CMAKE_SOURCE_DIR}/lib/wayland_decoration.c ${WL_DECO_CODE} ${WL_DECO_HEADER})
 
 if (USE_VENDOR_LIB)
 	target_link_libraries(${target} ${LIBS} ${CMAKE_SOURCE_DIR}/3rdparty/vte-0.52.1/src/.libs/libvte-2.91.a)

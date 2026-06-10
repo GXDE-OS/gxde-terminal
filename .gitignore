@@ -12,3 +12,26 @@ lib/constant.vala
 CMakeCache.txt
 CMakeFiles
 Makefile
+cmake_install.cmake
+install_manifest.txt
+
+# Vala intermediate source (generated)
+/main.c
+/widget/*.c
+/lib/*.c
+!/lib/font.c
+!/lib/wayland_decoration.c
+
+# wayland-scanner
+/server-decoration-client-protocol.h
+/server-decoration-protocol.c
+
+# Build artifacts
+debian/.debhelper/
+debian/files
+debian/debhelper-build-stamp
+debian/*.substvars
+debian/*.debhelper.log
+debian/gxde-terminal/
+/gxde-terminal
+*.gmo
