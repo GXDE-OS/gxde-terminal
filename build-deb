@@ -1,0 +1,234 @@
+#!/bin/bash
+
+# Copyright (C) 2026 CharOfString
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# 说明: 本脚本已针对 gxde-terminal 项目完成配置。
+#       auto_install_deps() 中的依赖列表对应 debian/control 的 Build-Depends，
+#       若 control 有变动请同步更新。
+
+# 此脚本用于在调试时生成安装包，便于在调试机器上轻松部署与卸载。
+# 用法: ./build_deb <选项>
+
+# 选项:
+#    -b, --binary          仅构建二进制包（也就是跳过源码包）
+#    -s, --source          构建时同时构建源码包
+#    -d, --install-deps    安装构建依赖
+#    -c, --clean           仅清理构建产物
+#    -h, --help            打印帮助信息
+
+# 路径配置
+CUR_SCRIPT_PATH="$0"
+CUR_SCRIPT_DIR="$(cd "$(dirname "$CUR_SCRIPT_PATH")" && pwd)"
+cd "$CUR_SCRIPT_DIR" || exit 1
+# 本脚本与 debian/ 目录位于同一层，因此项目根目录就是脚本所在目录
+PROJ_ROOT="$CUR_SCRIPT_DIR"
+
+# 参数
+BUILD_BIN=true
+BUILD_SRC=false
+NO_ASSERT_DEPS=false
+ACT_CLEANUPS=false
+
+# 打印帮助
+print_help() {
+    echo "使用方法: $0 <选项>"
+    echo ""
+    echo "可用选项:"
+    echo "  -b, --binary          仅构建二进制包而不构建源码包（默认行为）"
+    # echo "  -s, --source        在构建二进制包的同时构建源码包" # 已废弃
+    echo "  -c, --clean           清理构建产物后退出"
+    echo "  -d, --install-deps    安装构建依赖，然后构建二进制包"
+    echo "  -h, --help            打印此信息"
+    echo ""
+    echo "用法示例:"
+    echo "  $0 --install-deps    # 在构建二进制包的同时构建源码包"
+    echo "  $0 -c                # 清理构建产物"
+    exit 0
+}
+
+# 解析参数
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -b|--binary)
+                BUILD_BIN=true
+                BUILD_SRC=false
+                shift
+                ;;
+            -c|--clean)
+                ACT_CLEANUPS=true
+                shift
+                ;;
+            -d|--install-deps)
+                NO_ASSERT_DEPS=true
+                BUILD_BIN=true
+                BUILD_SRC=false
+                shift
+                ;;
+            -h|--help)
+                print_help
+                ;;
+            *)
+                echo "未知选项: $1"
+                echo "以下文档可能有帮助: "
+                print_help
+                ;;
+        esac
+    done
+}
+
+# Util: 检查工具链是否存在
+is_toolchain_exists() {
+    local cur_dep="$1"
+    if ! command -v "$cur_dep" &> /dev/null; then
+        return 1
+    fi
+    return 0
+}
+
+# 检查必要的工具链
+check_toolchains() {
+    echo "正在检查必要的工具链是否安装，请稍候..."
+    local missing_tools=()
+
+    if ! is_toolchain_exists "dpkg-buildpackage"; then
+        missing_tools+=("dpkg-dev")
+    fi
+
+    if ! is_toolchain_exists "cmake"; then
+        missing_tools+=("cmake")
+    fi
+
+    local missing_count=${#missing_tools[@]}
+    if [[ $missing_count -gt 0 ]]; then
+        echo "缺少以下必要工具链: ${missing_tools[*]}"
+        echo "可以尝试运行 sudo apt install ${missing_tools[*]}"
+        exit 1
+    fi
+
+    echo "恭喜，必要工具链检查通过！"
+}
+
+# 如果制定了则安装依赖
+auto_install_deps() {
+    if [[ "$NO_ASSERT_DEPS" == true ]]; then
+        echo "准备安装构建依赖，请稍候..."
+        sudo apt update
+
+        echo "开始安装了，请特别留意是否会卸载掉任何已有GXDE系统包！！"
+        # 依赖列表对应 debian/control 中的 Build-Depends
+        # 注意必须带 -y，否则会卡在确认提示上等待输入（非交互环境会超时导致一个都装不上）
+        sudo apt install \
+            build-essential devscripts debhelper \
+            valac cmake \
+            libgee-0.8-dev \
+            libjson-glib-dev \
+            libsecret-1-dev \
+            libwnck-3-dev \
+            gnome-pkg-tools \
+            dh-autoreconf \
+            libglib2.0-dev \
+            libpango1.0-dev \
+            libpcre2-dev \
+            libgtk-3-dev \
+            libgnutls28-dev \
+            libxml2-utils \
+            gobject-introspection \
+            libgirepository1.0-dev \
+            gettext gperf \
+            gtk-doc-tools \
+            librsvg2-dev \
+            libgladeui-dev \
+            libreadline-dev \
+            libvte-2.91-dev \
+            intltool
+        echo "恭喜，必要工具链检查通过！"
+    fi
+}
+
+# 清理构建产物
+exec_clean() {
+    echo "执行清理..."
+
+    cd "$PROJ_ROOT" || exit 1
+    echo "已经切换到项目根目录: $PROJ_ROOT"
+
+    # debhelper 中间目录
+    rm -rf debian/.debhelper/
+    rm -f debian/files
+    rm -f debian/*.debhelper.log
+    rm -f debian/*.substvars
+    rm -f debian/debhelper-build-stamp
+    rm -rf debian/gxde-terminal/
+    rm -rf debian/tmp/
+
+    # CMake 构建产物（本项目在源码目录内构建，参见 debian/rules）
+    rm -rf CMakeFiles/
+    rm -f CMakeCache.txt
+    rm -f cmake_install.cmake
+    rm -f install_manifest.txt
+    rm -f Makefile
+    rm -f project_path.c
+
+    # 构建产物（生成在上级目录）
+    rm -f "$PROJ_ROOT"/../gxde-terminal_*.deb
+    rm -f "$PROJ_ROOT"/../gxde-terminal_*.buildinfo
+    rm -f "$PROJ_ROOT"/../gxde-terminal_*.changes
+
+    echo "清理完成！！"
+}
+
+# 构建
+exec_build() {
+    local dpkg_args=("-us")
+    dpkg_args+=("-uc")
+
+    if [[ "$BUILD_SRC" == true ]]; then
+        dpkg_args+=("-S")
+    fi
+
+    if [[ "$BUILD_BIN" == true ]]; then
+        dpkg_args+=("-b")
+    fi
+
+    echo "准备构建DEB包，DPKG的构建参数已经被设置为: ${dpkg_args[*]}"
+    echo "正在构建中，请稍候..."
+
+    cd "$PROJ_ROOT" || exit 1
+    echo "已经切换到项目根目录: $PROJ_ROOT"
+
+    echo "开始使用DPKG构建&打包..."
+    dpkg-buildpackage "${dpkg_args[@]}"
+
+    echo "恭喜，如果无报错输出则构建已经完成，Deb包应该可以在上级目录中被找到了！"
+}
+
+# 主脚本
+echo "========================================="
+echo "    GXDE 终端 DEB 构建脚本 REL 0.9.0"
+echo "========================================="
+echo ""
+
+parse_args "$@"
+
+if [[ "$ACT_CLEANUPS" == true ]]; then
+    exec_clean
+    exit 0
+fi
+
+check_toolchains
+auto_install_deps
+exec_build
