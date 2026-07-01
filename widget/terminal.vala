@@ -42,6 +42,8 @@ namespace Widgets {
         public GLib.Pid child_pid;
         public Gdk.RGBA background_color = Gdk.RGBA();
         public Gdk.RGBA foreground_color = Gdk.RGBA();
+        public Gdk.Pixbuf? background_image_pixbuf = null;
+        public Cairo.ImageSurface? background_image_surface = null;
         public Gtk.Scrollbar scrollbar;
         public Menu.Menu menu;
         public Terminal term;
@@ -223,6 +225,19 @@ namespace Widgets {
 
             Gtk.drag_dest_set(this, Gtk.DestDefaults.ALL, targets, Gdk.DragAction.COPY);
             this.drag_data_received.connect(drag_received);
+
+            draw.connect((w, cr) => {
+                    if (background_image_pixbuf != null) {
+                        draw_background_image(cr);
+                    }
+                    return false;
+                });
+
+            size_allocate.connect((w, alloc) => {
+                    if (background_image_pixbuf != null) {
+                        apply_background_image();
+                    }
+                });
 
             /* Make Links Clickable */
             this.clickable(REGEX_STRINGS);
@@ -1374,9 +1389,153 @@ namespace Widgets {
                 var config_size = parent_window.config.config_file.get_integer("general", "font_size");
                 font_size = config_size * Pango.SCALE;
                 update_font_info();
+
+                load_background_image();
             } catch (GLib.KeyFileError e) {
                 stdout.printf(e.message);
             }
+        }
+
+        public void load_background_image() {
+            try {
+                Widgets.ConfigWindow parent_window = (Widgets.ConfigWindow) term.get_toplevel();
+                string image_path = parent_window.config.config_file.get_string("advanced", "background_image");
+
+                if (image_path == "" || !FileUtils.test(image_path, FileTest.EXISTS)) {
+                    background_image_pixbuf = null;
+                    background_image_surface = null;
+                    term.set_clear_background(true);
+                    return;
+                }
+
+                if (background_image_pixbuf == null) {
+                    try {
+                        background_image_pixbuf = new Gdk.Pixbuf.from_file(image_path);
+                    } catch (Error e) {
+                        print("load_background_image load: %s\n", e.message);
+                        background_image_pixbuf = null;
+                        background_image_surface = null;
+                        term.set_clear_background(true);
+                        return;
+                    }
+                }
+
+                term.set_clear_background(false);
+                apply_background_image();
+            } catch (GLib.KeyFileError e) {
+                print("load_background_image config: %s\n", e.message);
+            }
+        }
+
+        public void apply_background_image() {
+            if (background_image_pixbuf == null) {
+                return;
+            }
+
+            Gtk.Allocation alloc;
+            this.get_allocation(out alloc);
+            int widget_width = alloc.width;
+            int widget_height = alloc.height;
+
+            if (widget_width <= 0 || widget_height <= 0) {
+                return;
+            }
+
+            int img_width = background_image_pixbuf.get_width();
+            int img_height = background_image_pixbuf.get_height();
+
+            double scale_x = (double) widget_width / img_width;
+            double scale_y = (double) widget_height / img_height;
+            double s = double.max(scale_x, scale_y);
+            int draw_width = (int) (img_width * s);
+            int draw_height = (int) (img_height * s);
+
+            background_image_surface = new Cairo.ImageSurface(Cairo.Format.ARGB32, widget_width, widget_height);
+            var cr = new Cairo.Context(background_image_surface);
+
+            cr.set_operator(Cairo.Operator.SOURCE);
+            cr.set_source_rgba(0, 0, 0, 0);
+            cr.rectangle(0, 0, widget_width, widget_height);
+            cr.fill();
+
+            cr.set_operator(Cairo.Operator.OVER);
+            int x = (widget_width - draw_width) / 2;
+            int y = (widget_height - draw_height) / 2;
+            var scaled_pixbuf = background_image_pixbuf.scale_simple(draw_width, draw_height, Gdk.InterpType.BILINEAR);
+            Gdk.cairo_set_source_pixbuf(cr, scaled_pixbuf, x, y);
+            cr.paint();
+
+            cr.set_operator(Cairo.Operator.OVER);
+            cr.set_source_rgba(0, 0, 0, 0.7);
+            cr.rectangle(0, 0, widget_width, widget_height);
+            cr.fill();
+        }
+
+        public void draw_background_image(Cairo.Context cr) {
+            if (background_image_surface == null) {
+                return;
+            }
+
+            try {
+                Widgets.ConfigWindow parent_window = (Widgets.ConfigWindow) term.get_toplevel();
+                double opacity = parent_window.config.config_file.get_double("general", "opacity");
+                cr.save();
+                cr.set_source_surface(background_image_surface, 0, 0);
+                cr.paint_with_alpha(opacity);
+                cr.restore();
+            } catch (GLib.KeyFileError e) {
+                cr.save();
+                cr.set_source_surface(background_image_surface, 0, 0);
+                cr.paint_with_alpha(1.0);
+                cr.restore();
+            }
+        }
+
+        public void set_background_image() {
+            var chooser = new Gtk.FileChooserDialog(_("Select background image"),
+                    get_toplevel() as Gtk.Window, Gtk.FileChooserAction.OPEN);
+            chooser.add_button(_("Cancel"), Gtk.ResponseType.CANCEL);
+            chooser.add_button(_("Select"), Gtk.ResponseType.ACCEPT);
+
+            var image_filter = new Gtk.FileFilter();
+            image_filter.set_filter_name(_("Image files"));
+            image_filter.add_mime_type("image/*");
+            chooser.add_filter(image_filter);
+
+            var all_filter = new Gtk.FileFilter();
+            all_filter.set_filter_name(_("All files"));
+            all_filter.add_pattern("*");
+            chooser.add_filter(all_filter);
+
+            try {
+                Widgets.ConfigWindow parent_window = (Widgets.ConfigWindow) term.get_toplevel();
+                string current_path = parent_window.config.config_file.get_string("advanced", "background_image");
+                if (current_path != "" && FileUtils.test(current_path, FileTest.EXISTS)) {
+                    chooser.set_filename(current_path);
+                }
+            } catch (GLib.KeyFileError e) {
+            }
+
+            if (chooser.run() == Gtk.ResponseType.ACCEPT) {
+                Widgets.ConfigWindow parent_window = (Widgets.ConfigWindow) term.get_toplevel();
+                parent_window.config.load_config();
+                parent_window.config.config_file.set_string("advanced", "background_image", chooser.get_filename());
+                parent_window.config.save();
+                background_image_pixbuf = null;
+                parent_window.config.update();
+            }
+            chooser.destroy();
+        }
+
+        public void clear_background_image() {
+            Widgets.ConfigWindow parent_window = (Widgets.ConfigWindow) term.get_toplevel();
+            parent_window.config.load_config();
+            parent_window.config.config_file.set_string("advanced", "background_image", "");
+            parent_window.config.save();
+            background_image_pixbuf = null;
+            background_image_surface = null;
+            term.set_clear_background(true);
+            parent_window.config.update();
         }
 
         public bool clipboard_has_context() {

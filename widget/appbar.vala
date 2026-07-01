@@ -127,6 +127,9 @@ namespace Widgets {
                     menu_content.append(new Menu.MenuItem("custom_commands", _("Custom commands")));
                     menu_content.append(new Menu.MenuItem("remote_manage", _("Remote management")));
                     menu_content.append(new Menu.MenuItem("", ""));
+                    menu_content.append(new Menu.MenuItem("set_wallpaper", _("Set background image")));
+                    menu_content.append(new Menu.MenuItem("clear_wallpaper", _("Clear background image")));
+                    menu_content.append(new Menu.MenuItem("", ""));
                     menu_content.append(new Menu.MenuItem("preference", _("Settings")));
                     if (Utils.is_command_exist("dman")) {
                         menu_content.append(new Menu.MenuItem("help", _("Help")));
@@ -253,6 +256,12 @@ namespace Widgets {
                 case "switch_theme":
                     workspace_manager.focus_workspace.show_theme_panel(workspace_manager.focus_workspace);
                     break;
+                case "set_wallpaper":
+                    set_wallpaper_for_focus_terminal();
+                    break;
+                case "clear_wallpaper":
+                    clear_wallpaper_for_focus_terminal();
+                    break;
                 case "help":
                     Utils.show_manual();
                     break;
@@ -277,6 +286,16 @@ namespace Widgets {
             if (focus_widget != null) {
                 focus_widget.grab_focus();
             }
+        }
+
+        public void set_wallpaper_for_focus_terminal() {
+            Term focus_term = workspace_manager.focus_workspace.get_focus_term(workspace_manager.focus_workspace);
+            focus_term.set_background_image();
+        }
+
+        public void clear_wallpaper_for_focus_terminal() {
+            Term focus_term = workspace_manager.focus_workspace.get_focus_term(workspace_manager.focus_workspace);
+            focus_term.clear_background_image();
         }
 
         public void update_max_button() {

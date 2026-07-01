@@ -144,6 +144,8 @@ namespace Config {
                 config_file.set_boolean("advanced", "allow_hyperlink", false);
                 config_file.set_boolean("advanced", "prefer_deepin_menu", true);
 
+                config_file.set_string("advanced", "background_image", "");
+
                 config_file.set_string("theme", "color_1", "#232323");
                 config_file.set_comment("theme", "color_1", "host");
                 config_file.set_string("theme", "color_2", "#ff000f");
@@ -362,6 +364,8 @@ namespace Config {
             check_boolean("advanced", "show_highlight_frame", false);
             check_boolean("advanced", "copy_on_select", false);
             check_boolean("advanced", "tabbar_at_the_bottom", false);
+
+            check_string("advanced", "background_image", "");
 
             check_string("theme", "color_1", "#232323");
             check_string("theme", "color_2", "#ff000f");  // string
