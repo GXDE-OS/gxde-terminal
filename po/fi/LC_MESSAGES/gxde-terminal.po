@@ -2,7 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 # Translators:
 # ImSpaceman, 2017
 # Maggie Liu <maggie.liufei@gmail.com>, 2017
@@ -10,23 +10,24 @@
 # Kimmo Siniluoto <robotti1984@gmail.com>, 2017
 # Deathmist, 2018
 # Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-17 15:18+0800\n"
+"POT-Creation-Date: 2026-07-01 15:51+0800\n"
 "PO-Revision-Date: 2017-02-04 05:38+0000\n"
 "Last-Translator: Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019\n"
-"Language-Team: Finnish (https://www.transifex.com/linuxdeepin/teams/3976/fi/)\n"
+"Language-Team: Finnish (https://www.transifex.com/linuxdeepin/teams/3976/"
+"fi/)\n"
+"Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../widget/terminal.vala:1218
+#: ../widget/terminal.vala:1244
 msgid ""
 "\n"
 "Command has been completed, press ENTER to exit the terminal."
@@ -34,11 +35,11 @@ msgstr ""
 "\n"
 "Komento on suoritettu, paina ENTER poistuaksesi päätteestä."
 
-#: ../widget/appbar.vala:134
+#: ../widget/appbar.vala:137
 msgid "About"
 msgstr "Tietoja"
 
-#: ../widget/about_widget.vala:107
+#: ../widget/about_widget.vala:117
 msgid "Acknowledgments"
 msgstr "Kiitokset"
 
@@ -80,6 +81,11 @@ msgstr "Lisäasetukset"
 msgid "Advanced options"
 msgstr "Lisäasetukset"
 
+#: ../widget/terminal.vala:1506
+#, fuzzy
+msgid "All files"
+msgstr "Lähetä tiedosto"
+
 #: ../widget/remote_server_dialog.vala:426 ../widget/command_dialog.vala:249
 msgid "Are you sure you want to delete %s?"
 msgstr "Haluatko varmasti poistaa %s?"
@@ -106,9 +112,10 @@ msgstr "Sumeuta tausta"
 
 #: ../widget/remote_server_dialog.vala:347
 #: ../widget/remote_server_dialog.vala:427 ../widget/confirm_dialog.vala:130
-#: ../widget/terminal.vala:593 ../widget/terminal.vala:622
-#: ../widget/terminal.vala:656 ../widget/file_button.vala:69
-#: ../widget/command_dialog.vala:192 ../widget/command_dialog.vala:250
+#: ../widget/terminal.vala:614 ../widget/terminal.vala:643
+#: ../widget/terminal.vala:677 ../widget/terminal.vala:1497
+#: ../widget/file_button.vala:69 ../widget/command_dialog.vala:192
+#: ../widget/command_dialog.vala:250
 msgid "Cancel"
 msgstr "Peruuta"
 
@@ -120,7 +127,12 @@ msgstr "Sertifikaatti"
 msgid "Certificate:"
 msgstr "Sertifikaatti:"
 
-#: ../widget/terminal.vala:387 ../widget/config_window.vala:343
+#: ../widget/appbar.vala:131
+#, fuzzy
+msgid "Clear background image"
+msgstr "Sumeuta tausta"
+
+#: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Sulje muut paneelit"
 
@@ -128,7 +140,7 @@ msgstr "Sulje muut paneelit"
 msgid "Close other windows:"
 msgstr "Sulje muut paneelit:"
 
-#: ../widget/terminal.vala:385 ../widget/config_window.vala:342
+#: ../widget/terminal.vala:403 ../widget/config_window.vala:342
 msgid "Close window"
 msgstr "Sulje paneeli"
 
@@ -156,12 +168,12 @@ msgstr "Komento:"
 msgid "Content"
 msgstr "Sisältö"
 
-#: ../widget/terminal.vala:347 ../widget/config_window.vala:304
+#: ../widget/terminal.vala:365 ../widget/config_window.vala:304
 #: ../widget/entry_menu.vala:39
 msgid "Copy"
 msgstr "Kopioi"
 
-#: ../widget/terminal.vala:352
+#: ../widget/terminal.vala:370
 msgid "Copy link"
 msgstr "Kopioi linkki"
 
@@ -189,7 +201,7 @@ msgstr "Kursorin vilkkuminen"
 msgid "Cursor style:"
 msgstr "Kursorin tyyli:"
 
-#: ../widget/terminal.vala:447 ../widget/config_window.vala:360
+#: ../widget/terminal.vala:465 ../widget/config_window.vala:360
 #: ../widget/appbar.vala:127
 msgid "Custom commands"
 msgstr "Mukautetut komennot"
@@ -210,17 +222,19 @@ msgstr ""
 "Deepin Terminal on edistynyt pääte-emulaattori, jossa on välilehdet, "
 "työtilat, etähallinta, Quake-tila ja muut ominaisuudet."
 
-#: ../main.vala:198 ../widget/about_widget.vala:57 ../widget/tabbar.vala:610
+#: ../main.vala:198 ../widget/about_widget.vala:67 ../widget/tabbar.vala:610
 msgid "Deepin Terminal"
 msgstr "Deepin terminaali"
 
-#: ../widget/about_widget.vala:56
+#: ../widget/about_widget.vala:66
 msgid ""
-"Deepin Terminal is an advanced terminal emulator with workspace, multiple windows, remote management, quake mode and other features.\n"
+"Deepin Terminal is an advanced terminal emulator with workspace, multiple "
+"windows, remote management, quake mode and other features.\n"
 "\n"
 "It sharpens your focus in the world of command line!"
 msgstr ""
-"Deepin Pääte on edistynyt pääte-emulaattori, jossa on välilehdet, useita paneeleja, SSH-palvelinten hallinta, quake-tila ja muita ominaisuuksia.\n"
+"Deepin Pääte on edistynyt pääte-emulaattori, jossa on välilehdet, useita "
+"paneeleja, SSH-palvelinten hallinta, quake-tila ja muita ominaisuuksia.\n"
 "\n"
 "Se terävöittää keskittymistäsi komentorivin maailmassa!"
 
@@ -266,7 +280,7 @@ msgstr "Näytä pikanäppäimet:"
 msgid "Display version"
 msgstr "Näytetty versio"
 
-#: ../widget/terminal.vala:452
+#: ../widget/terminal.vala:470
 msgid "Download file"
 msgstr "Lataa tiedosto"
 
@@ -278,7 +292,7 @@ msgstr "Muokkaa komentoa"
 msgid "Edit Server"
 msgstr "Muokkaa palvelinta"
 
-#: ../widget/remote_server_dialog.vala:107 ../widget/terminal.vala:446
+#: ../widget/remote_server_dialog.vala:107 ../widget/terminal.vala:464
 msgid "Encoding"
 msgstr "Tavuesitys"
 
@@ -286,15 +300,15 @@ msgstr "Tavuesitys"
 msgid "Encoding:"
 msgstr "Tavuesitys:"
 
-#: ../widget/confirm_dialog.vala:130 ../widget/appbar.vala:135
+#: ../widget/confirm_dialog.vala:130 ../widget/appbar.vala:138
 msgid "Exit"
 msgstr "Poistu"
 
-#: ../widget/terminal.vala:397
+#: ../widget/terminal.vala:415
 msgid "Exit fullscreen"
 msgstr "Poistu kokoruudusta"
 
-#: ../widget/terminal.vala:403
+#: ../widget/terminal.vala:421
 msgid "Find"
 msgstr "Etsi"
 
@@ -306,7 +320,7 @@ msgstr "Fonttien koko:"
 msgid "Font:"
 msgstr "Fontti:"
 
-#: ../widget/preference.vala:399 ../widget/terminal.vala:399
+#: ../widget/preference.vala:399 ../widget/terminal.vala:417
 msgid "Fullscreen"
 msgstr "Kokoruututila"
 
@@ -322,7 +336,7 @@ msgstr "Ryhmä"
 msgid "Group:"
 msgstr "Ryhmä:"
 
-#: ../widget/appbar.vala:132
+#: ../widget/appbar.vala:135
 msgid "Help"
 msgstr "Ohje"
 
@@ -330,13 +344,17 @@ msgstr "Ohje"
 msgid "Hide Quake window after losing focus"
 msgstr "Piilota quake-ikkuna kadotetun tarkennuksen jälkeen"
 
-#: ../widget/terminal.vala:383 ../widget/config_window.vala:337
+#: ../widget/terminal.vala:401 ../widget/config_window.vala:337
 msgid "Horizontal split"
 msgstr "Vaakasuora jako"
 
 #: ../widget/preference.vala:326
 msgid "Horizontal split:"
 msgstr "Vaakasuora jako:"
+
+#: ../widget/terminal.vala:1501
+msgid "Image files"
+msgstr ""
 
 #: ../widget/preference_slidebar.vala:58 ../widget/preference.vala:252
 msgid "Interface"
@@ -378,7 +396,7 @@ msgstr "Nimi:"
 msgid "New window"
 msgstr "Uusi ikkuna"
 
-#: ../widget/terminal.vala:391 ../widget/config_window.vala:330
+#: ../widget/terminal.vala:409 ../widget/config_window.vala:330
 msgid "New workspace"
 msgstr "Uusi välilehti"
 
@@ -402,15 +420,15 @@ msgstr "Normaali ikkuna"
 msgid "Opacity:"
 msgstr "Läpikuultamattomuus:"
 
-#: ../widget/terminal.vala:365 ../widget/config_window.vala:306
+#: ../widget/terminal.vala:383 ../widget/config_window.vala:306
 msgid "Open"
 msgstr "Avaa"
 
-#: ../widget/terminal.vala:373
+#: ../widget/terminal.vala:391
 msgid "Open in file manager"
 msgstr "Avaa tiedostonhallinnassa"
 
-#: ../widget/terminal.vala:351
+#: ../widget/terminal.vala:369
 msgid "Open link"
 msgstr "Avaa linkki"
 
@@ -440,7 +458,7 @@ msgstr "Salasana"
 msgid "Password:"
 msgstr "Salasana:"
 
-#: ../widget/terminal.vala:358 ../widget/config_window.vala:305
+#: ../widget/terminal.vala:376 ../widget/config_window.vala:305
 #: ../widget/entry_menu.vala:41
 msgid "Paste"
 msgstr "Liitä"
@@ -481,7 +499,7 @@ msgstr "Ohjelmia on silti käynnissä päätteessä"
 msgid "Quake mode"
 msgstr "Quake-tila"
 
-#: ../widget/terminal.vala:448 ../widget/config_window.vala:361
+#: ../widget/terminal.vala:466 ../widget/config_window.vala:361
 #: ../widget/appbar.vala:128
 msgid "Remote management"
 msgstr "Etähallinta"
@@ -490,11 +508,11 @@ msgstr "Etähallinta"
 msgid "Remote management:"
 msgstr "Etähallinta:"
 
-#: ../widget/terminal.vala:657
+#: ../widget/terminal.vala:678
 msgid "Rename"
 msgstr "Nimeä uudelleen"
 
-#: ../widget/terminal.vala:445 ../widget/terminal.vala:654
+#: ../widget/terminal.vala:463 ../widget/terminal.vala:675
 #: ../widget/config_window.vala:357
 msgid "Rename title"
 msgstr "Nimeä välilehti"
@@ -534,7 +552,7 @@ msgstr "Selaa näppäimillä"
 msgid "Scroll on output"
 msgstr "Selaa ulostuloa"
 
-#: ../widget/terminal.vala:406 ../widget/search_entry.vala:64
+#: ../widget/terminal.vala:424 ../widget/search_entry.vala:64
 #: ../widget/search_entry.vala:66 ../widget/config_window.vala:307
 msgid "Search"
 msgstr "Etsi"
@@ -544,7 +562,8 @@ msgstr "Etsi"
 msgid "Search:"
 msgstr "Etsi:"
 
-#: ../widget/terminal.vala:623 ../widget/file_button.vala:71
+#: ../widget/terminal.vala:644 ../widget/terminal.vala:1498
+#: ../widget/file_button.vala:71
 msgid "Select"
 msgstr "Valitse"
 
@@ -556,11 +575,16 @@ msgstr "Valitse kaikki"
 msgid "Select all:"
 msgstr "Valitse kaikki:"
 
-#: ../widget/terminal.vala:620
+#: ../widget/terminal.vala:1495
+#, fuzzy
+msgid "Select background image"
+msgstr "Sumeuta tausta"
+
+#: ../widget/terminal.vala:641
 msgid "Select directory to save the file"
 msgstr "Valitse hakemisto tallentaaksesi tiedoston"
 
-#: ../widget/terminal.vala:591
+#: ../widget/terminal.vala:612
 msgid "Select file to upload"
 msgstr "Valitse lähetettävä tiedosto"
 
@@ -612,6 +636,11 @@ msgstr "Palvelimen nimi"
 msgid "Server name:"
 msgstr "Palvelimen nimi:"
 
+#: ../widget/appbar.vala:130
+#, fuzzy
+msgid "Set background image"
+msgstr "Sumeuta tausta"
+
 #: ../main.vala:138
 msgid "Set the terminal startup directory"
 msgstr "Aseta pääteikkunan aloituskansio"
@@ -620,7 +649,7 @@ msgstr "Aseta pääteikkunan aloituskansio"
 msgid "Set the terminal window mode"
 msgstr "Aseta pääteikkunan tila"
 
-#: ../widget/terminal.vala:456 ../widget/appbar.vala:130
+#: ../widget/terminal.vala:474 ../widget/appbar.vala:133
 msgid "Settings"
 msgstr "Asetukset"
 
@@ -633,16 +662,16 @@ msgstr "Pikanäppäimet"
 msgid "Shortcuts:"
 msgstr "Pikanäppäimet:"
 
-#: ../widget/terminal.vala:444 ../widget/appbar.vala:126
+#: ../widget/terminal.vala:462 ../widget/appbar.vala:126
 msgid "Switch theme"
 msgstr "Vaihda teemaa"
 
-#: ../widget/about_widget.vala:57 ../widget/preference_slidebar.vala:68
+#: ../widget/about_widget.vala:67 ../widget/preference_slidebar.vala:68
 #: ../widget/preference.vala:298 ../widget/config_window.vala:318
 msgid "Terminal"
 msgstr "Pääte"
 
-#: ../widget/about_widget.vala:55
+#: ../widget/about_widget.vala:65
 msgid ""
 "Terminal is an advanced terminal emulator with workspace, multiple windows, "
 "remote management, quake mode and other features."
@@ -652,15 +681,15 @@ msgstr ""
 msgid "Toggle fullscreen"
 msgstr "Vaihda kokonäyttöön"
 
-#: ../widget/terminal.vala:635
+#: ../widget/terminal.vala:656
 msgid "Type path to download file"
 msgstr "Kirjoita ladattavan tiedoston polku"
 
-#: ../widget/terminal.vala:595
+#: ../widget/terminal.vala:616
 msgid "Upload"
 msgstr "Lähetä"
 
-#: ../widget/terminal.vala:451
+#: ../widget/terminal.vala:469
 msgid "Upload file"
 msgstr "Lähetä tiedosto"
 
@@ -676,11 +705,11 @@ msgstr "Käyttäjänimi"
 msgid "Username:"
 msgstr "Käyttäjänimi:"
 
-#: ../widget/about_widget.vala:131
+#: ../widget/about_widget.vala:141
 msgid "Version:"
 msgstr "Versio:"
 
-#: ../widget/terminal.vala:384 ../widget/config_window.vala:336
+#: ../widget/terminal.vala:402 ../widget/config_window.vala:336
 msgid "Vertical split"
 msgstr "Pystysuora jako"
 
@@ -688,7 +717,7 @@ msgstr "Pystysuora jako"
 msgid "Vertical split:"
 msgstr "Pystysuora jako:"
 
-#: ../widget/terminal.vala:1529
+#: ../widget/terminal.vala:1700
 msgid ""
 "Welcome to Deepin Terminal, please make sure that rz and sz commands have "
 "been installed in the server before right clicking to upload and download "
@@ -722,6 +751,6 @@ msgstr "Loitonna"
 msgid "Zoom out:"
 msgstr "Loitonna:"
 
-#: ../widget/terminal.vala:796 ../widget/terminal.vala:1244
+#: ../widget/terminal.vala:817 ../widget/terminal.vala:1270
 msgid "deepin"
 msgstr "Deepin"
