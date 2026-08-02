@@ -22,6 +22,7 @@
  */
 
 using Animation;
+using Cairo;
 using Gee;
 using Gtk;
 using Utils;
@@ -54,6 +55,8 @@ namespace Widgets {
         public int show_slider_interval = 500;
         public int show_slider_start_x;
         public uint? highlight_frame_timeout_source_id = null;
+        public Gdk.Pixbuf? background_image_pixbuf = null;
+        public Cairo.ImageSurface? background_image_surface = null;
 
         private enum WorkspaceResizeKey {
             LEFT, RIGHT, UP, DOWN
@@ -92,10 +95,28 @@ namespace Widgets {
             command_panel_hide_timer = new AnimateTimer(AnimateTimer.ease_in_quint, hide_slider_interval);
             command_panel_hide_timer.animate.connect(command_panel_hide_animate);
 
+            draw.connect((w, cr) => {
+                    if (background_image_pixbuf != null) {
+                        draw_background_image(cr);
+                    }
+                    return false;
+                });
+
+            size_allocate.connect((w, alloc) => {
+                    if (background_image_pixbuf != null) {
+                        apply_background_image();
+                    }
+                });
+
             Term term = new_term(true, work_directory);
             workspace_manager.set_first_term(term);
 
             add(term);
+
+            GLib.Idle.add(() => {
+                    load_background_image();
+                    return false;
+                });
         }
 
         public Term new_term(bool first_term, string? work_directory) {
@@ -946,6 +967,112 @@ namespace Widgets {
                 hide_slider_start_x = rect.width - panel_width;
                 timer.reset();
             }
+        }
+
+        public void load_background_image() {
+            try {
+                var top_level = get_toplevel();
+                if (top_level == null || !top_level.get_type().is_a(typeof(ConfigWindow))) {
+                    return;
+                }
+                ConfigWindow parent_window = (ConfigWindow) top_level;
+                string image_path = parent_window.config.config_file.get_string("advanced", "background_image");
+
+                if (image_path == "" || !FileUtils.test(image_path, FileTest.EXISTS)) {
+                    background_image_pixbuf = null;
+                    background_image_surface = null;
+                    return;
+                }
+
+                if (background_image_pixbuf == null) {
+                    try {
+                        background_image_pixbuf = new Gdk.Pixbuf.from_file(image_path);
+                    } catch (Error e) {
+                        print("Workspace load_background_image load: %s\n", e.message);
+                        background_image_pixbuf = null;
+                        background_image_surface = null;
+                        return;
+                    }
+                }
+
+                apply_background_image();
+            } catch (GLib.KeyFileError e) {
+                print("Workspace load_background_image config: %s\n", e.message);
+            }
+        }
+
+        public void apply_background_image() {
+            if (background_image_pixbuf == null) {
+                return;
+            }
+
+            Gtk.Allocation alloc;
+            this.get_allocation(out alloc);
+            int widget_width = alloc.width;
+            int widget_height = alloc.height;
+
+            if (widget_width <= 0 || widget_height <= 0) {
+                return;
+            }
+
+            int img_width = background_image_pixbuf.get_width();
+            int img_height = background_image_pixbuf.get_height();
+
+            double scale_x = (double) widget_width / img_width;
+            double scale_y = (double) widget_height / img_height;
+            double s = double.max(scale_x, scale_y);
+            int draw_width = (int) (img_width * s);
+            int draw_height = (int) (img_height * s);
+
+            background_image_surface = new Cairo.ImageSurface(Cairo.Format.ARGB32, widget_width, widget_height);
+            var cr = new Cairo.Context(background_image_surface);
+
+            cr.set_operator(Cairo.Operator.SOURCE);
+            cr.set_source_rgba(0, 0, 0, 0);
+            cr.rectangle(0, 0, widget_width, widget_height);
+            cr.fill();
+
+            cr.set_operator(Cairo.Operator.OVER);
+            int x = (widget_width - draw_width) / 2;
+            int y = (widget_height - draw_height) / 2;
+            var scaled_pixbuf = background_image_pixbuf.scale_simple(draw_width, draw_height, Gdk.InterpType.BILINEAR);
+            Gdk.cairo_set_source_pixbuf(cr, scaled_pixbuf, x, y);
+            cr.paint();
+
+            cr.set_operator(Cairo.Operator.OVER);
+            cr.set_source_rgba(0, 0, 0, 0.7);
+            cr.rectangle(0, 0, widget_width, widget_height);
+            cr.fill();
+        }
+
+        public void draw_background_image(Cairo.Context cr) {
+            if (background_image_surface == null) {
+                return;
+            }
+
+            try {
+                var top_level = get_toplevel();
+                if (top_level == null || !top_level.get_type().is_a(typeof(ConfigWindow))) {
+                    return;
+                }
+                ConfigWindow parent_window = (ConfigWindow) top_level;
+                double opacity = parent_window.config.config_file.get_double("general", "opacity");
+                cr.save();
+                cr.set_source_surface(background_image_surface, 0, 0);
+                cr.paint_with_alpha(opacity);
+                cr.restore();
+            } catch (GLib.KeyFileError e) {
+                cr.save();
+                cr.set_source_surface(background_image_surface, 0, 0);
+                cr.paint_with_alpha(1.0);
+                cr.restore();
+            }
+        }
+
+        public void update_background_image() {
+            background_image_pixbuf = null;
+            background_image_surface = null;
+            load_background_image();
         }
     }
 }

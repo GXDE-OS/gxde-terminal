@@ -226,19 +226,6 @@ namespace Widgets {
             Gtk.drag_dest_set(this, Gtk.DestDefaults.ALL, targets, Gdk.DragAction.COPY);
             this.drag_data_received.connect(drag_received);
 
-            draw.connect((w, cr) => {
-                    if (background_image_pixbuf != null) {
-                        draw_background_image(cr);
-                    }
-                    return false;
-                });
-
-            size_allocate.connect((w, alloc) => {
-                    if (background_image_pixbuf != null) {
-                        apply_background_image();
-                    }
-                });
-
             /* Make Links Clickable */
             this.clickable(REGEX_STRINGS);
 
@@ -1405,23 +1392,11 @@ namespace Widgets {
                     background_image_pixbuf = null;
                     background_image_surface = null;
                     term.set_clear_background(true);
-                    return;
+                } else {
+                    term.set_clear_background(false);
                 }
 
-                if (background_image_pixbuf == null) {
-                    try {
-                        background_image_pixbuf = new Gdk.Pixbuf.from_file(image_path);
-                    } catch (Error e) {
-                        print("load_background_image load: %s\n", e.message);
-                        background_image_pixbuf = null;
-                        background_image_surface = null;
-                        term.set_clear_background(true);
-                        return;
-                    }
-                }
-
-                term.set_clear_background(false);
-                apply_background_image();
+                workspace_manager.update_all_workspaces_background();
             } catch (GLib.KeyFileError e) {
                 print("load_background_image config: %s\n", e.message);
             }
@@ -1523,6 +1498,8 @@ namespace Widgets {
                 parent_window.config.save();
                 background_image_pixbuf = null;
                 parent_window.config.update();
+
+                workspace_manager.update_all_workspaces_background();
             }
             chooser.destroy();
         }
@@ -1536,6 +1513,8 @@ namespace Widgets {
             background_image_surface = null;
             term.set_clear_background(true);
             parent_window.config.update();
+
+            workspace_manager.update_all_workspaces_background();
         }
 
         public bool clipboard_has_context() {

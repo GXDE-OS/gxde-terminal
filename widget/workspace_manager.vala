@@ -69,6 +69,7 @@ namespace Widgets {
             pack_start(workspace, true, true, 0);
 
             workspace.select_focus_terminal();
+            workspace.load_background_image();
         }
 
         public void new_workspace_with_current_directory(bool remote_serve_action=false) {
@@ -163,6 +164,13 @@ namespace Widgets {
             }
 
             return false;
+        }
+
+        public void update_all_workspaces_background() {
+            // 只更新当前可见的 Workspace，避免对不在窗口层级的 Workspace 调用 get_toplevel()
+            if (focus_workspace != null) {
+                focus_workspace.update_background_image();
+            }
         }
     }
 }

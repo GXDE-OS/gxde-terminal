@@ -1,4 +1,4 @@
-gxde-terminal (5.1.3) UNRELEASED; urgency=medium
+gxde-terminal (5.1.4) UNRELEASED; urgency=medium
 
   [ CharOfString ]
   * 修复在Wayland下系统标题栏未被隐藏的问题（https://gitee.com/GXDE-OS/gxde-terminal/issues/IJTO44）
@@ -6,8 +6,9 @@ gxde-terminal (5.1.3) UNRELEASED; urgency=medium
 
   [ gfdgd_xi ]
   * 支持设置窗口背景
+  * 修复设置分屏后终端壁纸重复的问题
 
- -- gfdgd_xi <3025613752@qq.com>  Wed, 01 Jul 2026 15:54:20 +0800
+ -- gfdgd_xi <3025613752@qq.com>  Sun, 02 Aug 2026 22:02:42 +0800
 
 gxde-terminal (5.1.1) UNRELEASED; urgency=medium
 
