@@ -1,3 +1,9 @@
+gxde-terminal (5.1.5) UNRELEASED; urgency=medium
+
+  * refactor(widget/window): 将窗口尺寸恢复逻辑提前到初始化阶段，修复 Wayland 下无法正确设置初始窗口大小的问题
+
+ -- shenmo <jifengshenmo@outlook.com>  Mon, 03 Aug 2026 16:24:48 +0800
+
 gxde-terminal (5.1.4) UNRELEASED; urgency=medium
 
   [ CharOfString ]

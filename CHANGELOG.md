@@ -1,3 +1,13 @@
+<a name="5.1.5"></a>
+## 5.1.5 (2026-08-03)
+
+
+#### Others
+
+*   refactor(widget/window): move window size restore logic earlier ([3c5f65a](https://gitee.com/GXDE-OS/gxde-terminal/commit/3c5f65aca066747dc37e7b84e241cf1d35d46d88))
+
+
+
 <a name="3.2.7"></a>
 ## 3.2.7 (2019-06-25)
 
