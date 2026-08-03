@@ -83,6 +83,25 @@ namespace Widgets {
             geo.min_height = rect.height / 3;
             this.set_geometry_hints(null, geo, Gdk.WindowHints.MIN_SIZE);
 
+            // 恢复上次保存的窗口大小。
+            // 注意：必须在窗口 realize/show 之前调用 set_default_size，
+            // Wayland 下在 realize 回调里再设置已经来不及，窗口会退回自然尺寸。
+            try {
+                var width = config.config_file.get_integer("advanced", "window_width");
+                var height = config.config_file.get_integer("advanced", "window_height");
+                if (width == 0 || height == 0) {
+                    if (rect.width == 0 || rect.height == 0) {
+                        set_default_size(800, 600);
+                    } else {
+                        set_default_size((int) (rect.width * window_default_scale), (int) (rect.height * window_default_scale));
+                    }
+                } else {
+                    set_default_size(width, height);
+                }
+            } catch (GLib.KeyFileError e) {
+                stdout.printf(e.message);
+            }
+
             top_line_dark_color = Utils.hex_to_rgba("#000000", 0.2);
             top_line_light_color = Utils.hex_to_rgba("#ffffff", 0.2);
 
@@ -126,18 +145,6 @@ namespace Widgets {
                             } else {
                                 get_window().set_shadow_width(0, 0, 0, 0);
                             }
-                        }
-
-                        var width = config.config_file.get_integer("advanced", "window_width");
-                        var height = config.config_file.get_integer("advanced", "window_height");
-                        if (width == 0 || height == 0) {
-                            if (rect.width == 0 || rect.height == 0) {
-                                set_default_size(800, 600);
-                            } else {
-                                set_default_size((int) (rect.width * window_default_scale), (int) (rect.height * window_default_scale));
-                            }
-                        } else {
-                            set_default_size(width, height);
                         }
                     } catch (GLib.KeyFileError e) {
                         stdout.printf(e.message);
