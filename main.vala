@@ -99,6 +99,19 @@ public class Application : Object {
         // Set 'NO_AT_BRIDGE' environment variable with 1 to dislable accessibility dbus warning.
         Environment.set_variable("NO_AT_BRIDGE", "1", true);
 
+        // Wayland 下不要强制使用 fcitx 的 GTK 输入法模块：fcitx5 的 GTK 模块通过客户端
+        // xdg_popup 显示输入窗口，而 GTK3 无法直接移动已显示的 popup，fcitx5 只能先隐藏
+        // 再重新显示来跟随光标，导致每次按键输入框都会消失并重新出现（闪烁）。
+        // 取消该变量后，GTK3 在 Wayland 下使用自带的 gtk-im-context-wayland（text-input-v3
+        // 协议），输入窗口由 fcitx5 原生 wayland 前端显示，可以正常移动而不再闪烁。
+        string? gtk_im_module = Environment.get_variable("GTK_IM_MODULE");
+        string? gdk_backend = Environment.get_variable("GDK_BACKEND");
+        if (Environment.get_variable("WAYLAND_DISPLAY") != null
+                && (gdk_backend == null || gdk_backend.index_of("wayland") != -1)
+                && (gtk_im_module == "fcitx" || gtk_im_module == "fcitx5")) {
+            Environment.unset_variable("GTK_IM_MODULE");
+        }
+
         Intl.setlocale();
         Intl.bind_textdomain_codeset(GETTEXT_PACKAGE, "utf-8");
         Intl.bindtextdomain(GETTEXT_PACKAGE, "/usr/share/locale");
