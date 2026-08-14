@@ -47,8 +47,12 @@ namespace Widgets {
             unchecked_press_surface = Utils.create_image_surface("checkbox_unchecked_press.svg");
             unchecked_insensitive_surface = Utils.create_image_surface("checkbox_unchecked_insensitive.svg");
 
-            set_size_request(checked_normal_surface.get_width() / get_scale_factor(),
-                             checked_normal_surface.get_height() / get_scale_factor());
+            // Use the same scale the SVG surface is rendered with
+            // (primary monitor scale), not get_scale_factor(), so the checkbox
+            // size matches the surface under Wayland where they may differ (e.g. 1.25).
+            var check_scale = Utils.get_default_monitor_scale();
+            set_size_request((int)(checked_normal_surface.get_width() / check_scale),
+                             (int)(checked_normal_surface.get_height() / check_scale));
 
             draw.connect(on_draw);
             enter_notify_event.connect((w, e) => {

@@ -170,8 +170,13 @@ namespace Widgets {
 
                     int key_width = int.max(text_width, 20);
 
-                    int button_width = button_left_surface.get_width() / get_scale_factor();
-                    int button_height = button_left_surface.get_height() / get_scale_factor();
+                    // Use the same scale the SVG surface is rendered with
+                    // (primary monitor scale), not get_scale_factor(), so the
+                    // shortcut key button size/position matches the surface under
+                    // Wayland where they may differ (e.g. 1.25).
+                    var scale = Utils.get_default_monitor_scale();
+                    int button_width = (int)(button_left_surface.get_width() / scale);
+                    int button_height = (int)(button_left_surface.get_height() / scale);
                     int button_y = (height - button_height) / 2;
                     int shortcut_key_width = key_width + shortcut_key_padding_x * 2;
 

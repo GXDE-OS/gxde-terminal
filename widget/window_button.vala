@@ -57,8 +57,13 @@ namespace Widgets {
 
             set_size_request(width, height);
 
-            surface_y = (height - normal_dark_surface.get_height() / get_scale_factor()) / 2;
-
+            // Note: the SVG surface is rendered with Utils.get_default_monitor_scale()
+            // (primary monitor scale) and set_device_scale() is applied, so we must use
+            // the same scale here to compute the vertical offset. Using get_scale_factor()
+            // would be wrong under Wayland when the window is on a monitor with a
+            // different scale factor, causing the icon to be misaligned/clipped.
+            // surface_y is recomputed in on_draw() to stay correct when the window
+            // moves between monitors under Wayland.
             draw.connect(on_draw);
             enter_notify_event.connect((w, e) => {
                     is_hover = true;
@@ -99,6 +104,12 @@ namespace Widgets {
             } else {
                 is_light_theme = ((Widgets.ConfigWindow) get_toplevel()).is_light_theme();
             }
+
+            // Recompute the vertical offset every draw using the same scale the SVG
+            // surface was rendered with (primary monitor scale), keeping the icon
+            // correctly centered under Wayland where the window scale may differ.
+            var scale = Utils.get_default_monitor_scale();
+            surface_y = (int)((get_allocated_height() - normal_dark_surface.get_height() / scale) / 2);
 
             if (is_hover) {
                 if (is_press) {

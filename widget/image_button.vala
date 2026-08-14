@@ -68,8 +68,12 @@ namespace Widgets {
                 text_press_color = Utils.hex_to_rgba("#FFFFFF");
             }
 
-            set_size_request(this.normal_dark_surface.get_width() / get_scale_factor(),
-                             this.normal_dark_surface.get_height() / get_scale_factor());
+            // Use the same scale the SVG surface is rendered with
+            // (primary monitor scale), not get_scale_factor(), so the button size
+            // matches the surface under Wayland where they may differ (e.g. 1.25).
+            var scale = Utils.get_default_monitor_scale();
+            set_size_request((int)(this.normal_dark_surface.get_width() / scale),
+                             (int)(this.normal_dark_surface.get_height() / scale));
 
             draw.connect(on_draw);
             enter_notify_event.connect((w, e) => {
@@ -106,7 +110,7 @@ namespace Widgets {
                 is_light_theme = ((Widgets.ConfigWindow) get_toplevel()).is_light_theme();
             }
 
-            var ratio = get_scale_factor();
+            var ratio = (int) Utils.get_default_monitor_scale();
 
             if (is_hover) {
                 if (is_press) {
