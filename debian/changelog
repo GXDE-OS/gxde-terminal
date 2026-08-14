@@ -1,8 +1,12 @@
-gxde-terminal (5.1.6) UNRELEASED; urgency=medium
+gxde-terminal (5.1.7) UNRELEASED; urgency=medium
 
+  [ shenmo ]
   * 修复Wayland下使用fcitx5输入法时输入框闪烁的问题
 
- -- shenmo <jifengshenmo@outlook.com>  Tue, 04 Aug 2026 11:20:22 +0800
+  [ gfdgd_xi ]
+  * 修复GXWM下样式异常的问题
+
+ -- gfdgd_xi <3025613752@qq.com>  Fri, 14 Aug 2026 15:49:35 +0800
 
 gxde-terminal (5.1.5) UNRELEASED; urgency=medium
 
