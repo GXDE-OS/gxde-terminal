@@ -122,11 +122,6 @@ msgstr "Sijil"
 msgid "Certificate:"
 msgstr "Sijil:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Latar belakang kabur"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Tutup tetingkap lain"
@@ -632,7 +627,7 @@ msgstr "Nama pelayan"
 msgid "Server name:"
 msgstr "Nama pelayan:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Latar belakang kabur"

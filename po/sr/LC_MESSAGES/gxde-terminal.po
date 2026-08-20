@@ -127,11 +127,6 @@ msgstr "Сертификат"
 msgid "Certificate:"
 msgstr "Сертификат:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Замућена позадина"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Затвори остале прозоре"
@@ -637,7 +632,7 @@ msgstr "Име сервера"
 msgid "Server name:"
 msgstr "Име сервера:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Замућена позадина"

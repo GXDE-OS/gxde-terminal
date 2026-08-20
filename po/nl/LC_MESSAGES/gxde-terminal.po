@@ -131,11 +131,6 @@ msgstr "Certificaat"
 msgid "Certificate:"
 msgstr "Certificaat:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Achtergrond vervagen"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Andere vensters sluiten"
@@ -642,7 +637,7 @@ msgstr "Servernaam"
 msgid "Server name:"
 msgstr "Servernaam:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Achtergrond vervagen"

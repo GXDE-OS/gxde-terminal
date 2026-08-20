@@ -127,11 +127,6 @@ msgstr "Πιστοποιητικό"
 msgid "Certificate:"
 msgstr "Πιστοποιητικό:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Θωλό παρασκήνιο"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Κλείσιμο άλλων παραθύρων"
@@ -638,7 +633,7 @@ msgstr "Όνομα διακομιστή"
 msgid "Server name:"
 msgstr "Όνομα διακομιστή:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Θωλό παρασκήνιο"

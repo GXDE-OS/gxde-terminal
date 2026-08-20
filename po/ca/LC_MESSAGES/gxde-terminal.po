@@ -126,11 +126,6 @@ msgstr "Certificat"
 msgid "Certificate:"
 msgstr "Certificat:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Fons difuminat"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Tanca les altres finestres"
@@ -637,7 +632,7 @@ msgstr "Nom de servidor"
 msgid "Server name:"
 msgstr "Nom de servidor:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Fons difuminat"

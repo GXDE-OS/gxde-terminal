@@ -123,11 +123,6 @@ msgstr "የምስክር ወረቀት"
 msgid "Certificate:"
 msgstr "የምስክር ወረቀት"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "መደብ ማደብዘዣ"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "ሌሎች መስኮቶችን መዝጊያ"
@@ -630,7 +625,7 @@ msgstr "የ ሰርቨር ስም"
 msgid "Server name:"
 msgstr "የ ሰርቨር ስም:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "መደብ ማደብዘዣ"

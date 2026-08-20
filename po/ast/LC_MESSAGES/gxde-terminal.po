@@ -123,11 +123,6 @@ msgstr "Certificáu"
 msgid "Certificate:"
 msgstr "Certificáu:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Desenfocar el fondu"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Zarrar les otres ventanes"
@@ -631,7 +626,7 @@ msgstr "Nome del sirvidor"
 msgid "Server name:"
 msgstr "Nome del sirvidor:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Desenfocar el fondu"

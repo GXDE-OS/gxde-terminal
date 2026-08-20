@@ -1466,6 +1466,16 @@ namespace Widgets {
             }
         }
 
+        public bool has_background_image() {
+            try {
+                Widgets.ConfigWindow parent_window = (Widgets.ConfigWindow) term.get_toplevel();
+                string image_path = parent_window.config.config_file.get_string("advanced", "background_image");
+                return image_path != "" && FileUtils.test(image_path, FileTest.EXISTS);
+            } catch (GLib.KeyFileError e) {
+                return false;
+            }
+        }
+
         public void set_background_image() {
             var chooser = new Gtk.FileChooserDialog(_("Select background image"),
                     get_toplevel() as Gtk.Window, Gtk.FileChooserAction.OPEN);

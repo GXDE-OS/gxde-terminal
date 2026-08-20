@@ -130,11 +130,6 @@ msgstr "Sertifikat"
 msgid "Certificate:"
 msgstr "Sertifikat:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Latar belakang buram"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Tutup jendela lainnya"
@@ -639,7 +634,7 @@ msgstr "Nama server"
 msgid "Server name:"
 msgstr "Nama server:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Latar belakang buram"

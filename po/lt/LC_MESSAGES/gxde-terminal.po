@@ -127,11 +127,6 @@ msgstr "Liudijimas"
 msgid "Certificate:"
 msgstr "Liudijimas:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Sulieti foną"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Užverti kitus langus"
@@ -638,7 +633,7 @@ msgstr "Serverio pavadinimas"
 msgid "Server name:"
 msgstr "Serverio pavadinimas:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Sulieti foną"

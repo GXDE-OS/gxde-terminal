@@ -130,11 +130,6 @@ msgstr "گواهینامه"
 msgid "Certificate:"
 msgstr "گواهینامه:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "پس زمینه تار"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "بستن پنجره های دیگر"
@@ -639,7 +634,7 @@ msgstr "نام سرور"
 msgid "Server name:"
 msgstr "نام سرور:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "پس زمینه تار"

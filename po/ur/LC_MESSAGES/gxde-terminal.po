@@ -118,10 +118,6 @@ msgstr ""
 msgid "Certificate:"
 msgstr ""
 
-#: ../widget/appbar.vala:131
-msgid "Clear background image"
-msgstr ""
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr ""
@@ -619,7 +615,7 @@ msgstr ""
 msgid "Server name:"
 msgstr ""
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 msgid "Set background image"
 msgstr ""
 

@@ -131,11 +131,6 @@ msgstr "Sertifika"
 msgid "Certificate:"
 msgstr "Sertifika:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Arkaplanı bulanıklaştır"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Diğer pencereleri kapat"
@@ -640,7 +635,7 @@ msgstr "Sunucu adı"
 msgid "Server name:"
 msgstr "Sunucu adı:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Arkaplanı bulanıklaştır"

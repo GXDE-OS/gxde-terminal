@@ -123,11 +123,6 @@ msgstr "Certificato"
 msgid "Certificate:"
 msgstr "Certificato:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Sfondo Blur"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Chiudi le altre finestre"
@@ -634,7 +629,7 @@ msgstr "Nome server"
 msgid "Server name:"
 msgstr "Nome server:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Sfondo Blur"

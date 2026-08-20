@@ -130,11 +130,6 @@ msgstr ""
 msgid "Certificate:"
 msgstr ""
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "背景のブラー"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "他のウィンドウを閉じる"
@@ -633,7 +628,7 @@ msgstr "サーバー名"
 msgid "Server name:"
 msgstr "サーバー名:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "背景のブラー"

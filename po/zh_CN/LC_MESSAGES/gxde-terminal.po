@@ -125,10 +125,6 @@ msgstr "证书"
 msgid "Certificate:"
 msgstr "证书："
 
-#: ../widget/appbar.vala:131
-msgid "Clear background image"
-msgstr "移除窗口背景"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "关闭其他窗口"
@@ -634,7 +630,7 @@ msgstr "服务器名"
 msgid "Server name:"
 msgstr "服务器名："
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 msgid "Set background image"
 msgstr "设置窗口背景"
 

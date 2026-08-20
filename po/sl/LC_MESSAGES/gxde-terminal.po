@@ -129,11 +129,6 @@ msgstr "Certifikat"
 msgid "Certificate:"
 msgstr "Certifikat:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Zabriši ozadje"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Zapri druga okna"
@@ -636,7 +631,7 @@ msgstr "Ime strežnika"
 msgid "Server name:"
 msgstr "Ime strežnika:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Zabriši ozadje"

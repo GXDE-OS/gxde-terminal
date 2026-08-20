@@ -40,11 +40,15 @@ namespace Menu {
     public class MenuItem : Object {
         public string menu_item_id;
         public string menu_item_text;
+        public bool menu_item_checkable;
+        public bool menu_item_checked;
         public List<MenuItem> menu_item_submenu;
 
-        public MenuItem(string item_id, string item_text) {
+        public MenuItem(string item_id, string item_text, bool checkable = false, bool checked = false) {
             menu_item_id = item_id;
             menu_item_text = item_text;
+            menu_item_checkable = checkable;
+            menu_item_checked = checked;
 
             menu_item_submenu = new List<MenuItem>();
         }
@@ -134,7 +138,7 @@ namespace Menu {
             Gtk.Menu result = new Gtk.Menu();
             
             foreach (unowned MenuItem menu_item in menu_content) {
-                var item = create_gtk_menu_item(menu_item.menu_item_id, menu_item.menu_item_text);
+                var item = create_gtk_menu_item(menu_item);
                 if (menu_item.menu_item_submenu.length() > 0) {
                     Gtk.Menu submenu = create_gtk_menu(menu_item.menu_item_submenu);
                     item.set_submenu(submenu);   
@@ -145,11 +149,20 @@ namespace Menu {
             return result;
         }
 
-        private Gtk.MenuItem create_gtk_menu_item(string item_id, string item_text) {
-            Gtk.MenuItem item = (item_text == "") ? new Gtk.SeparatorMenuItem() : new Gtk.MenuItem.with_label(item_text);
+        private Gtk.MenuItem create_gtk_menu_item(MenuItem menu_item) {
+            Gtk.MenuItem item;
 
-            item.activate.connect(() => { 
-                click_item(item_id); 
+            if (menu_item.menu_item_text == "") {
+                item = new Gtk.SeparatorMenuItem();
+            } else if (menu_item.menu_item_checkable) {
+                item = new Gtk.CheckMenuItem.with_label(menu_item.menu_item_text);
+                ((Gtk.CheckMenuItem) item).active = menu_item.menu_item_checked;
+            } else {
+                item = new Gtk.MenuItem.with_label(menu_item.menu_item_text);
+            }
+
+            item.activate.connect(() => {
+                click_item(menu_item.menu_item_id);
             });
 
             return item;
@@ -253,7 +266,7 @@ namespace Menu {
             builder.add_boolean_value(true);
 
             builder.set_member_name("checked");
-            builder.add_boolean_value(false);
+            builder.add_boolean_value(item.menu_item_checked);
 
             builder.set_member_name("itemSubMenu");
             unowned List<MenuItem> submenu_items = item.menu_item_submenu;

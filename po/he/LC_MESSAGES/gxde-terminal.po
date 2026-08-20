@@ -121,10 +121,6 @@ msgstr "אישור"
 msgid "Certificate:"
 msgstr "אישור:"
 
-#: ../widget/appbar.vala:131
-msgid "Clear background image"
-msgstr ""
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "סגירת חלונות אחרים"
@@ -622,7 +618,7 @@ msgstr ""
 msgid "Server name:"
 msgstr ""
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 msgid "Set background image"
 msgstr ""
 

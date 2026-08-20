@@ -126,11 +126,6 @@ msgstr "인증서"
 msgid "Certificate:"
 msgstr "인증서:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "배경 흐림"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "다른 창 닫기"
@@ -635,7 +630,7 @@ msgstr "서버 이름"
 msgid "Server name:"
 msgstr "서버 이름:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "배경 흐림"

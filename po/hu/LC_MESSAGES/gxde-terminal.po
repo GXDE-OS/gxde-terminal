@@ -135,11 +135,6 @@ msgstr "Tanúsítvány"
 msgid "Certificate:"
 msgstr "Tanúsítvány:"
 
-#: ../widget/appbar.vala:131
-#, fuzzy
-msgid "Clear background image"
-msgstr "Háttér elhomályosítása"
-
 #: ../widget/terminal.vala:405 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Egyéb ablakok bezárása"
@@ -646,7 +641,7 @@ msgstr "Szerver név"
 msgid "Server name:"
 msgstr "Szerver név:"
 
-#: ../widget/appbar.vala:130
+#: ../widget/appbar.vala:132
 #, fuzzy
 msgid "Set background image"
 msgstr "Háttér elhomályosítása"
