@@ -1,3 +1,9 @@
+gxde-terminal (5.1.8) UNRELEASED; urgency=medium
+
+  * 终端背景菜单合并为单个可勾选项：设置成功后显示对号，再次点击清除窗口背景
+
+ -- shenmo <shenmo@spark-app.store>  Thu, 20 Aug 2026 22:42:16 +0800
+
 gxde-terminal (5.1.7) UNRELEASED; urgency=medium
 
   [ shenmo ]
