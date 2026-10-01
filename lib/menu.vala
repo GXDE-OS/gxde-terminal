@@ -42,13 +42,15 @@ namespace Menu {
         public string menu_item_text;
         public bool menu_item_checkable;
         public bool menu_item_checked;
+        public bool menu_item_sensitive = true;
         public List<MenuItem> menu_item_submenu;
 
-        public MenuItem(string item_id, string item_text, bool checkable = false, bool checked = false) {
+        public MenuItem(string item_id, string item_text, bool checkable = false, bool checked = false, bool sensitive = true) {
             menu_item_id = item_id;
             menu_item_text = item_text;
             menu_item_checkable = checkable;
             menu_item_checked = checked;
+            menu_item_sensitive = sensitive;
 
             menu_item_submenu = new List<MenuItem>();
         }
@@ -165,6 +167,8 @@ namespace Menu {
                 click_item(menu_item.menu_item_id);
             });
 
+            item.sensitive = menu_item.menu_item_sensitive;
+
             return item;
         }
 
@@ -263,7 +267,7 @@ namespace Menu {
             builder.add_string_value("");
 
             builder.set_member_name("isActive");
-            builder.add_boolean_value(true);
+            builder.add_boolean_value(item.menu_item_sensitive);
 
             builder.set_member_name("checked");
             builder.add_boolean_value(item.menu_item_checked);

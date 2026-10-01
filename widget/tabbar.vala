@@ -81,6 +81,7 @@ namespace Widgets {
         public HashMap<int, string> tab_name_map;
         public Pango.FontDescription font_description;
         public bool allowed_add_tab = true;
+        private Menu.Menu context_menu;
         public int font_size = 11;
         public int height = Constant.TITLEBAR_HEIGHT;
         public int hover_clip_right_offset = 6;
@@ -270,6 +271,71 @@ namespace Widgets {
             }
         }
 
+        public void close_other_tabs(int keep_index) {
+            if (tab_list.size < 2) {
+                return;
+            }
+
+            int keep_id = tab_list.get(keep_index);
+            var ids_to_close = new ArrayList<int>();
+            foreach (int id in tab_list) {
+                if (id != keep_id) {
+                    ids_to_close.add(id);
+                }
+            }
+
+            foreach (int id in ids_to_close) {
+                int index = tab_list.index_of(id);
+                if (index >= 0) {
+                    close_tab(index, id);
+                }
+            }
+        }
+
+        private void show_tab_menu(int x, int y, int tab_index, int tab_id) {
+            var menu_content = new GLib.List<Menu.MenuItem>();
+            menu_content.append(new Menu.MenuItem("close_tab", _("Close tab")));
+            menu_content.append(new Menu.MenuItem("close_other_tabs", _("Close other tabs"), false, false, tab_list.size >= 2));
+            menu_content.append(new Menu.MenuItem("rename_tab", _("Rename tab")));
+
+            context_menu = new Menu.Menu();
+            context_menu.click_item.connect((item_id) => handle_tab_menu_click(item_id, tab_index, tab_id));
+            context_menu.destroy.connect(() => { context_menu = null; });
+            var window = (Widgets.ConfigWindow) get_toplevel();
+            context_menu.set_prefer_deepin_menu(window.config.config_file.get_boolean("advanced", "prefer_deepin_menu"));
+            context_menu.popup_at_position(menu_content, x, y);
+        }
+
+        private void handle_tab_menu_click(string item_id, int tab_index, int tab_id) {
+            switch (item_id) {
+                case "close_tab":
+                    close_nth_tab(tab_index);
+                    break;
+                case "close_other_tabs":
+                    close_other_tabs(tab_index);
+                    break;
+                case "rename_tab":
+                    rename_tab_dialog(tab_index, tab_id);
+                    break;
+            }
+        }
+
+        private void rename_tab_dialog(int tab_index, int tab_id) {
+            var window = (Widgets.ConfigWindow) get_toplevel();
+            string current_name = tab_name_map.get(tab_id);
+
+            var rename_dialog = new Widgets.RenameDialog(
+                _("Rename tab"),
+                current_name,
+                _("Cancel"),
+                _("Rename")
+            );
+            rename_dialog.transient_for_window(window);
+            rename_dialog.rename.connect((w, new_title) => {
+                rename_tab(tab_id, new_title.strip());
+            });
+        }
+
         public void destroy_tab(int index) {
             var tab_id = tab_list.get(index);
 
@@ -297,6 +363,14 @@ namespace Widgets {
             is_button_press = true;
 
             event.device.get_position(null, out button_press_x, out button_press_y);
+
+            if (event.button == Gdk.BUTTON_SECONDARY) {
+                int tab_index = get_tab_index_at_x((int) event.x);
+                if (tab_index != -1) {
+                    show_tab_menu((int) event.x_root, (int) event.y_root, tab_index, tab_list.get(tab_index));
+                    return true;
+                }
+            }
 
             return false;
         }
