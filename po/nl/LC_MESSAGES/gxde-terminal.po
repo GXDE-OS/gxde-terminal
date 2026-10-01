@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-01 15:51+0800\n"
+"POT-Creation-Date: 2026-10-01 23:04+0800\n"
 "PO-Revision-Date: 2017-02-04 05:38+0000\n"
 "Last-Translator: Heimen Stoffels <vistausss@outlook.com>, 2019\n"
 "Language-Team: Dutch (https://www.transifex.com/linuxdeepin/teams/3976/nl/)\n"
@@ -31,7 +31,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../widget/terminal.vala:1244
+#: ../widget/terminal.vala:1231
 msgid ""
 "\n"
 "Command has been completed, press ENTER to exit the terminal."
@@ -39,7 +39,7 @@ msgstr ""
 "\n"
 "De opdracht is afgerond. Druk op ENTER om de terminal af te sluiten."
 
-#: ../widget/appbar.vala:137
+#: ../widget/appbar.vala:140
 msgid "About"
 msgstr "Over"
 
@@ -85,7 +85,7 @@ msgstr "Geavanceerd"
 msgid "Advanced options"
 msgstr "Geavanceerde opties"
 
-#: ../widget/terminal.vala:1506
+#: ../widget/terminal.vala:1491
 #, fuzzy
 msgid "All files"
 msgstr "Bestand uploaden"
@@ -116,10 +116,10 @@ msgstr "Achtergrond vervagen"
 
 #: ../widget/remote_server_dialog.vala:347
 #: ../widget/remote_server_dialog.vala:427 ../widget/confirm_dialog.vala:130
-#: ../widget/terminal.vala:614 ../widget/terminal.vala:643
-#: ../widget/terminal.vala:677 ../widget/terminal.vala:1497
-#: ../widget/file_button.vala:69 ../widget/command_dialog.vala:192
-#: ../widget/command_dialog.vala:250
+#: ../widget/terminal.vala:601 ../widget/terminal.vala:630
+#: ../widget/terminal.vala:664 ../widget/terminal.vala:1482
+#: ../widget/tabbar.vala:330 ../widget/file_button.vala:69
+#: ../widget/command_dialog.vala:192 ../widget/command_dialog.vala:250
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -131,7 +131,12 @@ msgstr "Certificaat"
 msgid "Certificate:"
 msgstr "Certificaat:"
 
-#: ../widget/terminal.vala:405 ../widget/config_window.vala:343
+#: ../widget/tabbar.vala:298
+#, fuzzy
+msgid "Close other tabs"
+msgstr "Andere vensters sluiten"
+
+#: ../widget/terminal.vala:392 ../widget/config_window.vala:343
 msgid "Close other windows"
 msgstr "Andere vensters sluiten"
 
@@ -139,7 +144,11 @@ msgstr "Andere vensters sluiten"
 msgid "Close other windows:"
 msgstr "Andere vensters sluiten:"
 
-#: ../widget/terminal.vala:403 ../widget/config_window.vala:342
+#: ../widget/tabbar.vala:297
+msgid "Close tab"
+msgstr ""
+
+#: ../widget/terminal.vala:390 ../widget/config_window.vala:342
 msgid "Close window"
 msgstr "Sluit venster"
 
@@ -167,12 +176,12 @@ msgstr "Opdracht:"
 msgid "Content"
 msgstr "Inhoud"
 
-#: ../widget/terminal.vala:365 ../widget/config_window.vala:304
+#: ../widget/terminal.vala:352 ../widget/config_window.vala:304
 #: ../widget/entry_menu.vala:39
 msgid "Copy"
 msgstr "Kopiëren"
 
-#: ../widget/terminal.vala:370
+#: ../widget/terminal.vala:357
 msgid "Copy link"
 msgstr "Link kopiëren"
 
@@ -200,7 +209,7 @@ msgstr "Cursorknippering"
 msgid "Cursor style:"
 msgstr "Cursor-stijl:"
 
-#: ../widget/terminal.vala:465 ../widget/config_window.vala:360
+#: ../widget/terminal.vala:452 ../widget/config_window.vala:360
 #: ../widget/appbar.vala:127
 msgid "Custom commands"
 msgstr "Aangepaste opdrachten"
@@ -213,7 +222,7 @@ msgstr "Aangepaste opdrachten:"
 msgid "Cut"
 msgstr "Knippen"
 
-#: ../main.vala:199
+#: ../main.vala:212
 msgid ""
 "Deepin Teminal is an advanced terminal emulator with window-splitting, "
 "workspaces, remote management, Quake mode and other features."
@@ -222,7 +231,7 @@ msgstr ""
 "werkbladen, meerdere vensters, beheer op afstand, quake-modus en nog veel "
 "meer."
 
-#: ../main.vala:198 ../widget/about_widget.vala:67 ../widget/tabbar.vala:610
+#: ../main.vala:211 ../widget/about_widget.vala:67 ../widget/tabbar.vala:911
 msgid "Deepin Terminal"
 msgstr "Deepin Terminal"
 
@@ -277,11 +286,11 @@ msgstr "Sneltoetsen weergeven"
 msgid "Display shortcuts:"
 msgstr "Sneltoetsen weergeven:"
 
-#: ../main.vala:129
+#: ../main.vala:142
 msgid "Display version"
 msgstr "Versie weergeven"
 
-#: ../widget/terminal.vala:470
+#: ../widget/terminal.vala:457
 msgid "Download file"
 msgstr "Bestand downloaden"
 
@@ -293,7 +302,7 @@ msgstr "Opdracht bewerken"
 msgid "Edit Server"
 msgstr "Server bewerken"
 
-#: ../widget/remote_server_dialog.vala:107 ../widget/terminal.vala:464
+#: ../widget/remote_server_dialog.vala:107 ../widget/terminal.vala:451
 msgid "Encoding"
 msgstr "Versleuteling"
 
@@ -301,15 +310,15 @@ msgstr "Versleuteling"
 msgid "Encoding:"
 msgstr "Versleuteling:"
 
-#: ../widget/confirm_dialog.vala:130 ../widget/appbar.vala:138
+#: ../widget/confirm_dialog.vala:130 ../widget/appbar.vala:141
 msgid "Exit"
 msgstr "Afsluiten"
 
-#: ../widget/terminal.vala:415
+#: ../widget/terminal.vala:402
 msgid "Exit fullscreen"
 msgstr "Volledig scherm afsluiten"
 
-#: ../widget/terminal.vala:421
+#: ../widget/terminal.vala:408
 msgid "Find"
 msgstr "Zoeken"
 
@@ -321,7 +330,7 @@ msgstr "Lettertypegrootte:"
 msgid "Font:"
 msgstr "Lettertype:"
 
-#: ../widget/preference.vala:399 ../widget/terminal.vala:417
+#: ../widget/preference.vala:399 ../widget/terminal.vala:404
 msgid "Fullscreen"
 msgstr "Volledig scherm"
 
@@ -337,7 +346,7 @@ msgstr "Groep"
 msgid "Group:"
 msgstr "Groep:"
 
-#: ../widget/appbar.vala:135
+#: ../widget/appbar.vala:138
 msgid "Help"
 msgstr "Hulp"
 
@@ -345,7 +354,7 @@ msgstr "Hulp"
 msgid "Hide Quake window after losing focus"
 msgstr "Quake-venster verbergen na verliezen van focus"
 
-#: ../widget/terminal.vala:401 ../widget/config_window.vala:337
+#: ../widget/terminal.vala:388 ../widget/config_window.vala:337
 msgid "Horizontal split"
 msgstr "Horizontaal splitsen"
 
@@ -353,7 +362,7 @@ msgstr "Horizontaal splitsen"
 msgid "Horizontal split:"
 msgstr "Horizontaal splitsen:"
 
-#: ../widget/terminal.vala:1501
+#: ../widget/terminal.vala:1486
 msgid "Image files"
 msgstr ""
 
@@ -377,7 +386,7 @@ msgstr "Overgaan naar vorige opdracht"
 msgid "Jump to previous command:"
 msgstr "Overgaan naar vorige opdracht:"
 
-#: ../main.vala:183
+#: ../main.vala:196
 msgid "Load theme"
 msgstr "Thema laden"
 
@@ -397,7 +406,7 @@ msgstr "Naam:"
 msgid "New window"
 msgstr "Nieuw venster"
 
-#: ../widget/terminal.vala:409 ../widget/config_window.vala:330
+#: ../widget/terminal.vala:396 ../widget/config_window.vala:330
 msgid "New workspace"
 msgstr "Nieuw werkblad"
 
@@ -421,19 +430,19 @@ msgstr "Normaal venster"
 msgid "Opacity:"
 msgstr "Doorzichtigheid:"
 
-#: ../widget/terminal.vala:383 ../widget/config_window.vala:306
+#: ../widget/terminal.vala:370 ../widget/config_window.vala:306
 msgid "Open"
 msgstr "Openen"
 
-#: ../widget/terminal.vala:391
+#: ../widget/terminal.vala:378
 msgid "Open in file manager"
 msgstr "Openen in bestandsbeheerder"
 
-#: ../widget/terminal.vala:369
+#: ../widget/terminal.vala:356
 msgid "Open link"
 msgstr "Link openen"
 
-#: ../main.vala:192
+#: ../main.vala:205
 msgid "Open tabs"
 msgstr ""
 
@@ -459,7 +468,7 @@ msgstr "Wachtwoord"
 msgid "Password:"
 msgstr "Wachtwoord:"
 
-#: ../widget/terminal.vala:376 ../widget/config_window.vala:305
+#: ../widget/terminal.vala:363 ../widget/config_window.vala:305
 #: ../widget/entry_menu.vala:41
 msgid "Paste"
 msgstr "Plakken"
@@ -496,11 +505,11 @@ msgstr "Vorig werkblad:"
 msgid "Programs are still running in terminal"
 msgstr "Er draaien nog applicaties in de terminal"
 
-#: ../main.vala:174
+#: ../main.vala:187
 msgid "Quake mode"
 msgstr "Quake-modus"
 
-#: ../widget/terminal.vala:466 ../widget/config_window.vala:361
+#: ../widget/terminal.vala:453 ../widget/config_window.vala:361
 #: ../widget/appbar.vala:128
 msgid "Remote management"
 msgstr "Beheer op afstand"
@@ -509,11 +518,16 @@ msgstr "Beheer op afstand"
 msgid "Remote management:"
 msgstr "Beheer op afstand:"
 
-#: ../widget/terminal.vala:678
+#: ../widget/terminal.vala:665 ../widget/tabbar.vala:331
 msgid "Rename"
 msgstr "Naam wijzigen"
 
-#: ../widget/terminal.vala:463 ../widget/terminal.vala:675
+#: ../widget/tabbar.vala:299 ../widget/tabbar.vala:328
+#, fuzzy
+msgid "Rename tab"
+msgstr "Naam wijzigen"
+
+#: ../widget/terminal.vala:450 ../widget/terminal.vala:662
 #: ../widget/config_window.vala:357
 msgid "Rename title"
 msgstr "Titelnaam wijzigen"
@@ -533,7 +547,7 @@ msgstr "Verplicht"
 msgid "Restore Defaults"
 msgstr "Standaardwaarden herstellen"
 
-#: ../main.vala:156 ../main.vala:165
+#: ../main.vala:169 ../main.vala:178
 msgid "Run a program in the terminal"
 msgstr "Draai een applicatie in de terminal"
 
@@ -553,7 +567,7 @@ msgstr "Scrollen bij toetsaanslag"
 msgid "Scroll on output"
 msgstr "Scrollen bij uitvoer"
 
-#: ../widget/terminal.vala:424 ../widget/search_entry.vala:64
+#: ../widget/terminal.vala:411 ../widget/search_entry.vala:64
 #: ../widget/search_entry.vala:66 ../widget/config_window.vala:307
 msgid "Search"
 msgstr "Zoeken"
@@ -563,7 +577,7 @@ msgstr "Zoeken"
 msgid "Search:"
 msgstr "Zoeken:"
 
-#: ../widget/terminal.vala:644 ../widget/terminal.vala:1498
+#: ../widget/terminal.vala:631 ../widget/terminal.vala:1483
 #: ../widget/file_button.vala:71
 msgid "Select"
 msgstr "Selecteren"
@@ -576,16 +590,16 @@ msgstr "Alles selecteren"
 msgid "Select all:"
 msgstr "Alles selecteren:"
 
-#: ../widget/terminal.vala:1495
+#: ../widget/terminal.vala:1480
 #, fuzzy
 msgid "Select background image"
 msgstr "Achtergrond vervagen"
 
-#: ../widget/terminal.vala:641
+#: ../widget/terminal.vala:628
 msgid "Select directory to save the file"
 msgstr "Kies de map waarin het bestand moet worden opgeslagen"
 
-#: ../widget/terminal.vala:612
+#: ../widget/terminal.vala:599
 msgid "Select file to upload"
 msgstr "Selecteer te uploaden bestand"
 
@@ -642,15 +656,15 @@ msgstr "Servernaam:"
 msgid "Set background image"
 msgstr "Achtergrond vervagen"
 
-#: ../main.vala:138
+#: ../main.vala:151
 msgid "Set the terminal startup directory"
 msgstr "Stel de terminal-opstartmap in"
 
-#: ../main.vala:120
+#: ../main.vala:133
 msgid "Set the terminal window mode"
 msgstr "Stel de terminalvenstermodus in"
 
-#: ../widget/terminal.vala:474 ../widget/appbar.vala:133
+#: ../widget/terminal.vala:461 ../widget/appbar.vala:136
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -663,7 +677,7 @@ msgstr "Sneltoetsen"
 msgid "Shortcuts:"
 msgstr "Sneltoetsen:"
 
-#: ../widget/terminal.vala:462 ../widget/appbar.vala:126
+#: ../widget/terminal.vala:449 ../widget/appbar.vala:126
 msgid "Switch theme"
 msgstr "Thema wijzigen"
 
@@ -682,15 +696,15 @@ msgstr ""
 msgid "Toggle fullscreen"
 msgstr "Beeldvullende modus aan/uit"
 
-#: ../widget/terminal.vala:656
+#: ../widget/terminal.vala:643
 msgid "Type path to download file"
 msgstr "Typ het pad om het bestand te downloaden"
 
-#: ../widget/terminal.vala:616
+#: ../widget/terminal.vala:603
 msgid "Upload"
 msgstr "Uploaden"
 
-#: ../widget/terminal.vala:469
+#: ../widget/terminal.vala:456
 msgid "Upload file"
 msgstr "Bestand uploaden"
 
@@ -710,7 +724,7 @@ msgstr "Gebruikersnaam:"
 msgid "Version:"
 msgstr "Versie:"
 
-#: ../widget/terminal.vala:402 ../widget/config_window.vala:336
+#: ../widget/terminal.vala:389 ../widget/config_window.vala:336
 msgid "Vertical split"
 msgstr "Verticaal splitsen"
 
@@ -718,7 +732,7 @@ msgstr "Verticaal splitsen"
 msgid "Vertical split:"
 msgstr "Verticaal splitsen:"
 
-#: ../widget/terminal.vala:1700
+#: ../widget/terminal.vala:1689
 msgid ""
 "Welcome to Deepin Terminal, please make sure that rz and sz commands have "
 "been installed in the server before right clicking to upload and download "
@@ -753,6 +767,6 @@ msgstr "Uitzoomen"
 msgid "Zoom out:"
 msgstr "Uitzoomen:"
 
-#: ../widget/terminal.vala:817 ../widget/terminal.vala:1270
+#: ../widget/terminal.vala:804 ../widget/terminal.vala:1257
 msgid "deepin"
 msgstr "deepin"
