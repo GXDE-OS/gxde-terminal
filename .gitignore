@@ -32,3 +32,6 @@ debian/*.debhelper.log
 debian/gxde-terminal/
 /gxde-terminal
 *.gmo
+
+# IDE
+.cache/*

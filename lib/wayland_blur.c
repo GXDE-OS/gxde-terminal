@@ -1,3 +1,4 @@
+#include <math.h>
 #include <string.h>
 #include "wayland_blur.h"
 
@@ -125,6 +126,33 @@ static struct org_kde_kwin_blur* get_or_create_kde_blur(GdkWindow* window,
     return blur;
 }
 
+/* wl_region 只支持矩形，圆角部分按行拆成1像素高的横条
+ * 原来还要自己拼.png
+ */
+static void add_rounded_rect(struct wl_region* region, int x, int y,
+        int width, int height, int radius) {
+    if (radius > width / 2) {
+        radius = width / 2;
+    }
+
+    if (radius > height / 2) {
+        radius = height / 2;
+    }
+
+    if (radius <= 0) {
+        wl_region_add(region, x, y, width, height);
+        return;
+    }
+
+    for (int i = 0; i < radius; i++) {
+        double dy = radius - i - 0.5;
+        int inset = (int) lround(radius - sqrt((double) radius * radius - dy * dy));
+        wl_region_add(region, x + inset, y + i, width - inset * 2, 1);
+        wl_region_add(region, x + inset, y + height - 1 - i, width - inset * 2, 1);
+    }
+    wl_region_add(region, x, y + radius, width, height - radius * 2);
+}
+
 static int resolve_window(GdkWindow* window, struct wl_display** display_out,
         struct wl_surface** surface_out) {
     if (window == NULL || !GDK_IS_WAYLAND_WINDOW(window)) {
@@ -149,7 +177,7 @@ static int resolve_window(GdkWindow* window, struct wl_display** display_out,
 }
 
 void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
-        int height) {
+        int height, int radius) {
     struct wl_display* display;
     struct wl_surface* surface;
     if (!resolve_window(window, &display, &surface)) {
@@ -158,7 +186,28 @@ void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
 
     ensure_globals(display);
 
-    /* 优先 Treeland：整窗背景模糊，不需要区域。 */
+    /* 优先 KDE：按区域模糊，可以把圆角外的部分排除掉。 */
+    if (g_kde_blur_manager != NULL && g_compositor != NULL) {
+        struct org_kde_kwin_blur* blur = get_or_create_kde_blur(window, surface);
+        if (blur == NULL) {
+            return;
+        }
+
+        struct wl_region* region = wl_compositor_create_region(g_compositor);
+        if (region == NULL) {
+            return;
+        }
+        add_rounded_rect(region, x, y, width, height, radius);
+
+        org_kde_kwin_blur_set_region(blur, region);
+        org_kde_kwin_blur_commit(blur);
+        wl_region_destroy(region);
+
+        wl_display_flush(display);
+        return;
+    }
+
+    /* 回退 Treeland：整窗背景模糊，不支持区域。 */
     if (g_treeland_manager != NULL) {
         struct treeland_personalization_window_context_v1* ctx =
             get_or_create_treeland_ctx(window, surface);
@@ -166,32 +215,11 @@ void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
             treeland_personalization_window_context_v1_set_blend_mode(
                 ctx,
                 TREELAND_PERSONALIZATION_WINDOW_CONTEXT_V1_BLEND_MODE_BLUR);
+            treeland_personalization_window_context_v1_set_round_corner_radius(
+                ctx, radius);
             wl_display_flush(display);
         }
-        return;
     }
-
-    /* 回退KDE: 按内容区域模糊。 */
-    if (g_kde_blur_manager == NULL || g_compositor == NULL) {
-        return;
-    }
-
-    struct org_kde_kwin_blur* blur = get_or_create_kde_blur(window, surface);
-    if (blur == NULL) {
-        return;
-    }
-
-    struct wl_region* region = wl_compositor_create_region(g_compositor);
-    if (region == NULL) {
-        return;
-    }
-    wl_region_add(region, x, y, width, height);
-
-    org_kde_kwin_blur_set_region(blur, region);
-    org_kde_kwin_blur_commit(blur);
-    wl_region_destroy(region);
-
-    wl_display_flush(display);
 }
 
 void gxde_clear_blur(GdkWindow* window) {
@@ -203,6 +231,14 @@ void gxde_clear_blur(GdkWindow* window) {
 
     ensure_globals(display);
 
+    /* KDE：移除缓存的 blur 对象并 unset。 */
+    if (g_kde_blur_manager != NULL && g_compositor != NULL) {
+        g_object_set_data(G_OBJECT(window), GXDE_KDE_BLUR_KEY, NULL);
+        org_kde_kwin_blur_manager_unset(g_kde_blur_manager, surface);
+        wl_display_flush(display);
+        return;
+    }
+
     /* Treeland: blend mode -> 透明。 */
     if (g_treeland_manager != NULL) {
         struct treeland_personalization_window_context_v1* ctx =
@@ -213,14 +249,6 @@ void gxde_clear_blur(GdkWindow* window) {
                 TREELAND_PERSONALIZATION_WINDOW_CONTEXT_V1_BLEND_MODE_TRANSPARENT);
             wl_display_flush(display);
         }
-        return;
-    }
-
-    /* KDE：移除缓存的 blur 对象并 unset。 */
-    g_object_set_data(G_OBJECT(window), GXDE_KDE_BLUR_KEY, NULL);
-    if (g_kde_blur_manager != NULL) {
-        org_kde_kwin_blur_manager_unset(g_kde_blur_manager, surface);
-        wl_display_flush(display);
     }
 }
 
@@ -228,12 +256,13 @@ void gxde_clear_blur(GdkWindow* window) {
 
 /* X11下依旧走原逻辑 本patch不应该生效 */
 void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
-        int height) {
+        int height, int radius) {
     (void) window;
     (void) x;
     (void) y;
     (void) width;
     (void) height;
+    (void) radius;
 }
 
 void gxde_clear_blur(GdkWindow* window) {

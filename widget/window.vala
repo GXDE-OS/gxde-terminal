@@ -37,7 +37,7 @@ namespace Widgets {
 
     // Blur配置
     [CCode (cheader_filename = "wayland_blur.h", cname = "gxde_set_blur_region")]
-    private extern void wayland_set_blur_region (Gdk.Window window, int x, int y, int width, int height);
+    private extern void wayland_set_blur_region (Gdk.Window window, int x, int y, int width, int height, int radius);
     [CCode (cheader_filename = "wayland_blur.h", cname = "gxde_clear_blur")]
     private extern void wayland_clear_blur (Gdk.Window window);
 
@@ -53,6 +53,7 @@ namespace Widgets {
         public int window_frame_margin_end = 50;
         public int window_frame_margin_start = 50;
         public int window_frame_margin_top = 50;
+        public int window_frame_radius = 8;
         public bool tabbar_at_the_bottom = false;
         public int window_fullscreen_monitor_height = Constant.TITLEBAR_HEIGHT * 2;
         public int window_fullscreen_monitor_timeout = 150;
@@ -190,6 +191,23 @@ namespace Widgets {
             add(window_frame_box);
             window_frame_box.pack_start(window_widget_box, true, true, 0);
 
+            // GTK3不会按border-radius裁剪子控件，标题栏的方角会直接顶出来，这里强制裁剪
+            window_widget_box.draw.connect((w, cr) => {
+                    if (window_is_normal() && screen_monitor.is_composited()) {
+                        Gtk.Allocation rect;
+                        w.get_allocation(out rect);
+                        Draw.clip_rounded_rectangle(
+                            cr,
+                            1 - w.margin_start,
+                            1 - w.margin_top,
+                            rect.width + w.margin_start + w.margin_end - 2,
+                            rect.height + w.margin_top + w.margin_bottom - 2,
+                            window_frame_radius - 1);
+                    }
+
+                    return false;
+                });
+
             focus_in_event.connect((w) => {
                     update_style();
 
@@ -267,9 +285,18 @@ namespace Widgets {
 
                     draw_window_widgets(cr);
 
+                    // 边框内侧的线条不能超出圆角
+                    cr.save();
+                    if (window_is_normal() && screen_monitor.is_composited()) {
+                        Gtk.Allocation frame_rect;
+                        window_frame_box.get_allocation(out frame_rect);
+                        Draw.clip_rounded_rectangle(cr, frame_rect.x, frame_rect.y, frame_rect.width, frame_rect.height, window_frame_radius);
+                    }
+
                     draw_window_frame(cr);
 
                     draw_window_above(cr);
+                    cr.restore();
 
                     return true;
                 });
@@ -470,7 +497,8 @@ namespace Widgets {
                         h = height;
                     }
 
-                    wayland_set_blur_region(get_window(), x, y, w, h);
+                    int radius = (window_is_normal() && screen_monitor.is_composited()) ? window_frame_radius : 0;
+                    wayland_set_blur_region(get_window(), x, y, w, h, radius);
                 }
             } catch (GLib.KeyFileError e) {
                 print("%s\n", e.message);
@@ -638,6 +666,9 @@ namespace Widgets {
             if (tabbar_at_the_bottom) {
                 titlebar_y += height - Constant.TITLEBAR_HEIGHT;
             }
+
+            // 标题栏竖线需要在Wayland HDPI下对齐
+            int titlebar_side_y = titlebar_y;
             if (get_scale_factor() > 1) {
                 titlebar_y -= 1;
             }
@@ -694,9 +725,9 @@ namespace Widgets {
                     // Draw line around titlebar side.
                     cr.set_source_rgba(frame_color.red, frame_color.green, frame_color.blue, config.config_file.get_double("general", "opacity"));
                     // Left.
-                    Draw.draw_rectangle(cr, x + 1, titlebar_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
+                    Draw.draw_rectangle(cr, x + 1, titlebar_side_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
                     // Right.
-                    Draw.draw_rectangle(cr, x + width - 2, titlebar_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
+                    Draw.draw_rectangle(cr, x + width - 2, titlebar_side_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
 
                     //  if (is_light_theme) {
                     //      Utils.set_context_color(cr, top_line_light_color);
@@ -705,9 +736,9 @@ namespace Widgets {
                     //  }
 
                     // Left.
-                    Draw.draw_rectangle(cr, x + 1, titlebar_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
+                    Draw.draw_rectangle(cr, x + 1, titlebar_side_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
                     // Right.
-                    Draw.draw_rectangle(cr, x + width - 2, titlebar_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
+                    Draw.draw_rectangle(cr, x + width - 2, titlebar_side_y + side_margin, 1, Constant.TITLEBAR_HEIGHT);
 
                     if (tabbar_at_the_bottom)  {
                         draw_titlebar_underline(cr, x + 1, titlebar_y, width - 2, -1);
