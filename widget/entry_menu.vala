@@ -32,7 +32,7 @@ namespace Widgets {
             Intl.bindtextdomain(GETTEXT_PACKAGE, "/usr/share/locale");
         }
 
-        public void create_entry_menu(Gtk.Entry entry, int x, int y) {
+        public void create_entry_menu(Gtk.Entry entry, Gdk.Event event) {
             var menu_content = new List<Menu.MenuItem>();
             if (is_selection(entry)) {
                 menu_content.append(new Menu.MenuItem("cut", _("Cut")));
@@ -51,7 +51,7 @@ namespace Widgets {
                     handle_menu_item_click(entry, item_id);
                 });
             menu.destroy.connect(handle_menu_destroy);
-            menu.popup_at_position(menu_content, x, y);
+            menu.popup_at_pointer(menu_content, entry, event);
         }
 
         public void handle_menu_item_click(Gtk.Entry entry, string item_id) {

@@ -252,6 +252,23 @@ void gxde_clear_blur(GdkWindow* window) {
     }
 }
 
+int gxde_blur_available(GdkDisplay* gdk_display) {
+    if (gdk_display == NULL || !GDK_IS_WAYLAND_DISPLAY(gdk_display)) {
+        return 0;
+    }
+
+    struct wl_display* display = gdk_wayland_display_get_wl_display(
+        gdk_display);
+    if (display == NULL) {
+        return 0;
+    }
+
+    ensure_globals(display);
+
+    return (g_kde_blur_manager != NULL && g_compositor != NULL)
+        || g_treeland_manager != NULL;
+}
+
 #else /* !GDK_WINDOWING_WAYLAND */
 
 /* X11下依旧走原逻辑 本patch不应该生效 */
@@ -267,6 +284,11 @@ void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
 
 void gxde_clear_blur(GdkWindow* window) {
     (void) window;
+}
+
+int gxde_blur_available(GdkDisplay* display) {
+    (void) display;
+    return 0;
 }
 
 #endif

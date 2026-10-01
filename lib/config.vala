@@ -142,7 +142,6 @@ namespace Config {
                 config_file.set_boolean("advanced", "audible_bell", false);
                 config_file.set_boolean("advanced", "always_hide_resize_grip", false);
                 config_file.set_boolean("advanced", "allow_hyperlink", false);
-                config_file.set_boolean("advanced", "prefer_deepin_menu", true);
 
                 config_file.set_string("advanced", "background_image", "");
 
@@ -343,7 +342,6 @@ namespace Config {
             check_boolean("advanced", "audible_bell", false);
             check_boolean("advanced", "always_hide_resize_grip", false);
             check_boolean("advanced", "allow_hyperlink", false);
-            check_boolean("advanced", "prefer_deepin_menu", true);
 
             check_boolean("advanced", "scroll_on_key", true);
             check_boolean("advanced", "scroll_on_output", false);

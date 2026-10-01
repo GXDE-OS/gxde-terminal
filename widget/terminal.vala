@@ -191,7 +191,7 @@ namespace Widgets {
                         focus_term();
 
                         uri_at_right_press = uri;
-                        show_menu((int) event.x_root, (int) event.y_root);
+                        show_menu(event);
 
                         return false;
                     }
@@ -335,7 +335,8 @@ namespace Widgets {
             return in_remote_server;
         }
 
-        public void show_menu(int x, int y) {
+        // event 为空时在相对终端的 (x, y) 处弹出。
+        public void show_menu(Gdk.Event? event, int x = 0, int y = 0) {
             bool in_quake_window = this.get_toplevel().get_type().is_a(typeof(Widgets.QuakeWindow));
 
             // Set variable 'show_quake_menu' to true if terminal's window is quake window.
@@ -460,12 +461,14 @@ namespace Widgets {
             menu_content.append(new Menu.MenuItem("", ""));
             menu_content.append(new Menu.MenuItem("preference", _("Settings")));
 
-            var window = ((Widgets.Window) get_toplevel());
             menu = new Menu.Menu();
             menu.click_item.connect(handle_menu_item_click);
             menu.destroy.connect(handle_menu_destroy);
-            menu.set_prefer_deepin_menu(window.config.config_file.get_boolean("advanced", "prefer_deepin_menu"));
-            menu.popup_at_position(menu_content, x, y);
+            if (event != null) {
+                menu.popup_at_pointer(menu_content, term, event);
+            } else {
+                menu.popup_at_rect(menu_content, term, x, y, null);
+            }
 
         }
 
@@ -877,24 +880,23 @@ namespace Widgets {
                 Widgets.ConfigWindow parent_window = (Widgets.ConfigWindow) term.get_toplevel();
 
                 if (keyname == "Menu") {
+                    // 用相对终端控件的指针位置（Wayland 下没有全局坐标），指针不在终端内时居中弹出。
                     int pointer_x, pointer_y;
-                    Utils.get_pointer_position(out pointer_x, out pointer_y);
+                    var pointer = term.get_display().get_default_seat().get_pointer();
+                    term.get_window().get_device_position(pointer, out pointer_x, out pointer_y, null);
 
-                    int window_width, window_height;
-                    ((ConfigWindow) get_toplevel()).get_size(out window_width, out window_height);
+                    Gtk.Allocation term_rect;
+                    term.get_allocation(out term_rect);
 
-                    int window_x, window_y;
-                    ((ConfigWindow) get_toplevel()).get_window().get_origin(out window_x, out window_y);
-
-                    if (pointer_x < window_x || pointer_x > window_x + window_width) {
-                        pointer_x = window_x + window_width / 2;
+                    if (pointer_x < 0 || pointer_x > term_rect.width) {
+                        pointer_x = term_rect.width / 2;
                     }
 
-                    if (pointer_y < window_y || pointer_y > window_y + window_height) {
-                        pointer_y = window_y + window_height / 2;
+                    if (pointer_y < 0 || pointer_y > term_rect.height) {
+                        pointer_y = term_rect.height / 2;
                     }
 
-                    show_menu(pointer_x, pointer_y);
+                    show_menu(null, pointer_x, pointer_y);
 
                     return true;
                 }

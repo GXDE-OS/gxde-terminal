@@ -32,7 +32,7 @@ namespace Widgets {
             button_press_event.connect((w, e) => {
                     if (Utils.is_right_button(e)) {
                         menu = new Widgets.EntryMenu();
-                        menu.create_entry_menu(this, (int) e.x_root, (int) e.y_root);
+                        menu.create_entry_menu(this, e);
 
                         return true;
                     }

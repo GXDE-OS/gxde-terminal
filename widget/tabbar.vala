@@ -292,7 +292,7 @@ namespace Widgets {
             }
         }
 
-        private void show_tab_menu(int x, int y, int tab_index, int tab_id) {
+        private void show_tab_menu(Gdk.Event event, int tab_index, int tab_id) {
             var menu_content = new GLib.List<Menu.MenuItem>();
             menu_content.append(new Menu.MenuItem("close_tab", _("Close tab")));
             menu_content.append(new Menu.MenuItem("close_other_tabs", _("Close other tabs"), false, false, tab_list.size >= 2));
@@ -301,9 +301,7 @@ namespace Widgets {
             context_menu = new Menu.Menu();
             context_menu.click_item.connect((item_id) => handle_tab_menu_click(item_id, tab_index, tab_id));
             context_menu.destroy.connect(() => { context_menu = null; });
-            var window = (Widgets.ConfigWindow) get_toplevel();
-            context_menu.set_prefer_deepin_menu(window.config.config_file.get_boolean("advanced", "prefer_deepin_menu"));
-            context_menu.popup_at_position(menu_content, x, y);
+            context_menu.popup_at_pointer(menu_content, this, event);
         }
 
         private void handle_tab_menu_click(string item_id, int tab_index, int tab_id) {
@@ -367,7 +365,7 @@ namespace Widgets {
             if (event.button == Gdk.BUTTON_SECONDARY) {
                 int tab_index = get_tab_index_at_x((int) event.x);
                 if (tab_index != -1) {
-                    show_tab_menu((int) event.x_root, (int) event.y_root, tab_index, tab_list.get(tab_index));
+                    show_tab_menu(event, tab_index, tab_list.get(tab_index));
                     return true;
                 }
             }
