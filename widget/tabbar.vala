@@ -45,6 +45,19 @@ namespace Widgets {
         private Cairo.ImageSurface close_press_surface;
         private bool draw_hover = false;
         private bool is_button_press = false;
+        private bool is_dragging_tab = false;
+        private bool press_on_tab_body = false;
+        private int drag_tab_index = -1;
+        private int drag_tab_id = -1;
+        private int drag_start_x = 0;
+        private const int DRAG_THRESHOLD = 4;
+        private HashMap<int, double?> tab_current_x = new HashMap<int, double?>();
+        private HashMap<int, double?> tab_target_x = new HashMap<int, double?>();
+        private bool tab_animating = false;
+        private double tab_anim_last_time = 0;
+        private double drag_grab_offset = 0;
+        private const double TAB_ANIM_TAU = 0.05;
+        private const double TAB_ANIM_THRESHOLD = 0.5;
         private double draw_scale = 1.0;
         private int add_button_width = 50;
         private int button_press_x = 0;
@@ -64,6 +77,7 @@ namespace Widgets {
         public Gdk.RGBA text_hover_dark_color;
         public Gdk.RGBA text_hover_light_color;
         public Gdk.RGBA text_light_color;
+        private Gdk.RGBA tabbar_bg_color = Gdk.RGBA();
         public HashMap<int, string> tab_name_map;
         public Pango.FontDescription font_description;
         public bool allowed_add_tab = true;
@@ -72,6 +86,10 @@ namespace Widgets {
         public int hover_clip_right_offset = 6;
         public int min_tab_width = 70;
         public int tab_index = 0;
+
+        public bool is_pressing_tab {
+            get { return press_on_tab_body; }
+        }
 
         public signal void press_tab(int tab_index, int tab_id);
         public signal void update_tab_underline(int x, int width);
@@ -156,6 +174,8 @@ namespace Widgets {
         public void reset() {
             tab_list = new ArrayList<int>();
             tab_name_map = new HashMap<int, string>();
+            tab_current_x.clear();
+            tab_target_x.clear();
             tab_index = 0;
         }
 
@@ -163,9 +183,7 @@ namespace Widgets {
             tab_list.add(tab_id);
             tab_name_map.set(tab_id, tab_name);
 
-            update_tab_scale();
-
-            queue_draw();
+            reconcile_tab_positions(true);
         }
 
         public void rename_tab(int tab_id, string tab_name) {
@@ -175,9 +193,7 @@ namespace Widgets {
                 update_window_title(tab_name);
             }
 
-            update_tab_scale();
-
-            queue_draw();
+            reconcile_tab_positions(false);
         }
 
         public void highlight_tab(int tab_id) {
@@ -259,6 +275,8 @@ namespace Widgets {
 
             tab_list.remove_at(index);
             tab_name_map.unset(tab_id);
+            tab_current_x.unset(tab_id);
+            tab_target_x.unset(tab_id);
 
             if (tab_list.size == 0) {
                 tab_index = 0;
@@ -266,15 +284,11 @@ namespace Widgets {
                 tab_index = tab_list.size - 1;
             }
 
-            update_tab_scale();
-
-            queue_draw();
+            reconcile_tab_positions(true);
         }
 
         public bool on_configure(Gtk.Widget widget, Gdk.EventConfigure event) {
-            update_tab_scale();
-
-            queue_draw();
+            reconcile_tab_positions(false);
 
             return false;
         }
@@ -367,9 +381,115 @@ namespace Widgets {
             return -1;
         }
 
+        public int get_tab_index_at_x(int x) {
+            int draw_x = 0;
+            int counter = 0;
+            foreach (int tab_id in tab_list) {
+                int name_width, name_height;
+                get_text_size(tab_name_map.get(tab_id), out name_width, out name_height);
+                int tab_width = get_tab_width(name_width);
+
+                if (x > draw_x && x < draw_x + tab_width - get_tab_close_button_padding()) {
+                    return counter;
+                }
+
+                draw_x += tab_width;
+                counter++;
+            }
+
+            return -1;
+        }
+
+        public bool try_start_tab_drag(int x) {
+            drag_start_x = x;
+            drag_tab_index = get_tab_index_at_x(x);
+            press_on_tab_body = drag_tab_index != -1;
+            if (press_on_tab_body) {
+                drag_tab_id = tab_list.get(drag_tab_index);
+
+                double left = 0;
+                for (int i = 0; i < drag_tab_index; i++) {
+                    int nw, nh;
+                    get_text_size(tab_name_map.get(tab_list.get(i)), out nw, out nh);
+                    left += get_tab_width(nw);
+                }
+                drag_grab_offset = x - left;
+            } else {
+                drag_tab_id = -1;
+            }
+            is_dragging_tab = false;
+
+            return press_on_tab_body;
+        }
+
+        public void end_tab_drag() {
+            if (is_dragging_tab && drag_tab_id != -1) {
+                int nw, nh;
+                get_text_size(tab_name_map.get(drag_tab_id), out nw, out nh);
+                double w = get_tab_width(nw);
+                double left = clamp_drag_left(hover_x - drag_grab_offset, w);
+                tab_current_x.set(drag_tab_id, left);
+            }
+            is_dragging_tab = false;
+            press_on_tab_body = false;
+            drag_tab_index = -1;
+            drag_tab_id = -1;
+            start_tab_animation();
+            queue_draw();
+        }
+
+        public void reorder_dragged_tab(int x) {
+            if (drag_tab_id == -1) {
+                return;
+            }
+
+            int? current = tab_list.index_of(drag_tab_id);
+            if (current == null) {
+                return;
+            }
+
+            is_dragging_tab = true;
+
+            tab_list.remove_at((int) current);
+
+            int draw_x = 0;
+            int target = tab_list.size;
+            for (int i = 0; i < tab_list.size; i++) {
+                int tab_id = tab_list.get(i);
+                string? name = tab_name_map.get(tab_id);
+                int name_width, name_height;
+                get_text_size(name != null ? name : "", out name_width, out name_height);
+                int tab_width = get_tab_width(name_width);
+
+                if (x < draw_x + tab_width / 2) {
+                    target = i;
+                    break;
+                }
+
+                draw_x += tab_width;
+            }
+
+            tab_list.insert(target, drag_tab_id);
+
+            tab_index = (int) tab_list.index_of(drag_tab_id);
+
+            reconcile_tab_positions(true);
+        }
+
         public bool on_motion_notify(Gtk.Widget widget, Gdk.EventMotion event) {
             draw_hover = true;
             hover_x = (int) event.x;
+
+            if (press_on_tab_body && drag_tab_id != -1) {
+                int dx = (int) event.x - drag_start_x;
+                if (!is_dragging_tab && (dx < 0 ? -dx : dx) < DRAG_THRESHOLD) {
+                    queue_draw();
+                    return false;
+                }
+
+                is_dragging_tab = true;
+                reorder_dragged_tab((int) event.x);
+            }
 
             queue_draw();
 
@@ -410,33 +530,27 @@ namespace Widgets {
             Gtk.Allocation alloc;
             widget.get_allocation(out alloc);
 
+            tabbar_bg_color = get_style_context().get_background_color(Gtk.StateFlags.NORMAL);
+
             bool is_light_theme = ((Widgets.ConfigWindow) get_toplevel()).is_light_theme();
 
-            // Draw tab splitter.
-            int draw_x = 0;
-            int counter = 0;
+            update_tab_targets();
+
+            // Draw tab splitters at each tab's animated position.
             foreach (int tab_id in tab_list) {
-                int name_width, name_height;
-                get_text_size(tab_name_map.get(tab_id), out name_width, out name_height);
+                if (is_dragging_tab && tab_id == drag_tab_id) {
+                    continue;
+                }
 
-                int tab_width = get_tab_width(name_width);
-
+                double drawn_x = get_drawn_x(tab_id);
                 if (is_light_theme) {
                     Utils.set_context_color(cr, tab_split_light_color);
                 } else {
                     Utils.set_context_color(cr, tab_split_dark_color);
                 }
-                if (counter < tab_list.size) {
-                    Draw.draw_rectangle(cr, draw_x, 0, tab_split_width, height);
-                }
-
-                draw_x += tab_width;
-
-                counter++;
+                Draw.draw_rectangle(cr, (int) drawn_x, 0, tab_split_width, height);
             }
 
-            draw_x = 0;
-            counter = 0;
             try {
                 text_active_color = Utils.hex_to_rgba(((Widgets.ConfigWindow) this.get_toplevel()).config.config_file.get_string("theme", "tab"));
             } catch (Error e) {
@@ -448,106 +562,40 @@ namespace Widgets {
             foreach (int tab_id in tab_list) {
                 int name_width, name_height;
                 var layout = get_text_size(tab_name_map.get(tab_id), out name_width, out name_height);
-
                 int tab_width = get_tab_width(name_width);
 
                 max_tab_height = int.max(max_tab_height, name_height);
-
-                if (tab_highlight_map.has_key(tab_id)) {
-                    tab_text_color = text_highlight_color;
-                } else {
-                    if (is_light_theme) {
-                        tab_text_color = text_light_color;
-                    } else {
-                        tab_text_color = text_dark_color;
-                    }
-                }
-
-                if (counter == tab_index) {
-                    cr.save();
-                    clip_rectangle(cr, draw_x, 0, tab_width, height);
-
-                    update_tab_underline(draw_x + 1, tab_width - 1);
-
-                    cr.restore();
-
-                    tab_text_color = text_active_color;
-                } else {
-                    var is_hover = false;
-
-                    if (draw_hover) {
-                        if (hover_x > draw_x && hover_x < draw_x + tab_width) {
-                            is_hover = true;
-                        }
-                    }
-
-                    if (is_hover) {
-                        cr.save();
-                        clip_rectangle(cr, draw_x, 0, tab_width + 1, height);
-
-                        if (is_light_theme) {
-                            Utils.set_context_color(cr, tab_split_light_color);
-                        } else {
-                            Utils.set_context_color(cr, tab_split_dark_color);
-                        }
-                        Draw.draw_rectangle(cr, draw_x, 0, tab_width + 1, height);
-
-                        cr.restore();
-
-                        if (is_light_theme) {
-                            tab_text_color = text_hover_light_color;
-                        } else {
-                            tab_text_color = text_hover_dark_color;
-                        }
-                    } else {
-                        cr.set_source_rgba(0, 0, 0, 0);
-                        Draw.draw_rectangle(cr, draw_x, 0, tab_width, height);
-                    }
-                }
-
-                if (draw_hover) {
-                    if (hover_x > draw_x && hover_x < draw_x + tab_width) {
-                        if (hover_x > draw_x + tab_width - get_tab_close_button_padding()) {
-                            if (is_button_press) {
-                                Draw.draw_surface(cr, close_press_surface, draw_x + tab_width - get_tab_close_button_padding(), 0, 0, height);
-                            } else {
-                                Draw.draw_surface(cr, close_hover_surface, draw_x + tab_width - get_tab_close_button_padding(), 0, 0, height);
-                            }
-                        } else {
-                            Draw.draw_surface(cr, close_normal_surface, draw_x + tab_width - get_tab_close_button_padding(), 0, 0, height);
-                        }
-                    }
-                }
-
-                // Draw tab text.
-                cr.save();
-                clip_rectangle(cr, draw_x + get_tab_text_padding(), 0, tab_width - get_tab_text_padding() * 2, height);
-
-                Utils.set_context_color(cr, tab_text_color);
-                var is_hover = false;
-                if (draw_hover) {
-                    if (hover_x > draw_x && hover_x < draw_x + tab_width) {
-                        is_hover = true;
-                    }
-                }
-
-                int text_render_y = (alloc.height - max_tab_height) / 2;
-                if (is_hover) {
-                    cr.rectangle(draw_x, text_render_y, tab_width - get_tab_close_button_padding() - hover_clip_right_offset, height);
-                    cr.clip();
-                }
-                Draw.draw_layout(cr, layout, draw_x + get_tab_text_padding(), text_render_y);
-                cr.restore();
-
-                draw_x += tab_width;
-
                 max_tab_width = int.max(max_tab_width, tab_width);
 
-                counter++;
+                if (is_dragging_tab && tab_id == drag_tab_id) {
+                    continue;
+                }
+
+                bool is_active = (tab_index == tab_list.index_of(tab_id));
+                draw_tab_body(cr, tab_id, (int) get_drawn_x(tab_id), tab_width, alloc, is_light_theme, layout, max_tab_height, is_active, false);
+            }
+
+            // Draw the dragged tab on top so it can follow the cursor smoothly.
+            if (is_dragging_tab) {
+                int tab_id = drag_tab_id;
+                int name_width, name_height;
+                var layout = get_text_size(tab_name_map.get(tab_id), out name_width, out name_height);
+                int tab_width = get_tab_width(name_width);
+                bool is_active = (tab_index == tab_list.index_of(tab_id));
+                draw_tab_body(cr, tab_id, (int) get_drawn_x(tab_id), tab_width, alloc, is_light_theme, layout, max_tab_height, is_active, true);
             }
 
             // Don't allowed add tab when scale too small.
             allowed_add_tab = max_tab_width > min_tab_width || draw_scale >= 1.0;
+
+            int draw_x = 0;
+            if (tab_list.size > 0) {
+                int last_id = tab_list.get(tab_list.size - 1);
+                int lnw, lnh;
+                get_text_size(tab_name_map.get(last_id), out lnw, out lnh);
+                int last_tab_width = get_tab_width(lnw);
+                draw_x = (int) ((tab_target_x.get(last_id) ?? 0.0) + last_tab_width);
+            }
 
             if (hover_x > draw_x && hover_x < draw_x + add_button_width) {
                 if (is_button_press) {
@@ -572,6 +620,185 @@ namespace Widgets {
             }
 
             return true;
+        }
+
+        private double clamp_drag_left(double raw_left, double w) {
+            double layout_right = w;
+            if (tab_list.size > 0) {
+                int last_id = tab_list.get(tab_list.size - 1);
+                int lnw, lnh;
+                get_text_size(tab_name_map.get(last_id), out lnw, out lnh);
+                double last_w = get_tab_width(lnw);
+                double? t = tab_target_x.get(last_id);
+                layout_right = (t ?? 0.0) + last_w;
+            }
+            double right = double.max(0, layout_right - w);
+            return double.max(0, double.min(raw_left, right));
+        }
+
+        private double get_drawn_x(int tab_id) {
+            if (is_dragging_tab && tab_id == drag_tab_id) {
+                int name_width, name_height;
+                get_text_size(tab_name_map.get(tab_id), out name_width, out name_height);
+                double w = get_tab_width(name_width);
+                return clamp_drag_left(hover_x - drag_grab_offset, w);
+            }
+
+            double? current = tab_current_x.get(tab_id);
+            if (current == null) {
+                double? target = tab_target_x.get(tab_id);
+                double t = target ?? 0.0;
+                tab_current_x.set(tab_id, t);
+                return t;
+            }
+            return current;
+        }
+
+        private void update_tab_targets() {
+            double x = 0;
+            foreach (int tab_id in tab_list) {
+                int name_width, name_height;
+                get_text_size(tab_name_map.get(tab_id), out name_width, out name_height);
+                double tw = get_tab_width(name_width);
+                tab_target_x.set(tab_id, x);
+                if (!tab_current_x.has_key(tab_id)) {
+                    tab_current_x.set(tab_id, x);
+                }
+                x += tw;
+            }
+        }
+
+        private void reconcile_tab_positions(bool animate) {
+            update_tab_scale();
+            update_tab_targets();
+
+            if (animate) {
+                start_tab_animation();
+            } else {
+                foreach (int tab_id in tab_list) {
+                    double? t = tab_target_x.get(tab_id);
+                    tab_current_x.set(tab_id, t ?? 0.0);
+                }
+            }
+
+            queue_draw();
+        }
+
+        private void start_tab_animation() {
+            update_tab_targets();
+            if (!tab_animating) {
+                tab_animating = true;
+                tab_anim_last_time = 0;
+                add_tick_callback(on_tab_anim_frame);
+            }
+        }
+
+        private bool on_tab_anim_frame(Gtk.Widget widget, Gdk.FrameClock frame_clock) {
+            double now = (double) frame_clock.get_frame_time() / 1000000.0;
+            double dt = now - tab_anim_last_time;
+            tab_anim_last_time = now;
+            if (dt <= 0) {
+                dt = 0.016;
+            } else if (dt > 0.05) {
+                dt = 0.05;
+            }
+
+            double k = 1.0 - Math.exp(-dt / TAB_ANIM_TAU);
+            bool active = false;
+            foreach (int tab_id in tab_list) {
+                if (is_dragging_tab && tab_id == drag_tab_id) {
+                    continue;
+                }
+
+                double? target = tab_target_x.get(tab_id);
+                if (target == null) {
+                    continue;
+                }
+                double tgt = target ?? 0.0;
+
+                double current = tab_current_x.get(tab_id) ?? 0.0;
+                double next = current + (tgt - current) * k;
+                if (Math.fabs(next - tgt) > TAB_ANIM_THRESHOLD) {
+                    active = true;
+                } else {
+                    next = tgt;
+                }
+                tab_current_x.set(tab_id, next);
+            }
+
+            queue_draw();
+
+            if (!active) {
+                tab_animating = false;
+                return false;
+            }
+            return true;
+        }
+
+        private void draw_tab_body(Cairo.Context cr, int tab_id, int dx, int tab_width,
+                                   Gtk.Allocation alloc, bool is_light_theme,
+                                   Pango.Layout layout, int max_tab_height,
+                                   bool is_active, bool is_dragged) {
+            if (tab_highlight_map.has_key(tab_id)) {
+                tab_text_color = text_highlight_color;
+            } else {
+                tab_text_color = is_light_theme ? text_light_color : text_dark_color;
+            }
+
+            if (is_dragged) {
+                // Opaque background so the dragged tab covers the tabs beneath it
+                // instead of letting their text overlap with the dragged tab.
+                tabbar_bg_color.alpha = 1.0;
+                Utils.set_context_color(cr, tabbar_bg_color);
+                Draw.draw_rectangle(cr, dx, 0, tab_width, height);
+                tab_text_color = text_active_color;
+            } else if (is_active) {
+                tab_text_color = text_active_color;
+            } else if (draw_hover && hover_x > dx && hover_x < dx + tab_width) {
+                cr.save();
+                clip_rectangle(cr, dx, 0, tab_width + 1, height);
+                Utils.set_context_color(cr, is_light_theme ? tab_split_light_color : tab_split_dark_color);
+                Draw.draw_rectangle(cr, dx, 0, tab_width + 1, height);
+                cr.restore();
+                tab_text_color = is_light_theme ? text_hover_light_color : text_hover_dark_color;
+            } else {
+                cr.set_source_rgba(0, 0, 0, 0);
+                Draw.draw_rectangle(cr, dx, 0, tab_width, height);
+            }
+
+            if (is_active || is_dragged) {
+                cr.save();
+                clip_rectangle(cr, dx, 0, tab_width, height);
+                update_tab_underline(dx + 1, tab_width - 1);
+                cr.restore();
+            }
+
+            if (!is_dragged && draw_hover) {
+                if (hover_x > dx && hover_x < dx + tab_width) {
+                    if (hover_x > dx + tab_width - get_tab_close_button_padding()) {
+                        if (is_button_press) {
+                            Draw.draw_surface(cr, close_press_surface, dx + tab_width - get_tab_close_button_padding(), 0, 0, height);
+                        } else {
+                            Draw.draw_surface(cr, close_hover_surface, dx + tab_width - get_tab_close_button_padding(), 0, 0, height);
+                        }
+                    } else {
+                        Draw.draw_surface(cr, close_normal_surface, dx + tab_width - get_tab_close_button_padding(), 0, 0, height);
+                    }
+                }
+            }
+
+            cr.save();
+            clip_rectangle(cr, dx + get_tab_text_padding(), 0, tab_width - get_tab_text_padding() * 2, height);
+
+            Utils.set_context_color(cr, tab_text_color);
+            bool is_hover = draw_hover && !is_dragged && hover_x > dx && hover_x < dx + tab_width;
+            int text_render_y = (alloc.height - max_tab_height) / 2;
+            if (is_hover) {
+                cr.rectangle(dx, text_render_y, tab_width - get_tab_close_button_padding() - hover_clip_right_offset, height);
+                cr.clip();
+            }
+            Draw.draw_layout(cr, layout, dx + get_tab_text_padding(), text_render_y);
+            cr.restore();
         }
 
         public int get_tab_render_width(int name_width) {

@@ -29,6 +29,10 @@ using Widgets;
 namespace Widgets {
     public class WindowEventArea : Gtk.EventBox {
         public FilterDoubleClick? filter_double_click_callback = null;
+        public FilterDoubleClick? filter_move_callback = null;
+        public Widgets.Tabbar? drag_tabbar = null;
+        private bool is_tab_drag_candidate = false;
+        private bool is_tab_dragging = false;
         public Gtk.Container drawing_area;
         public Gtk.Widget? child_before_leave;
         public bool is_double_clicked = false;
@@ -87,11 +91,24 @@ namespace Widgets {
                         ((Gdk.Event*) event)->put();
                     }
 
+                    // Backup driver: while a tab drag is in progress, reorder the
+                    // tabbar based on the current pointer position. The tabbar's own
+                    // motion handler also does this; keeping this guarantees the
+                    // reorder works even if forwarded motion is not delivered.
+                    if (is_tab_drag_candidate && drag_tabbar != null && is_press) {
+                        int lx, ly;
+                        this.translate_coordinates(drag_tabbar, (int) e.x, (int) e.y, out lx, out ly);
+                        drag_tabbar.reorder_dragged_tab(lx);
+                        is_tab_dragging = true;
+                    }
+
                     return true;
                 });
 
             button_press_event.connect((w, e) => {
                     is_press = true;
+                    is_tab_drag_candidate = false;
+                    is_tab_dragging = false;
 
                     e.device.get_position(null, out press_x, out press_y);
 
@@ -103,6 +120,11 @@ namespace Widgets {
                             e.device.get_position(null, out pointer_x, out pointer_y);
 
                             if (pointer_x != press_x || pointer_y != press_y) {
+                                // Block window movement when the user is dragging a tab
+                                // in the tabbar so that the gesture reorders tabs instead.
+                                if (is_tab_drag_candidate || (filter_move_callback != null && filter_move_callback((int) e.x, (int) e.y))) {
+                                    return false;
+                                }
                                 Utils.move_window(this, e);
                                 return false;
                             } else {
@@ -134,6 +156,13 @@ namespace Widgets {
                         ((Gdk.Event*) event)->put();
                     }
 
+                    // Mark a potential tab drag if the press started on a tab body.
+                    if (drag_tabbar != null) {
+                        int lx, ly;
+                        this.translate_coordinates(drag_tabbar, (int) e.x, (int) e.y, out lx, out ly);
+                        is_tab_drag_candidate = drag_tabbar.try_start_tab_drag(lx);
+                    }
+
                     if (e.type == Gdk.EventType.BUTTON_PRESS) {
                         is_double_clicked = true;
 
@@ -158,6 +187,13 @@ namespace Widgets {
 
             button_release_event.connect((w, e) => {
                     is_press = false;
+
+                    // Finalize a tab drag if one was in progress.
+                    if (drag_tabbar != null) {
+                        drag_tabbar.end_tab_drag();
+                    }
+                    is_tab_drag_candidate = false;
+                    is_tab_dragging = false;
 
                     var child = get_child_at_pos(drawing_area, (int) e.x, (int) e.y);
                     if (child != null) {

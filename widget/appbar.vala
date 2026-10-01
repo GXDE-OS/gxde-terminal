@@ -195,6 +195,13 @@ namespace Widgets {
                     return tabbar.is_at_tab_close_button((int) tabbar_x) != -1;
                 });
 
+            // When a tab in the tabbar is being dragged, block the window move
+            // gesture so the drag reorders tabs instead of moving the window.
+            event_area.filter_move_callback = ((x, y) => {
+                    return tabbar.is_pressing_tab;
+                });
+            event_area.drag_tabbar = tabbar;
+
             add(box);
             add_overlay(event_area);
 
