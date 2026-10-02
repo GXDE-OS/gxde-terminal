@@ -55,7 +55,6 @@ namespace Menu {
     // 用 GTK 菜单复刻 deepin-menu 的外观，尺寸与颜色取自 dstyle 插件 dlight2/ddark2 与 DTK 的 DMenuEffect。
     public class Menu : Object {
         private const int RADIUS = 8;
-        private const int ITEM_HEIGHT = 22;
         private const int CHECK_X = 10;
         private const int TEXT_X = 27;
         private const int TEXT_RIGHT_PADDING = 44;
@@ -236,7 +235,6 @@ namespace Menu {
             box.pack_end(arrow_image, false, false, 0);
 
             item.add(box);
-            item.set_size_request(-1, ITEM_HEIGHT);
             item.sensitive = menu_item.menu_item_sensitive;
 
             bool has_submenu = menu_item.menu_item_submenu.length() > 0;
@@ -374,7 +372,7 @@ namespace Menu {
             menu.gxde-menu.dark { background-color: #202020; }
             menu.gxde-menu.dark.blur { background-color: rgba(32, 32, 32, $(BLUR_BACKGROUND_ALPHA)); }
             menu.gxde-menu menuitem {
-                min-height: $(ITEM_HEIGHT)px;
+                min-height: 2em;
                 padding: 0;
                 margin: 0;
                 border: none;
@@ -382,10 +380,13 @@ namespace Menu {
                 background: none;
                 box-shadow: none;
                 $font_css
+                font-weight: normal;
             }
             menu.gxde-menu menuitem label {
                 color: inherit;
                 $font_css
+                font-weight: normal;
+                text-shadow: 0.1px 0 currentColor, -0.1px 0 currentColor, 0 0.1px currentColor, 0 -0.1px currentColor;
             }
             menu.gxde-menu menuitem arrow {
                 -gtk-icon-source: none;
@@ -396,7 +397,7 @@ namespace Menu {
             }
             menu.gxde-menu separator {
                 min-height: 1px;
-                margin: 2px 5px;
+                margin: 3px 5px;
                 padding: 0;
             }
             menu.gxde-menu.light menuitem { color: rgb(25, 25, 25); }
