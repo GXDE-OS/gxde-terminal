@@ -166,6 +166,14 @@ namespace Menu {
 
             var toplevel = menu.get_toplevel();
             toplevel.get_style_context().add_class("gxde-menu-window");
+
+            var screen = toplevel.get_screen();
+            if (screen.is_composited()) {
+                toplevel.set_visual(screen.get_rgba_visual());
+            } else {
+                menu.get_style_context().add_class("square");
+            }
+
             menu.size_allocate.connect_after((w, a) => {
                     update_surface(menu);
                 });
@@ -360,6 +368,7 @@ namespace Menu {
                 /* 上下留白不小于圆角半径，首末项高亮才不会顶进圆角里 */
                 padding: $(RADIUS)px 0;
             }
+            menu.gxde-menu.square { border-radius: 0; }
             menu.gxde-menu.light { background-color: rgb(255, 255, 255); }
             menu.gxde-menu.light.blur { background-color: rgba(255, 255, 255, $(BLUR_BACKGROUND_ALPHA)); }
             menu.gxde-menu.dark { background-color: #202020; }

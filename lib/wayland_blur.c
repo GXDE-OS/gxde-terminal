@@ -176,7 +176,7 @@ static int resolve_window(GdkWindow* window, struct wl_display** display_out,
     return 1;
 }
 
-void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
+static void wl_set_blur_region(GdkWindow* window, int x, int y, int width,
         int height, int radius) {
     struct wl_display* display;
     struct wl_surface* surface;
@@ -222,7 +222,7 @@ void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
     }
 }
 
-void gxde_clear_blur(GdkWindow* window) {
+static void wl_clear_blur(GdkWindow* window) {
     struct wl_display* display;
     struct wl_surface* surface;
     if (!resolve_window(window, &display, &surface)) {
@@ -252,7 +252,7 @@ void gxde_clear_blur(GdkWindow* window) {
     }
 }
 
-int gxde_blur_available(GdkDisplay* gdk_display) {
+static int wl_blur_available(GdkDisplay* gdk_display) {
     if (gdk_display == NULL || !GDK_IS_WAYLAND_DISPLAY(gdk_display)) {
         return 0;
     }
@@ -269,26 +269,143 @@ int gxde_blur_available(GdkDisplay* gdk_display) {
         || g_treeland_manager != NULL;
 }
 
-#else /* !GDK_WINDOWING_WAYLAND */
+#endif /* GDK_WINDOWING_WAYLAND */
 
-/* X11下依旧走原逻辑 本patch不应该生效 */
+#ifdef GDK_WINDOWING_X11
+#include <gdk/gdkx.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
+
+static int x11_list_contains_atom(Display* xdisplay, Window window,
+        Atom list_atom, Atom target) {
+    Atom type;
+    int format;
+    unsigned long count, remaining;
+    unsigned char* data = NULL;
+    int found = 0;
+
+    if (XGetWindowProperty(xdisplay, window, list_atom, 0, 4096, False,
+            XA_ATOM, &type, &format, &count, &remaining, &data) == Success
+            && data != NULL) {
+        Atom* atoms = (Atom*) data;
+        for (unsigned long i = 0; i < count; i++) {
+            if (atoms[i] == target) {
+                found = 1;
+                break;
+            }
+        }
+    }
+
+    if (data != NULL) {
+        XFree(data);
+    }
+    return found;
+}
+
+static int x11_blur_available(GdkDisplay* gdk_display) {
+    if (!gdk_screen_is_composited(gdk_display_get_default_screen(gdk_display))) {
+        return 0;
+    }
+
+    Display* xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display);
+    Window root = DefaultRootWindow(xdisplay);
+
+    Atom net_supported = XInternAtom(xdisplay, "_NET_SUPPORTED", False);
+    Atom deepin_blur = XInternAtom(xdisplay, "_NET_WM_DEEPIN_BLUR_REGION_ROUNDED", False);
+    if (x11_list_contains_atom(xdisplay, root, net_supported, deepin_blur)) {
+        return 1;
+    }
+
+    Atom kde_blur = XInternAtom(xdisplay, "_KDE_NET_WM_BLUR_BEHIND_REGION", False);
+    int count = 0;
+    Atom* properties = XListProperties(xdisplay, root, &count);
+    int found = 0;
+    for (int i = 0; i < count; i++) {
+        if (properties[i] == kde_blur) {
+            found = 1;
+            break;
+        }
+    }
+    if (properties != NULL) {
+        XFree(properties);
+    }
+    return found;
+}
+
+static void x11_set_blur_region(GdkWindow* window, int x, int y, int width,
+        int height, int radius) {
+    Display* xdisplay = GDK_WINDOW_XDISPLAY(window);
+    Window xid = GDK_WINDOW_XID(window);
+    int scale = gdk_window_get_scale_factor(window);
+
+    long deepin_data[6] = { x * scale, y * scale, width * scale, height * scale,
+                            radius * scale, radius * scale };
+    long kde_data[4] = { x * scale, y * scale, width * scale, height * scale };
+
+    XChangeProperty(xdisplay, xid,
+        XInternAtom(xdisplay, "_NET_WM_DEEPIN_BLUR_REGION_ROUNDED", False),
+        XA_CARDINAL, 32, PropModeReplace, (unsigned char*) deepin_data, 6);
+    XChangeProperty(xdisplay, xid,
+        XInternAtom(xdisplay, "_KDE_NET_WM_BLUR_BEHIND_REGION", False),
+        XA_CARDINAL, 32, PropModeReplace, (unsigned char*) kde_data, 4);
+    XFlush(xdisplay);
+}
+
+static void x11_clear_blur(GdkWindow* window) {
+    Display* xdisplay = GDK_WINDOW_XDISPLAY(window);
+    Window xid = GDK_WINDOW_XID(window);
+
+    XDeleteProperty(xdisplay, xid,
+        XInternAtom(xdisplay, "_NET_WM_DEEPIN_BLUR_REGION_ROUNDED", False));
+    XDeleteProperty(xdisplay, xid,
+        XInternAtom(xdisplay, "_KDE_NET_WM_BLUR_BEHIND_REGION", False));
+    XFlush(xdisplay);
+}
+#endif /* GDK_WINDOWING_X11 */
+
 void gxde_set_blur_region(GdkWindow* window, int x, int y, int width,
         int height, int radius) {
-    (void) window;
-    (void) x;
-    (void) y;
-    (void) width;
-    (void) height;
-    (void) radius;
+    if (window == NULL) {
+        return;
+    }
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_WINDOW(window)) {
+        x11_set_blur_region(window, x, y, width, height, radius);
+        return;
+    }
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+    wl_set_blur_region(window, x, y, width, height, radius);
+#endif
 }
 
 void gxde_clear_blur(GdkWindow* window) {
-    (void) window;
+    if (window == NULL) {
+        return;
+    }
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_WINDOW(window)) {
+        x11_clear_blur(window);
+        return;
+    }
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+    wl_clear_blur(window);
+#endif
 }
 
 int gxde_blur_available(GdkDisplay* display) {
-    (void) display;
-    return 0;
-}
-
+    if (display == NULL) {
+        return 0;
+    }
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_DISPLAY(display)) {
+        return x11_blur_available(display);
+    }
 #endif
+#ifdef GDK_WINDOWING_WAYLAND
+    return wl_blur_available(display);
+#else
+    return 0;
+#endif
+}
