@@ -140,14 +140,14 @@ auto_install_deps() {
         return
     fi
     echo "准备按 debian/control 安装构建依赖，请稍候..."
-    sudo apt-get update
+    sudo apt-get update || return $?
 
     echo ""
     echo ">>> 注意：以下 apt 操作未加 -y，请仔细核对「将要安装 / 将要卸载」，"
     echo ">>>       确认不会有任何 GXDE 系统包被冲突卸载！！"
     echo ""
     # apt-get build-dep 直接解析本目录 debian/control 的 Build-Depends
-    sudo apt-get build-dep "$PROJ_ROOT"
+    sudo apt-get build-dep "$PROJ_ROOT" || return $?
     echo "构建依赖安装完成。"
 }
 
@@ -211,7 +211,12 @@ exec_build() {
     cd "$PROJ_ROOT" || exit 1
     prefetch_subprojects
     echo "开始使用 dpkg-buildpackage 构建&打包(参数: ${dpkg_args[*]})..."
-    dpkg-buildpackage "${dpkg_args[@]}"
+    local build_status=0
+    dpkg-buildpackage "${dpkg_args[@]}" || build_status=$?
+    if (( build_status != 0 )); then
+        echo "错误: dpkg-buildpackage 失败(退出码: $build_status)，请检查上面的错误输出。" >&2
+        return "$build_status"
+    fi
 
     echo "构建完成。Deb 包应位于上级目录:"
     ls -1 ../"${PKG_NAME}"*_*.deb 2>/dev/null || echo "  (未找到 .deb，请检查上面的构建输出)"
@@ -232,5 +237,5 @@ if [[ "$ACT_CLEANUPS" == true ]]; then
 fi
 
 check_toolchains
-auto_install_deps
+auto_install_deps || exit $?
 exec_build
