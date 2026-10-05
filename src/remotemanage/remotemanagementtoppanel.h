@@ -74,6 +74,9 @@ signals:
     void focusOut();
     void doConnectServer(ServerConfig *curServer);
 
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
 private:
     // 远程主界面
     RemoteManagementPanel *m_remoteManagementPanel = nullptr;
