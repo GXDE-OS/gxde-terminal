@@ -129,7 +129,17 @@ namespace Widgets {
                 });
             term.exit.connect((term) => {
                     remove_all_panels();
-                    close_term(term);
+
+                    // Defer the terminal destruction: `exit` is emitted from within
+                    // the Vte `child-exited` signal emission. Destroying the
+                    // Vte.Terminal synchronously here makes VTE access the freed
+                    // widget during signal emission cleanup, causing a
+                    // `gtk_widget_get_mapped` assertion failure and a segfault
+                    // (commonly hit when a remote/ssh session exits).
+                    GLib.Idle.add(() => {
+                            close_term(term);
+                            return false;
+                        });
                 });
             term.exit_with_bad_code.connect((w, status) => {
                     reset_term(status);
