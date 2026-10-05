@@ -191,6 +191,44 @@ void MainWindow::initUI()
     initPlugins();
     initTabBar();
     initTitleBar();
+    // GXDE uses the terminal theme for the whole header, including window controls.
+    const auto updateChrome = [this]() {
+        auto settings = Settings::instance();
+        QString name = settings->extendColorScheme();
+        if (name.isEmpty()) {
+            name = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::LightType
+                ? QStringLiteral("Light") : QStringLiteral("Dark");
+        }
+        const QString path = QFileInfo(name).isAbsolute()
+            ? name : QStringLiteral(":/gxde-colors/%1.colorscheme").arg(name);
+        QSettings scheme(path, QSettings::IniFormat);
+        const QStringList rgb = scheme.value("Background/Color").toStringList();
+        if (rgb.size() != 3)
+            return;
+        QColor background(rgb.at(0).toInt(), rgb.at(1).toInt(), rgb.at(2).toInt());
+        background.setAlphaF(settings->opacity());
+        for (QWidget *header : {static_cast<QWidget *>(titlebar()), static_cast<QWidget *>(m_titleBar)}) {
+            if (!header)
+                continue;
+            QPalette colors = header->palette();
+            colors.setColor(QPalette::Window, background);
+            colors.setColor(QPalette::Base, background);
+            colors.setColor(QPalette::Button, background);
+            header->setPalette(colors);
+            header->update();
+        }
+        // The embedded bar inherits the DTitlebar background. Quake has its own bar.
+        m_titleBar->setAutoFillBackground(m_isQuakeWindow);
+    };
+    updateChrome();
+    connect(Settings::instance(), &Settings::terminalSettingChanged, this,
+            [updateChrome](const QString &key) {
+        if (key.startsWith("basic.interface."))
+            updateChrome();
+    });
+    connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::themeTypeChanged,
+            this, [this, updateChrome]() { QTimer::singleShot(0, this, updateChrome); });
+
     initWindowAttribute();
     initFileWatcher();
 
@@ -205,6 +243,7 @@ void MainWindow::initWindow()
     setMinimumSize(m_MinWidth, m_MinHeight);
     setEnableBlurWindow(Settings::instance()->backgroundBlur());
     setWindowIcon(QIcon::fromTheme("deepin-terminal"));
+
 
     // Init layout
     m_centralLayout->setContentsMargins(0, 0, 0, 0);
@@ -2609,9 +2648,10 @@ void MainWindow::setThemeCheckItemSlot()
     }
 
     //选中了深色主题项
-    if (THEME_DARK == Settings::instance()->themeStr && THEME_NO == Settings::instance()->extendThemeStr) {
+    if (THEME_DARK == Settings::instance()->themeStr
+        && (THEME_NO == Settings::instance()->extendThemeStr || THEME_DARK == Settings::instance()->extendThemeStr)) {
         Settings::instance()->setColorScheme(THEME_DARK);
-        Settings::instance()->setExtendColorScheme(THEME_NO);
+        Settings::instance()->setExtendColorScheme(THEME_DARK);
         DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::DarkType);
         emit DGuiApplicationHelper::instance()->themeTypeChanged(DGuiApplicationHelper::DarkType);
         return;
@@ -2691,7 +2731,7 @@ void MainWindow::menuHideSetThemeSlot()
         return;
     } else if (currCheckThemeAction == darkThemeAction) {
         Settings::instance()->setColorScheme(THEME_DARK);
-        Settings::instance()->setExtendColorScheme(THEME_NO);
+        Settings::instance()->setExtendColorScheme(THEME_DARK);
         DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::DarkType);
         emit DGuiApplicationHelper::instance()->themeTypeChanged(DGuiApplicationHelper::DarkType);
         return;
@@ -2788,11 +2828,11 @@ void MainWindow::switchThemeAction(QAction *action)
 
         if (Settings::instance()->bSwitchTheme) {
             Settings::instance()->themeStr = THEME_DARK;
-            Settings::instance()->extendThemeStr = THEME_NO;
+            Settings::instance()->extendThemeStr = THEME_DARK;
         }
 
         Settings::instance()->setColorScheme(THEME_DARK);
-        Settings::instance()->setExtendColorScheme(THEME_NO);
+        Settings::instance()->setExtendColorScheme(THEME_DARK);
         DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::DarkType);
         emit DGuiApplicationHelper::instance()->themeTypeChanged(DGuiApplicationHelper::DarkType);
         return;
@@ -3015,7 +3055,20 @@ void NormalWindow::initTitleBar()
 
     titlebar()->setCustomWidget(m_titleBar);
     titlebar()->setTitle("");
-    titlebar()->setIcon(QIcon::fromTheme("deepin-terminal"));
+    titlebar()->setIcon(QIcon(":/logo/gxde-title.svg"));
+    titlebar()->setFixedHeight(WIN_TITLE_BAR_HEIGHT);
+    titlebar()->setSeparatorVisible(false);
+    const QPair<QString, QString> windowButtons[] = {
+        {"DTitlebarDWindowOptionButton", "menu"},
+        {"DTitlebarDWindowMinButton", "min"},
+        {"DTitlebarDWindowMaxButton", "max"},
+        {"DTitlebarDWindowCloseButton", "close"}
+    };
+    for (const auto &entry : windowButtons) {
+        if (auto button = titlebar()->findChild<DIconButton *>(entry.first))
+            applyGxdeWindowButtonStyle(button, entry.second);
+    }
+    setWindowRadius(8);
     titlebar()->setAutoHideOnFullscreen(true);
 
     //设置titlebar焦点策略为不抢占焦点策略，防止点击titlebar后终端失去输入焦点
@@ -3247,7 +3300,7 @@ void QuakeWindow::initTitleBar()
 {
     qCDebug(mainprocess) << "Enter QuakeWindow::initTitleBar";
     // titleba在普通模式和雷神模型不一样的功能
-    m_titleBar = new TitleBar(this);
+    m_titleBar = new TitleBar(this, true);
     m_titleBar->setObjectName("QuakeWindowTitleBar");//Add by ut001000 renfeixiang 2020-08-14
     m_titleBar->setTabBar(m_tabbar);
 

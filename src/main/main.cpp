@@ -13,6 +13,7 @@
 
 
 #include <DApplication>
+#include <DPlatformWindowHandle>
 #include <DLog>
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
 #include <DApplicationSettings>
@@ -26,12 +27,86 @@
 #include <QTime>
 #include <QElapsedTimer>
 #include <QUrl>
+#include <QMenu>
+#include <QStyle>
+#include <QStyleFactory>
+#include <QProxyStyle>
+#include <QPainter>
+#ifdef HAVE_KWINDOWEFFECTS
+#include <KWindowEffects>
+#endif
 
 DWIDGET_USE_NAMESPACE
 
 DCORE_USE_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(mainprocess)
+
+namespace {
+class GxdeMenuProxyStyle : public QProxyStyle
+{
+public:
+    explicit GxdeMenuProxyStyle(QStyle *style) : QProxyStyle(style) {}
+
+    void drawPrimitive(PrimitiveElement element, const QStyleOption *option,
+                       QPainter *painter, const QWidget *widget = nullptr) const override
+    {
+        painter->save();
+        if (element == PE_PanelMenu && widget && widget->property("gxdeMenuBlurFallback").toBool())
+            painter->setOpacity(painter->opacity() * 0.6);
+        QProxyStyle::drawPrimitive(element, option, painter, widget);
+        painter->restore();
+    }
+};
+
+class GxdeMenuStyle : public QObject
+{
+public:
+    explicit GxdeMenuStyle(QApplication *app) : QObject(app), m_style(QStyleFactory::create("ddark2"))
+    {
+        // Keep the platform style when the optional GXDE style plugin is absent.
+        if (m_style) {
+            m_style = new GxdeMenuProxyStyle(m_style);
+            m_style->setObjectName("ddark2");
+            m_style->setParent(this);
+            app->installEventFilter(this);
+#ifdef HAVE_KWINDOWEFFECTS
+            // Start Wayland protocol discovery before the first menu is shown.
+            KWindowEffects::isEffectAvailable(KWindowEffects::BlurBehind);
+#endif
+        }
+    }
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event) override
+    {
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
+            if (auto menu = qobject_cast<QMenu *>(object)) {
+                if (menu->style() != m_style)
+                    menu->setStyle(m_style);
+                // DDark2's own menu setup is guarded by isDXcbPlatform(),
+                // so Wayland menus need the translucent surface and blur request here.
+                if (QGuiApplication::platformName().startsWith("wayland")) {
+                    menu->setAttribute(Qt::WA_TranslucentBackground);
+                    DPlatformWindowHandle handle(menu);
+#ifdef HAVE_KWINDOWEFFECTS
+                    const bool fallback = KWindowEffects::isEffectAvailable(KWindowEffects::BlurBehind);
+                    menu->setProperty("gxdeMenuBlurFallback", fallback);
+                    if (fallback)
+                        KWindowEffects::enableBlurBehind(menu->windowHandle());
+                    else
+#endif
+                        handle.setEnableBlurWindow(true);
+                }
+            }
+        }
+        return false;
+    }
+
+private:
+    QStyle *m_style;
+};
+}
 
 bool checkImmutableMode() {
     QProcess process;
@@ -81,6 +156,7 @@ int main(int argc, char *argv[])
     // 启动应用
     qCDebug(mainprocess) << "Creating TerminalApplication instance";
     TerminalApplication app(argc, argv);
+    new GxdeMenuStyle(&app);
     app.setStartTime(startTime);
     qCInfo(mainprocess) << "TerminalApplication initialized, start time:" << startTime;
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))

@@ -27,6 +27,9 @@
 #include <QMouseEvent>
 #include <QPainterPath>
 #include <QMimeData>
+#include <QAbstractButton>
+#include <QCursor>
+#include <QTimer>
 
 #ifdef DTKWIDGET_CLASS_DSizeMode
 #include <DSizeMode>
@@ -34,6 +37,70 @@
 #include <QLoggingCategory>
 
 Q_DECLARE_LOGGING_CATEGORY(views)
+namespace {
+// Keep a stable hit area without painting a button outside the hovered tab.
+class GxdeTabCloseButton : public QAbstractButton
+{
+public:
+    explicit GxdeTabCloseButton(TabBar *bar) : QAbstractButton(bar), m_bar(bar)
+    {
+        setObjectName("GXDETabCloseButton");
+        setAccessibleName(TabBar::tr("Close tab"));
+        setFocusPolicy(Qt::NoFocus);
+        setFixedSize(28, WIN_TITLE_BAR_HEIGHT);
+        setMouseTracking(true);
+        bar->installEventFilter(this);
+        if (auto tabs = bar->findChild<QTabBar *>()) {
+            tabs->setMouseTracking(true);
+            tabs->installEventFilter(this);
+        }
+    }
+
+protected:
+    bool eventFilter(QObject *, QEvent *event) override
+    {
+        switch (event->type()) {
+        case QEvent::Enter:
+        case QEvent::Leave:
+        case QEvent::MouseMove:
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseButtonRelease:
+        case QEvent::Move:
+        case QEvent::Resize:
+            // Enter/leave state is updated after the event filters run.
+            QTimer::singleShot(0, this, [this] { update(); });
+            break;
+        default:
+            break;
+        }
+        return false;
+    }
+
+    void paintEvent(QPaintEvent *) override
+    {
+        if (!m_bar->underMouse())
+            return;
+        if ((QApplication::mouseButtons() & Qt::LeftButton) && !isDown())
+            return; // Do not put a close icon in a dragged tab.
+        const QPoint position = m_bar->mapFromGlobal(QCursor::pos());
+        for (int i = 0; i < m_bar->count(); ++i) {
+            if (m_bar->tabButton(i, QTabBar::RightSide) != this)
+                continue;
+            if (!m_bar->tabRect(i).contains(position))
+                return;
+            const QString state = isDown() ? "press" : underMouse() ? "hover" : "normal";
+            QPainter painter(this);
+            QIcon(QStringLiteral(":/other/tab_close_%1.svg").arg(state)).paint(
+                &painter, QRect(0, (height() - 17) / 2, 17, 17));
+            return;
+        }
+    }
+
+private:
+    TabBar *m_bar;
+};
+}
+
 //TermTabStyle类开始，该类用于设置tab标签样式
 TermTabStyle::TermTabStyle() : m_tabCount(0)
 {
@@ -72,73 +139,49 @@ int TermTabStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *op
 
 void TermTabStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
 {
-    // qCDebug(views) << "Enter TermTabStyle::drawControl with element:" << element;
-    if (CE_TabBarTabLabel == element) {
-        // qCDebug(views) << "Branch: Drawing tab bar tab label";
-        if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(option)) {
-            // qCDebug(views) << "Branch: Tab option cast successful";
-            DGuiApplicationHelper *appHelper = DGuiApplicationHelper::instance();
-
-            QTextOption textOption;
-            textOption.setAlignment(Qt::AlignCenter);
-
-            // qCDebug(views) << "Branch: Setting up font";
-            QFont textFont = QApplication::font();
-            int fontSize = DFontSizeManager::instance()->fontPixelSize(DFontSizeManager::T6);
-            textFont.setPixelSize(fontSize);
-            textFont.setWeight(QFont::Medium);
-            painter->setFont(textFont);
-            QString content = tab->text;
-            QRect tabRect = tab->rect;
-
-            // 取出对应index的tab唯一标识identifier（Qt5下由 QTabBar::initStyleOption 写入）
-            QString strTabIndex = QString::number(tab->row);
-            QObject *styleObject = option->styleObject;
-            QString strTabIdentifier = styleObject ? styleObject->property(strTabIndex.toLatin1()).toString() : QString();
-
-            // qCDebug(views) << "Branch: Checking tab status";
-            // 由于标签现在可以左右移动切换，index会变化，改成使用唯一标识identifier进行判断
-            if (TabTextColorStatus_Changed == m_tabStatusMap.value(strTabIdentifier)) {
-                // qCDebug(views) << "Branch: Tab status is changed, applying custom color";
-                if (tab->state & QStyle::State_Selected) {
-                    // qCDebug(views) << "Branch: Tab is selected, using highlighted text color";
-                    DPalette pa = appHelper->standardPalette(appHelper->themeType());
-                    painter->setPen(pa.color(DPalette::HighlightedText));
-                } else if (tab->state & QStyle::State_MouseOver) {
-                    // qCDebug(views) << "Branch: Tab is mouse over, using custom text color";
-                    painter->setPen(m_tabTextColor);
-                } else {
-                    // qCDebug(views) << "Branch: Tab is normal state, using custom text color";
-                    painter->setPen(m_tabTextColor);
-                }
-            } else {
-                // qCDebug(views) << "Branch: Tab status is normal, using standard colors";
-                DPalette pa = appHelper->standardPalette(appHelper->themeType());
-                if (tab->state & QStyle::State_Selected) {
-                    // qCDebug(views) << "Branch: Tab is selected, using highlighted text color";
-                    painter->setPen(pa.color(DPalette::HighlightedText));
-                } else if (tab->state & QStyle::State_MouseOver) {
-                    // qCDebug(views) << "Branch: Tab is mouse over, using title text color";
-                    painter->setPen(pa.color(DPalette::TextTitle));
-                } else {
-                    // qCDebug(views) << "Branch: Tab is normal state, using title text color";
-                    painter->setPen(pa.color(DPalette::TextTitle));
-                }
-            }
-
-            // qCDebug(views) << "Branch: Drawing elided text";
-            QFontMetrics fontMetric(textFont);
-            const int TAB_LEFTRIGHT_SPACE = 30;
-            QString elidedText = fontMetric.elidedText(content, Qt::ElideRight, tabRect.width() - TAB_LEFTRIGHT_SPACE, Qt::TextShowMnemonic);
-            painter->drawText(tabRect, elidedText, textOption);
-        } else {
-            // qCDebug(views) << "Branch: Tab option cast failed, using default drawing";
-            QProxyStyle::drawControl(element, option, painter, widget);
-        }
-    } else {
-        // qCDebug(views) << "Branch: Not tab bar tab label, using default drawing";
+    const auto *tab = qstyleoption_cast<const QStyleOptionTab *>(option);
+    if (!tab || (element != CE_TabBarTab && element != CE_TabBarTabShape && element != CE_TabBarTabLabel)) {
         QProxyStyle::drawControl(element, option, painter, widget);
+        return;
     }
+    painter->save();
+    const bool light = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::LightType;
+    const bool selected = tab->state & State_Selected;
+    const bool hover = tab->state & State_MouseOver;
+    const QColor accent("#2ca7f8");
+    const QColor separator = light ? QColor(0, 0, 0, 13) : QColor(255, 255, 255, 13);
+    if (element != CE_TabBarTabLabel) {
+        if (hover && !selected)
+            painter->fillRect(tab->rect, separator);
+        painter->fillRect(QRect(tab->rect.topRight(), QSize(1, tab->rect.height())), separator);
+        if (selected)
+            painter->fillRect(QRect(tab->rect.left(), tab->rect.bottom() - 1, tab->rect.width(), 2), accent);
+    }
+    if (element != CE_TabBarTabShape) {
+        const QString id = tab->styleObject
+            ? tab->styleObject->property(QByteArray::number(tab->row)).toString() : QString();
+        QColor text = light ? QColor(0, 0, 0, 204) : QColor(255, 255, 255, 204);
+        if (selected)
+            text = accent;
+        else if (m_tabStatusMap.value(id) == TabTextColorStatus_Changed)
+            text = QColor("#ff9600");
+        else if (hover)
+            text = light ? Qt::black : Qt::white;
+        QFont font = QApplication::font();
+        font.setPointSize(11);
+        font.setWeight(QFont::Normal);
+        painter->setFont(font);
+        painter->setPen(text);
+        const QRect textRect = tab->rect.adjusted(20, 0, -28, -2);
+        const QString label = QFontMetrics(font).elidedText(tab->text, Qt::ElideRight, qMax(0, textRect.width()));
+        painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, label);
+        if (tab->state & State_HasFocus) {
+            QPen pen(accent, 1, Qt::DotLine);
+            painter->setPen(pen);
+            painter->drawRect(tab->rect.adjusted(2, 2, -3, -4));
+        }
+    }
+    painter->restore();
 }
 
 void TermTabStyle::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
@@ -195,14 +238,15 @@ TabBar::TabBar(QWidget *parent) : DTabBar(parent), m_rightClickTab(-1)
     qCDebug(views) << "Branch: Setting tab properties";
     //启用关闭tab动画效果
     setEnableCloseTabAnimation(true);
-    setTabsClosable(true);
+    setTabsClosable(false);
     setVisibleAddButton(true);
     setElideMode(Qt::ElideRight);
     setFocusPolicy(Qt::TabFocus);
     setStartDragDistance(40);
 
     qCDebug(views) << "Branch: Setting tab width limits";
-    setTabItemMinWidth(110);
+    setTabItemMinWidth(80);
+    setExpanding(false);
     setTabItemMaxWidth(450);
 
     qCDebug(views) << "Branch: Updating tab drag move status";
@@ -214,6 +258,8 @@ TabBar::TabBar(QWidget *parent) : DTabBar(parent), m_rightClickTab(-1)
     if (nullptr != addButton) {
         qCDebug(views) << "Branch: Add button found, setting focus policy";
         addButton->setFocusPolicy(Qt::TabFocus);
+        addButton->setFlat(true);
+        addButton->setFixedSize(50, WIN_TITLE_BAR_HEIGHT);
     }
 
     qCDebug(views) << "Branch: Connecting tab bar signals";
@@ -229,14 +275,14 @@ TabBar::TabBar(QWidget *parent) : DTabBar(parent), m_rightClickTab(-1)
 
 #ifdef DTKWIDGET_CLASS_DSizeMode
     qCDebug(views) << "Branch: Setting up size mode handling";
-    setTabHeight(DSizeModeHelper::element(COMMONHEIGHT_COMPACT, COMMONHEIGHT));
+    setTabHeight(WIN_TITLE_BAR_HEIGHT);
     QObject::connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::sizeModeChanged, this, [this](){
         qCDebug(views) << "Lambda: Size mode changed, updating tab height";
-        setTabHeight(DSizeModeHelper::element(COMMONHEIGHT_COMPACT, COMMONHEIGHT));
+        setTabHeight(WIN_TITLE_BAR_HEIGHT);
     });
 #else
     qCDebug(views) << "Branch: Size mode handling not available, setting fixed height";
-    setTabHeight(36);
+    setTabHeight(WIN_TITLE_BAR_HEIGHT);
 #endif
     qCDebug(views) << "TabBar constructor finished";
 }
@@ -259,48 +305,30 @@ TabBar::~TabBar()
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 void TabBar::paintTab(QPainter *painter, int index, const QStyleOptionTab &option) const
 {
-    // 在DTabBar的单tab绘制链路里调整文本色，避免paintEvent里“叠字”问题
     QStyleOptionTab opt(option);
-
-    const QString id = identifier(index);
-    const bool isChanged = (m_tabStatusMap.value(id) == TabTextColorStatus_Changed);
-    const bool isCurrent = (index == currentIndex());
-
-    // Qt6 + DTabBar 下，内部绘制文字不一定使用 QPalette 的这些角色，导致“状态正确但不变色”。
-    // 这里采用更稳的方式：对需要变色的后台tab，先禁止底层绘制文字（避免叠字），
-    // 让底层仍绘制背景/图标/按钮，然后我们自己绘制一次文字并上色。
-    const QString rawText = opt.text;
-    const bool needForcePaintText = (isChanged && !isCurrent && m_tabChangedTextColor.isValid());
-    if (needForcePaintText) {
-        opt.text.clear();
-    }
-
-    DTabBar::paintTab(painter, index, opt);
-
-    if (needForcePaintText && painter) {
-        painter->save();
-        painter->setRenderHint(QPainter::TextAntialiasing, true);
-
-        QFont textFont = QApplication::font();
-        int fontSize = DFontSizeManager::instance()->fontPixelSize(DFontSizeManager::T6);
-        textFont.setPixelSize(fontSize);
-        textFont.setWeight(QFont::Medium);
-        painter->setFont(textFont);
-        painter->setPen(m_tabChangedTextColor);
-
-        QFontMetrics fm(textFont);
-        const int TAB_LEFTRIGHT_SPACE = 30;
-        const QRect tabRect = opt.rect;
-        const QString elided = fm.elidedText(rawText, Qt::ElideRight, tabRect.width() - TAB_LEFTRIGHT_SPACE, Qt::TextShowMnemonic);
-
-        QTextOption textOption;
-        textOption.setAlignment(Qt::AlignCenter);
-        painter->drawText(tabRect, elided, textOption);
-
-        painter->restore();
-    }
+    // Feed the same renderer on Qt 5 and Qt 6, retaining tab identity after reordering.
+    opt.row = index;
+    opt.styleObject = const_cast<TabBar *>(this);
+    opt.styleObject->setProperty(QByteArray::number(index), identifier(index));
+    m_termTabStyle->drawControl(QStyle::CE_TabBarTab, &opt, painter, this);
 }
 #endif
+
+void TabBar::tabInserted(int index)
+{
+    DTabBar::tabInserted(index);
+    auto button = new GxdeTabCloseButton(this);
+    setTabButton(index, QTabBar::RightSide, button);
+    connect(button, &QAbstractButton::clicked, this, [this, button] {
+        // Resolve the index when clicked: tabs may have moved since insertion.
+        for (int i = 0; i < count(); ++i) {
+            if (tabButton(i, QTabBar::RightSide) == button) {
+                emit tabCloseRequested(i);
+                return;
+            }
+        }
+    });
+}
 
 void TabBar::setTabHeight(int tabHeight)
 {

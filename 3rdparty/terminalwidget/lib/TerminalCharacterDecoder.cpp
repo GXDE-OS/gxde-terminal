@@ -107,10 +107,15 @@ void PlainTextDecoder::decodeLine(const Character* const characters, int count, 
 
     for (int i=0;i<outputCount;)
     {
-        if (characters[i].character != 0) {
+        if (characters[i].rendition & RE_EXTENDED_CHAR) {
+            ushort length = 0;
+            const uint *points = ExtendedCharTable::instance.lookupExtendedChar(characters[i].character, length);
+            if (points)
+                for (ushort j = 0; j < length; ++j) plainText.push_back(points[j]);
+        } else if (characters[i].character != 0) {
             plainText.push_back(characters[i].character);
         }
-        i += qMax(1,Character::width(characters[i].character));
+        i += qMax(1,characters[i].width());
     }
     *_output << QString::fromStdWString(plainText);
 }
@@ -162,6 +167,8 @@ void HTMLDecoder::decodeLine(const Character* const characters, int count, LineP
 
     for (int i=0;i<count;i++)
     {
+        if (characters[i].character == 0)
+            continue;
         wchar_t ch(characters[i].character);
 
         //check if appearance of character is different from previous char
@@ -206,6 +213,15 @@ void HTMLDecoder::decodeLine(const Character* const characters, int count, LineP
             //open the span with the current style
             openSpan(text,style);
             _innerSpanOpen = true;
+        }
+
+        if (characters[i].rendition & RE_EXTENDED_CHAR) {
+            ushort length = 0;
+            const uint *points = ExtendedCharTable::instance.lookupExtendedChar(characters[i].character, length);
+            if (points)
+                text.append(QString::fromUcs4(points, length).toHtmlEscaped().toStdWString());
+            spaceCount = 0;
+            continue;
         }
 
         //handle whitespace

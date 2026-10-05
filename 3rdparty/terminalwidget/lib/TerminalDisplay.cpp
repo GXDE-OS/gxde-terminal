@@ -37,6 +37,8 @@
 #include <QLabel>
 #include <QLayout>
 #include <QPainter>
+#include <QTextLayout>
+#include <QFontDatabase>
 #include <QPixmap>
 #include <QScrollBar>
 #include <QStyle>
@@ -875,6 +877,53 @@ void TerminalDisplay::drawCharacters(QPainter& painter,
     {
         pen.setColor(color);
         painter.setPen(color);
+    }
+
+    const auto codepoints = text.toUcs4();
+    if (!IsCodecGB18030() && isEmojiCluster(codepoints.constData(), codepoints.size())) {
+        static const QString emojiFamily = [] {
+            const QString resolved = QFontInfo(QFont(QStringLiteral("emoji"))).family();
+            if (resolved.contains("emoji", Qt::CaseInsensitive))
+                return resolved;
+            const QStringList families = QFontDatabase().families();
+            for (const QString &candidate : {QStringLiteral("Noto Color Emoji"),
+                    QStringLiteral("Twemoji Mozilla"), QStringLiteral("Apple Color Emoji"),
+                    QStringLiteral("Segoe UI Emoji")}) {
+                if (families.contains(candidate))
+                    return candidate;
+            }
+            return QStringLiteral("emoji");
+        }();
+        QFont emojiFont = font;
+        emojiFont.setFamily(emojiFamily);
+        emojiFont.setStyleName(QString());
+        emojiFont.setBold(false);
+        emojiFont.setItalic(false);
+
+        emojiFont.setStyleStrategy(QFont::NoFontMerging);
+        QTextLayout layout(text, emojiFont);
+        QTextOption option;
+        option.setWrapMode(QTextOption::NoWrap);
+        option.setTextDirection(Qt::LeftToRight);
+        layout.setTextOption(option);
+        layout.beginLayout();
+        QTextLine line = layout.createLine();
+        if (line.isValid())
+            line.setLineWidth(100000);
+        layout.endLayout();
+        if (line.isValid()) {
+            const qreal width = qMax(qreal(1), line.naturalTextWidth());
+            const qreal height = qMax(qreal(1), line.height());
+            const qreal scale = qMin(qreal(1), qMin(rect.width() / width, rect.height() / height));
+            painter.save();
+            painter.setClipRect(rect, Qt::IntersectClip);
+            painter.translate(rect.x() + (rect.width() - width * scale) / 2,
+                              rect.y() + (rect.height() - height * scale) / 2);
+            painter.scale(scale, scale);
+            line.draw(&painter, QPointF());
+            painter.restore();
+        }
+        return;
     }
 
     // draw text
@@ -1780,6 +1829,13 @@ void TerminalDisplay::drawContents(QPainter &paint, const QRect &rect)
                 return currentScript == script;
             };
             const auto canBeGrouped = [&](int column) {
+                const Character &cell = _image[loc(column, y)];
+                ushort length = 1;
+                const uint *points = &cell.character;
+                if (cell.rendition & RE_EXTENDED_CHAR)
+                    points = ExtendedCharTable::instance.lookupExtendedChar(cell.character, length);
+                if (points && isEmojiCluster(points, length))
+                    return false;
                 return _image[loc(column, y)].character <= 0x7e
                        || (_image[loc(column, y)].rendition & RE_EXTENDED_CHAR)
                        || (_bidiEnabled && !doubleWidth);

@@ -6,6 +6,7 @@
 #include "remotemanagementtoppanel.h"
 #include "utils.h"
 #include "mainwindow.h"
+#include "gxderemotestyle.h"
 
 #include <QParallelAnimationGroup>
 #include <QDebug>
@@ -41,6 +42,7 @@ RemoteManagementTopPanel::RemoteManagementTopPanel(QWidget *parent) : RightPanel
     m_serverConfigGroupPanel->hide();
     m_remoteManagementSearchPanel->hide();
     m_remoteManagementPanel->hide();
+    applyGxdeRemoteStyle(this);
     qCDebug(remotemanage) << "RemoteManagementTopPanel initialization complete";
 }
 

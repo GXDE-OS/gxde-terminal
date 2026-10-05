@@ -30,6 +30,7 @@
 // Local
 #include "CharacterColor.h"
 #include "konsole_wcwidth.h"
+#include "TerminalUnicode.h"
 
 namespace Konsole
 {
@@ -162,20 +163,14 @@ public:
         }
     }
 
-    inline int width() const {
-        return width(character);
-    }
+    int width() const;
 
     static int width(uint ucs4) {
         return characterWidth(ucs4);
     }
 
     static int stringWidth(const uint *ucs4Str, int len) {
-        int w = 0;
-        for (int i = 0; i < len; ++i) {
-            w += width(ucs4Str[i]);
-        }
-        return w;
+        return terminalTextWidth(QString::fromUcs4(ucs4Str, len));
     }
 
     inline static int stringWidth(const QString &str) {
@@ -275,6 +270,16 @@ private:
     // themselves.
     QHash<uint,uint*> extendedCharTable;
 };
+
+inline int Character::width() const
+{
+    if (rendition & RE_EXTENDED_CHAR) {
+        ushort length = 0;
+        const uint *points = ExtendedCharTable::instance.lookupExtendedChar(character, length);
+        return points ? terminalClusterWidth(points, length) : 1;
+    }
+    return width(character);
+}
 
 }
 Q_DECLARE_TYPEINFO(Konsole::Character, Q_MOVABLE_TYPE);

@@ -774,6 +774,63 @@ void Screen::displayCharacter(uint c)
     // putting the cursor one right to the last column of the screen.
 
     int w = Character::width(c);
+    // A terminal cell stores one grapheme, not one Unicode scalar. Keep combining
+    // marks, variation selectors, modifiers, ZWJ sequences and flag pairs together.
+    if (c >= 0x300 && _cuY < _screenLines.size() && _cuX > 0) {
+        auto &line = _screenLines[_cuY];
+        int start = qMin(_cuX, _columns) - 1;
+        if (start < line.size()) {
+            while (start > 0 && line[start].character == 0)
+                --start;
+            const Character previous = line[start];
+            QVector<uint> points;
+            if (previous.rendition & RE_EXTENDED_CHAR) {
+                ushort length = 0;
+                const uint *stored = ExtendedCharTable::instance.lookupExtendedChar(previous.character, length);
+                if (stored)
+                    for (ushort i = 0; i < length; ++i) points.append(stored[i]);
+            } else if (previous.character != 0) {
+                points.append(previous.character);
+            }
+            const QString prefix = QString::fromUcs4(points.constData(), points.size());
+            const QString candidate = prefix + QString::fromUcs4(&c, 1);
+            QTextBoundaryFinder boundary(QTextBoundaryFinder::Grapheme, candidate);
+            boundary.setPosition(prefix.size());
+            if (!points.isEmpty() && !boundary.isAtBoundary()) {
+                if (points.size() >= 64)
+                    return; // Bound storage for arbitrarily long combining input.
+                points.append(c);
+                int width = qMin(_columns, qMax(1, terminalClusterWidth(points.constData(), points.size())));
+                Character combined = previous;
+                combined.character = ExtendedCharTable::instance.createExtendedChar(points.data(), points.size());
+                combined.rendition |= RE_EXTENDED_CHAR;
+                if (start + width > _columns) {
+                    line[start] = Character(' ', _effectiveForeground, _effectiveBackground, _effectiveRendition);
+                    if (getMode(MODE_Wrap)) {
+                        _lineProperties[_cuY] = (LineProperty)(_lineProperties[_cuY] | LINE_WRAPPED);
+                        nextLine();
+                        start = 0;
+                    } else {
+                        start = _columns - width;
+                    }
+                }
+                auto &target = _screenLines[_cuY];
+                if (target.size() < start + width)
+                    target.resize(start + width);
+                target[start] = combined;
+                for (int i = 1; i < width; ++i) {
+                    target[start + i] = combined;
+                    target[start + i].character = 0;
+                    target[start + i].rendition &= ~RE_EXTENDED_CHAR;
+                }
+                _lastPos = loc(start, _cuY);
+                checkSelection(_lastPos, _lastPos + width - 1);
+                _cuX = start + width;
+                return;
+            }
+        }
+    }
+
     if (w <= 0)
         return;
 

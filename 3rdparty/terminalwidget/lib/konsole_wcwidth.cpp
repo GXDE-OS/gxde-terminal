@@ -21,6 +21,7 @@
 
 
 #include "konsole_wcwidth.h"
+#include <unicode/uchar.h>
 #include <QPainter>
 #include <QPainterPath>
 
@@ -207,6 +208,8 @@ bool IsCodecGB18030(){
 }
 
 int characterWidth(uint ucs4) {
+    if (!m_isCodecGB18030 && u_hasBinaryProperty(ucs4, UCHAR_EMOJI_PRESENTATION))
+        return 2;
      if (m_isCodecGB18030) {
         if(Q_LIKELY(ucs4 < sizeof(DIRECT_LUT_GB18030))) {
             return DIRECT_LUT_GB18030[ucs4];

@@ -1,6 +1,61 @@
 <RCC>
     <qresource prefix="/">
         <file>other/default-config.json</file>
+        <file>other/tab_close_normal.svg</file>
+        <file>other/tab_close_hover.svg</file>
+        <file>other/tab_close_press.svg</file>
+        <file alias="gxde-colors/BlackOnRandomLight.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/BlackOnRandomLight.colorscheme</file>
+        <file alias="gxde-colors/BreezeModified.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/BreezeModified.colorscheme</file>
+        <file alias="gxde-colors/Dark.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Dark.colorscheme</file>
+        <file alias="gxde-colors/DarkPastels.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/DarkPastels.colorscheme</file>
+        <file alias="gxde-colors/GreenOnBlack.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/GreenOnBlack.colorscheme</file>
+        <file alias="gxde-colors/Light.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Light.colorscheme</file>
+        <file alias="gxde-colors/Linux.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Linux.colorscheme</file>
+        <file alias="gxde-colors/Solarized.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Solarized.colorscheme</file>
+        <file alias="gxde-colors/SolarizedLight.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/SolarizedLight.colorscheme</file>
+        <file alias="gxde-colors/Tango.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Tango.colorscheme</file>
+        <file alias="gxde-colors/Theme1.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme1.colorscheme</file>
+        <file alias="gxde-colors/Theme10.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme10.colorscheme</file>
+        <file alias="gxde-colors/Theme2.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme2.colorscheme</file>
+        <file alias="gxde-colors/Theme3.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme3.colorscheme</file>
+        <file alias="gxde-colors/Theme4.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme4.colorscheme</file>
+        <file alias="gxde-colors/Theme5.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme5.colorscheme</file>
+        <file alias="gxde-colors/Theme6.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme6.colorscheme</file>
+        <file alias="gxde-colors/Theme7.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme7.colorscheme</file>
+        <file alias="gxde-colors/Theme8.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme8.colorscheme</file>
+        <file alias="gxde-colors/Theme9.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme9.colorscheme</file>
+        <file alias="gxde-colors/Ubuntu.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Ubuntu.colorscheme</file>
+        <file>logo/gxde-title.svg</file>
+        <file>other/gxde-window/window_menu_dark_normal.svg</file>
+        <file>other/gxde-window/window_menu_dark_hover.svg</file>
+        <file>other/gxde-window/window_menu_dark_press.svg</file>
+        <file>other/gxde-window/window_menu_light_normal.svg</file>
+        <file>other/gxde-window/window_menu_light_hover.svg</file>
+        <file>other/gxde-window/window_menu_light_press.svg</file>
+        <file>other/gxde-window/window_min_dark_normal.svg</file>
+        <file>other/gxde-window/window_min_dark_hover.svg</file>
+        <file>other/gxde-window/window_min_dark_press.svg</file>
+        <file>other/gxde-window/window_min_light_normal.svg</file>
+        <file>other/gxde-window/window_min_light_hover.svg</file>
+        <file>other/gxde-window/window_min_light_press.svg</file>
+        <file>other/gxde-window/window_max_dark_normal.svg</file>
+        <file>other/gxde-window/window_max_dark_hover.svg</file>
+        <file>other/gxde-window/window_max_dark_press.svg</file>
+        <file>other/gxde-window/window_max_light_normal.svg</file>
+        <file>other/gxde-window/window_max_light_hover.svg</file>
+        <file>other/gxde-window/window_max_light_press.svg</file>
+        <file>other/gxde-window/window_unmax_dark_normal.svg</file>
+        <file>other/gxde-window/window_unmax_dark_hover.svg</file>
+        <file>other/gxde-window/window_unmax_dark_press.svg</file>
+        <file>other/gxde-window/window_unmax_light_normal.svg</file>
+        <file>other/gxde-window/window_unmax_light_hover.svg</file>
+        <file>other/gxde-window/window_unmax_light_press.svg</file>
+        <file>other/gxde-window/window_close_dark_normal.svg</file>
+        <file>other/gxde-window/window_close_dark_hover.svg</file>
+        <file>other/gxde-window/window_close_dark_press.svg</file>
+        <file>other/gxde-window/window_close_light_normal.svg</file>
+        <file>other/gxde-window/window_close_light_hover.svg</file>
+        <file>other/gxde-window/window_close_light_press.svg</file>
         <file>other/ssh_login.sh</file>
         <file>other/server_group.svg</file>
         <file>other/command.svg</file>

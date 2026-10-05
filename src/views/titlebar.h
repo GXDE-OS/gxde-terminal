@@ -16,11 +16,16 @@
  4. @说明:
 *******************************************************************************/
 
+class QAbstractButton;
+
+// Change only painting; DTK keeps ownership of window actions and accessibility.
+void applyGxdeWindowButtonStyle(QAbstractButton *button, const QString &iconName);
+
 class TitleBar : public QWidget
 {
     Q_OBJECT
 public:
-    TitleBar(QWidget *parent = nullptr);
+    TitleBar(QWidget *parent = nullptr, bool showIcon = false);
     ~TitleBar();
 
     /**

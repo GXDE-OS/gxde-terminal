@@ -21,6 +21,7 @@
 #include "groupconfigoptdlg.h"
 #include "serverconfigmanager.h"
 #include "utils.h"
+#include "gxderemotestyle.h"
 
 #include <DSuggestButton>
 #include <DVerticalLine>
@@ -37,6 +38,8 @@ GroupConfigOptDlg::GroupConfigOptDlg(const QString &groupName, QWidget *parent)
       m_groupNameEdit(new DLineEdit(this)),
       m_serverList(new ListView(ListType_Remote, this))
 {
+    m_iconLabel->setObjectName("RemoteIconLabel");
+    m_closeButton->setObjectName("RemoteCloseButton");
     m_groupNameEdit->setPlaceholderText(tr("Group Name(Required)"));
     if (groupName.isEmpty()) {
         m_titleLabel->setText(tr("Add Group"));
@@ -134,7 +137,8 @@ GroupConfigOptDlg::GroupConfigOptDlg(const QString &groupName, QWidget *parent)
         reject();
     });
 
-    m_groupNameEdit->setFixedWidth(width());
+    setFixedWidth(460);
+    m_groupNameEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_serverList->setMaximumHeight(240);
     ServerConfigManager::instance()->refreshServerList(ServerConfigManager::PanelType_Serverlist, m_serverList, "", groupName);
 
@@ -145,4 +149,5 @@ GroupConfigOptDlg::GroupConfigOptDlg(const QString &groupName, QWidget *parent)
     m_mainLayout->addLayout(pBtHbLayout);
     setLayout(m_mainLayout);
     m_groupNameEdit->setFocus();
+    applyGxdeRemoteStyle(this);
 }

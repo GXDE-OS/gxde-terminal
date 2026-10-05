@@ -284,6 +284,7 @@ public slots:
     void setCurrentIndex(int index);
 
 protected:
+    void tabInserted(int index) override;
     /**
      * @brief 绘制单个tab（用于在DTabBar内部绘制链路中修改文字颜色，避免paintEvent叠字）
      * @note Qt5下原实现可通过TermTabStyle生效；Qt6下某些场景style不生效时，用此处兜底。

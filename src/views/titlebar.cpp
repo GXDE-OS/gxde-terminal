@@ -14,6 +14,9 @@
 #include <QDebug>
 #include <QMouseEvent>
 #include <QLoggingCategory>
+#include <QAbstractButton>
+#include <QPainter>
+#include <DGuiApplicationHelper>
 
 Q_DECLARE_LOGGING_CATEGORY(views)
 
@@ -21,12 +24,66 @@ Q_DECLARE_LOGGING_CATEGORY(views)
 #include <DSizeMode>
 #endif
 
+namespace {
+class GxdeWindowButtonStyle : public QObject
+{
+public:
+    GxdeWindowButtonStyle(QAbstractButton *button, const QString &iconName)
+        : QObject(button), m_button(button), m_iconName(iconName)
+    {
+        button->installEventFilter(this);
+        button->setFixedSize(40, 39);
+        button->setCursor(Qt::PointingHandCursor);
+        connect(Dtk::Gui::DGuiApplicationHelper::instance(),
+                &Dtk::Gui::DGuiApplicationHelper::themeTypeChanged, button,
+                [button] { button->update(); });
+    }
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event) override
+    {
+        if (object != m_button || event->type() != QEvent::Paint)
+            return false;
+        const QString name = m_iconName == "max" && m_button->property("isMaximized").toBool()
+            ? QStringLiteral("unmax") : m_iconName;
+        QString theme = m_button->property("gxdeWindowButtonTheme").toString();
+        if (theme.isEmpty())
+            theme = Dtk::Gui::DGuiApplicationHelper::instance()->themeType()
+                == Dtk::Gui::DGuiApplicationHelper::LightType ? "light" : "dark";
+        const QString state = m_button->underMouse()
+            ? (m_button->isDown() ? "press" : "hover") : "normal";
+        const QIcon icon(QStringLiteral(":/other/gxde-window/window_%1_%2_%3.svg")
+                         .arg(name, theme, state));
+        QPainter painter(m_button);
+        if (!m_button->isEnabled())
+            painter.setOpacity(0.4);
+        // GXDE draws the original 40px asset centered in its 39px header.
+        painter.drawPixmap(QPoint(0, (m_button->height() - 40) / 2),
+                           icon.pixmap(QSize(40, 40), m_button->devicePixelRatioF()));
+        if (m_button->hasFocus()) {
+            painter.setPen(QPen(QColor("#2ca7f8"), 1, Qt::DotLine));
+            painter.drawRect(m_button->rect().adjusted(2, 2, -3, -3));
+        }
+        return true;
+    }
+
+private:
+    QAbstractButton *m_button;
+    QString m_iconName;
+};
+}
+
+void applyGxdeWindowButtonStyle(QAbstractButton *button, const QString &iconName)
+{
+    new GxdeWindowButtonStyle(button, iconName);
+}
+
 static const int VER_RESIZED_ALLOWED_OFF = 3;//允许的垂直偏移量
 static const int VER_RESIZED_MIN_HEIGHT = 30;//resize的最小高度
 
 DWIDGET_USE_NAMESPACE
 
-TitleBar::TitleBar(QWidget *parent) : QWidget(parent), m_layout(new QHBoxLayout(this))
+TitleBar::TitleBar(QWidget *parent, bool showIcon) : QWidget(parent), m_layout(new QHBoxLayout(this))
 {
     qCDebug(views) << "Enter TitleBar::TitleBar";
     Utils::set_Object_Name(this);
@@ -36,9 +93,20 @@ TitleBar::TitleBar(QWidget *parent) : QWidget(parent), m_layout(new QHBoxLayout(
 //    palette.setBrush(DPalette::Background, palette.color(DPalette::Base));
 //    this->setPalette(palette);
     this->setBackgroundRole(DPalette::Base);
-    this->setAutoFillBackground(true);
+    this->setAutoFillBackground(false);
     /********************* Modify by m000714 daizhengwen End ************************/
-    m_layout->setContentsMargins(0, 0, 0, 0);
+    m_layout->setContentsMargins(0, 0, 10, 0);
+    m_layout->setSpacing(0);
+    // Normal windows use DTitlebar's icon; quake windows have no DTitlebar.
+    if (showIcon) {
+        auto logo = new QLabel(this);
+        logo->setObjectName("GXDETitleIcon");
+        logo->setFixedSize(48, WIN_TITLE_BAR_HEIGHT);
+        logo->setAlignment(Qt::AlignCenter);
+        logo->setPixmap(QIcon(":/logo/gxde-title.svg").pixmap(QSize(24, 24), devicePixelRatioF()));
+        logo->setAttribute(Qt::WA_TransparentForMouseEvents);
+        m_layout->addWidget(logo);
+    }
 
 #ifdef DTKWIDGET_CLASS_DSizeMode
     setFixedHeight(DSizeModeHelper::element(WIN_TITLE_BAR_HEIGHT_COMPACT, WIN_TITLE_BAR_HEIGHT));

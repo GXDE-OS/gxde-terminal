@@ -70,6 +70,8 @@ const QStringList get_color_schemes_dirs()
 //    qDebug() << __FILE__ << __FUNCTION__;
 
     QStringList rval;
+    if (QDir(QStringLiteral(":/gxde-colors")).exists())
+        rval << QStringLiteral(":/gxde-colors/");
     QString k(QLatin1String(COLORSCHEMES_DIR));
     QDir d(k);
 

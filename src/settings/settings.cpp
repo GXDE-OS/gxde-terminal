@@ -28,6 +28,7 @@
 #include <QProcessEnvironment>
 #include <QJsonDocument>
 #include <QHBoxLayout>
+#include <QSignalBlocker>
 
 DWIDGET_USE_NAMESPACE
 #define PRIVATE_PROPERTY_translateContext "_d_DSettingsWidgetFactory_translateContext"
@@ -39,6 +40,29 @@ DComboBox *Settings::g_shellConfigCombox = nullptr;
 const QString DEFAULT_SHELL = "$SHELL";
 
 Q_DECLARE_LOGGING_CATEGORY(tsettings)
+
+namespace {
+FontDataList availableTerminalFonts()
+{
+    FontDataList fonts = DBusManager::callAppearanceFont("monospacefont");
+    if (fonts.isEmpty()) {
+        QFontDatabase database;
+        QStringList families;
+        for (const QString &family : database.families()) {
+            if (database.isFixedPitch(family))
+                families.append(family);
+        }
+        const QString fallback = QFontDatabase::systemFont(QFontDatabase::FixedFont).family();
+        if (!families.contains(fallback))
+            families.append(fallback);
+        fonts.appendValues(families);
+    }
+    std::sort(fonts.begin(), fonts.end(), [](const FontData &a, const FontData &b) {
+        return QCollator().compare(a.value, b.value) < 0;
+    });
+    return fonts;
+}
+}
 
 Settings::Settings() : QObject(qApp)
 {
@@ -139,7 +163,8 @@ void Settings::init()
         qCDebug(tsettings) << "Setting default color scheme to Dark";
         DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::DarkType);
         setColorScheme("Dark");
-        setExtendColorScheme("");
+        // Keep the GXDE default on subsequent launches; Follow system remains an explicit choice.
+        setExtendColorScheme("Dark");
         qCDebug(tsettings) << "Color scheme initialized";
     } else if (DGuiApplicationHelper::instance()->paletteType() == DGuiApplicationHelper::UnknownType
                && extendColorScheme().isEmpty()) {
@@ -702,13 +727,13 @@ bool Settings::isShortcutConflict(const QString &Name, const QString &Key)
 /******** Add by ut001000 renfeixiang 2020-06-15:增加 每次显示设置界面时，更新设置的等宽字体 Begin***************/
 void Settings::handleWidthFont()
 {
-    qCDebug(tsettings) << "Handling width font";
-    FontDataList Whitelist = DBusManager::callAppearanceFont("monospacefont");
-
+    if (!comboBox)
+        return;
+    const FontDataList fonts = availableTerminalFonts();
     //将新安装的字体，加载到字体库中
     QFontDatabase base;
-    for (int i = 0; i < Whitelist.count(); ++i) {
-        QString name = Whitelist[i].value;
+    for (int i = 0; i < fonts.count(); ++i) {
+        QString name = fonts[i].value;
         if (-1 == comboBox->findData(name)) {
             // qCDebug(tsettings) << "Adding new font to database:" << name;
             QString fontpath =  QDir::homePath() + "/.local/share/fonts/" + name + "/";// + name + ".ttf";
@@ -723,20 +748,15 @@ void Settings::handleWidthFont()
 
         }
     }
-    //按name小到大排序
-    std::sort(Whitelist.begin(), Whitelist.end(), [ = ](const FontData & str1, const FontData & str2) {
-        QCollator qc;
-        return qc.compare(str1.value, str2.value) < 0;
-    });
-
-    //更新设置界面的字体信息
-    QVariant fontname = comboBox->currentData();
+    const QString selected = fontName();
+    // Rebuilding the model emits index -1 and 0; neither is a user selection.
+    const QSignalBlocker blocker(comboBox);
     comboBox->clear();
-    for(int k = 0; k < Whitelist.count(); k ++) {
-        comboBox->addItem(Whitelist[k].value, Whitelist[k].key);
-    }
-    comboBox->setCurrentIndex(comboBox->findData(fontname));
-    qCDebug(tsettings) << "Width font handling completed";
+    for (const auto &font : fonts)
+        comboBox->addItem(font.value, font.key);
+    if (!selected.isEmpty() && comboBox->findData(selected) < 0)
+        comboBox->addItem(selected, selected);
+    comboBox->setCurrentIndex(comboBox->findData(selected));
 }
 
 bool Settings::disableControlFlow(void)
@@ -785,25 +805,7 @@ QPair<QWidget *, QWidget *> Settings::createFontComBoBoxHandle(QObject *obj)
     QPair<QWidget *, QWidget *> optionWidget =
         DSettingsWidgetFactory::createStandardItem(QByteArray(), option, comboBox);
 
-    FontDataList Whitelist = DBusManager::callAppearanceFont("monospacefont");
-
-    std::sort(Whitelist.begin(), Whitelist.end(), [ = ](const FontData & str1, const FontData & str2) {
-        QCollator qc;
-        return qc.compare(str1.value, str2.value) < 0;
-    });
-
-    qCInfo(tsettings) << "createFontComBoBoxHandle get system monospacefont";
-    if (Whitelist.size() <= 0) {
-        //一般不会走这个分支，除非DBUS出现问题
-        qCInfo(tsettings) << "DBusManager::callAppearanceFont failed, get control font failed.";
-        //DBUS获取字体失败后，设置系统默认的等宽字体
-        QStringList fontlist;
-        fontlist << "Courier 10 Pitch" << "DejaVu Sans Mono" << "Liberation Mono"
-                 << "Noto Mono" << "Noto Sans Mono" << "Noto Sans Mono CJK JP"
-                 << "Noto Sans Mono CJK KR" << "Noto Sans Mono CJK SC"
-                 << "Noto Sans Mono CJK TC";
-        Whitelist.appendValues(fontlist);
-    }
+    const FontDataList Whitelist = availableTerminalFonts();
     for(int k = 0; k < Whitelist.count(); k ++) {
         comboBox->addItem(Whitelist[k].value, Whitelist[k].key);
     }
@@ -812,16 +814,22 @@ QPair<QWidget *, QWidget *> Settings::createFontComBoBoxHandle(QObject *obj)
     if (option->value().toString().isEmpty())
         option->setValue(QFontDatabase::systemFont(QFontDatabase::FixedFont).family());
 
-    // init.
+    // Preserve installed/custom selections that the desktop service did not list.
+    if (comboBox->findData(option->value()) < 0)
+        comboBox->addItem(option->value().toString(), option->value());
     comboBox->setCurrentIndex(comboBox->findData(option->value()));
 
     connect(option, &DSettingsOption::valueChanged, comboBox, [ = ](QVariant var) {
+        const QSignalBlocker blocker(comboBox);
+        if (!var.toString().isEmpty() && comboBox->findData(var) < 0)
+            comboBox->addItem(var.toString(), var);
         comboBox->setCurrentIndex(comboBox->findData(var));
     });
 
     option->connect(
         comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), option, [ = ](int index) {
-        option->setValue(comboBox->itemData(index));
+        if (index >= 0 && !comboBox->itemData(index).toString().isEmpty())
+            option->setValue(comboBox->itemData(index));
     });
 
     return optionWidget;

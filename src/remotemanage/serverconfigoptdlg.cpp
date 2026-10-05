@@ -7,6 +7,7 @@
 #include "serverconfigmanager.h"
 #include "termcommandlinkbutton.h"
 #include "utils.h"
+#include "gxderemotestyle.h"
 
 //dtk
 #include <DFontSizeManager>
@@ -82,6 +83,7 @@ ServerConfigOptDlg::ServerConfigOptDlg(ServerConfigOptType type, ServerConfig *c
     setAutoFillBackground(true);
     initUI();
     initData();
+    applyGxdeRemoteStyle(this);
 }
 
 void ServerConfigOptDlg::initUI()

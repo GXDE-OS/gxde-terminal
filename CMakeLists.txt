@@ -187,6 +187,8 @@ set (DTNG_CPP_FILES
     src/views/termbasedialog.cpp
     src/views/termcommandlinkbutton.cpp
     src/views/titlebar.cpp
+    src/views/gxdesettingsstyle.cpp
+    src/views/gxderemotestyle.cpp
     src/views/itemwidget.cpp
     src/views/focusframe.cpp
     src/views/iconbutton.cpp
@@ -274,6 +276,13 @@ target_include_directories(${EXE_NAME}
 )
 
 target_link_libraries (deepin-terminal ${LINK_LIBS} terminalwidget${QT_DESIRED_VERSION})
+if (QT_VERSION_MAJOR EQUAL 6)
+    find_package(KF6WindowSystem QUIET)
+    if (KF6WindowSystem_FOUND)
+        target_link_libraries(deepin-terminal KF6::WindowSystem)
+        target_compile_definitions(deepin-terminal PRIVATE HAVE_KWINDOWEFFECTS)
+    endif()
+endif()
 
 # Install settings
 

@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "define.h"
 #include "eventlogutils.h"
+#include "gxdesettingsstyle.h"
 
 #include <DSettings>
 #include <DSettingsGroup>
@@ -134,6 +135,7 @@ void Service::initSetting(MainWindow *pOwner)
     // 将数据重新读入
     qCDebug(mainprocess)<< "Updating settings";
     m_settingDialog->updateSettings(Settings::instance()->settings);
+    applyGxdeSettingsStyle(m_settingDialog);
     // 设置窗口模态为没有模态，不阻塞窗口和进程
     qCDebug(mainprocess)<< "Setting window modality and moving to center";
     m_settingDialog->setWindowModality(Qt::NonModal);
