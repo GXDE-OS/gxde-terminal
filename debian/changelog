@@ -1,11 +1,11 @@
-gxde-terminal (7.0.0) unstable; urgency=medium
+gxde-terminal (7.0.1) unstable; urgency=medium
 
   * feat: GXDE Terminal 5 styled UI.
   * feat: Simple animations.
   * feat: Fallback font.
   * feat: Font ligatures.
 
- -- CharOfString <root@charofstring.cc>  Tue, 06 Oct 2026 16:08:12 -0500
+ -- CharOfString <root@charofstring.cc>  Tue, 06 Oct 2026 16:19:00 -0500
 
 deepin-terminal (6.5.40) unstable; urgency=medium
 
