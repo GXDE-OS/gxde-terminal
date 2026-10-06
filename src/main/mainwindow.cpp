@@ -211,8 +211,8 @@ void MainWindow::initUI()
             ? DGuiApplicationHelper::LightType :
                 DGuiApplicationHelper::DarkType;
 
-        if (!settings->extendColorScheme().isEmpty() {
-            && DGuiApplicationHelper::instance()->themeType() != themeType)
+        if (!settings->extendColorScheme().isEmpty()
+            && DGuiApplicationHelper::instance()->themeType() != themeType) {
             DGuiApplicationHelper::instance()->setPaletteType(themeType);
         }
 

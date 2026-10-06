@@ -80,7 +80,7 @@ TermWidgetPage::TermWidgetPage(const TermProperties &properties, QWidget *parent
 #ifdef DTKWIDGET_CLASS_DSizeMode
     qCDebug(views) << "Branch: DTKWIDGET_CLASS_DSizeMode defined, connecting size mode change";
     connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::sizeModeChanged, this, [this](){
-        m_findBar->move(width() - m_findBar->width(), 0);
+        m_findBar->move(qMax(0, width() - m_findBar->width()), 6);
     }, Qt::QueuedConnection);
 #endif
     qCDebug(views) << "TermWidgetPage constructor finished";
@@ -610,20 +610,20 @@ void TermWidgetPage::showSearchBar(int state)
         /******** Add by nt001000 renfeixiang 2020-05-18:修改雷神窗口太小时，查询界面使用不方便，将雷神窗口变大适应正常的查询界面 End***************/
         m_findBar->raise();
         m_findBar->clearHoldContent();
-        m_findBar->show();
+        m_findBar->setExpanded(true);
         //Add by ut001000 renfeixiang 2020-12-02 在搜索框弹出时，添加设置Term的m_bHasSelect为false函数
         if (m_currentTerm != nullptr)
             m_currentTerm->setNoHasSelect();
-        m_findBar->move(width() - m_findBar->width(), 0);
+        m_findBar->move(qMax(0, width() - m_findBar->width()), 6);
         QTimer::singleShot(10, this, [ = ] { m_findBar->focus(); });
     } else if (SearchBar_Hide == state) {
-        m_findBar->hide();
+        m_findBar->setExpanded(false);
     } else if (SearchBar_FocusOut == state) {
         /******** Modify by ut001000 renfeixiang 2020-08-28:修改bug 45227,焦点只有在m_findBar上时，才将焦点设置到CurrentPage Begin***************/
         MainWindow *w = Utils::getMainWindow(this);
         if (w && w->isFocusOnList())
             w->focusCurrentPage();
-        m_findBar->hide();
+        m_findBar->setExpanded(false);
         /******** Modify by ut001000 renfeixiang 2020-08-28 End***************/
     }
 }
@@ -863,5 +863,5 @@ void TermWidgetPage::resizeEvent(QResizeEvent *event)
 {
     // qCDebug(views) << "Enter TermWidgetPage::resizeEvent";
     Q_UNUSED(event)
-    this->m_findBar->move(width() - SEARCHBAR_RIGHT_MARGIN, 0);
+    m_findBar->move(qMax(0, width() - m_findBar->width()), 6);
 }

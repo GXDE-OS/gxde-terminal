@@ -6,6 +6,9 @@
 #include "pagesearchbar.h"
 #include "utils.h"
 #include "mainwindow.h"
+#include "gxderemotestyle.h"
+#include <QVariantAnimation>
+#include <QPainter>
 
 #include <DLog>
 #include <DAnchors>
@@ -21,7 +24,7 @@
 #include <QAction>
 Q_DECLARE_LOGGING_CATEGORY(views)
 
-PageSearchBar::PageSearchBar(QWidget *parent) : DFloatingWidget(parent)
+PageSearchBar::PageSearchBar(QWidget *parent) : QWidget(parent)
 {
     qCDebug(views) << "PageSearchBar constructor entered";
 
@@ -29,10 +32,22 @@ PageSearchBar::PageSearchBar(QWidget *parent) : DFloatingWidget(parent)
     // Init
     hide();
     setFixedSize(barWidth, barHight);
-    // 设置窗体透明度的，需求为100%
-    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect;
-    setGraphicsEffect(opacityEffect);
-    opacityEffect->setOpacity(opacity);
+    m_opacityEffect = new QGraphicsOpacityEffect(this);
+    setGraphicsEffect(m_opacityEffect);
+    m_opacityEffect->setEnabled(false);
+    m_reveal = new QVariantAnimation(this);
+    m_reveal->setObjectName("SearchBarReveal");
+    m_reveal->setDuration(180);
+    m_reveal->setEasingCurve(QEasingCurve::OutCubic);
+    connect(m_reveal, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+        const qreal progress = value.toReal();
+        m_opacityEffect->setOpacity(progress);
+        if (parentWidget()) move(qMax(0, parentWidget()->width() - width()), 6 + qRound(-8 * (1 - progress)));
+    });
+    connect(m_reveal, &QVariantAnimation::finished, this, [this] {
+        if (!m_expanded) hide();
+        m_opacityEffect->setEnabled(false);
+    });
 
     initSearchEdit();
     initFindNextButton();
@@ -52,6 +67,14 @@ PageSearchBar::PageSearchBar(QWidget *parent) : DFloatingWidget(parent)
     updateSizeMode();
     QObject::connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::sizeModeChanged, this, &PageSearchBar::updateSizeMode);
 #endif
+    applyGxdePanelStyle(this);
+    // DSearchEdit wraps a line edit whose DTK2 frame is 24px tall.
+    // Give the wrapper and navigation buttons the same visible height.
+    m_searchEdit->setFixedHeight(widgetHight);
+    m_searchEdit->lineEdit()->setFixedHeight(widgetHight);
+    updateArrowIcons();
+    connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::themeTypeChanged,
+            this, [this] { updateArrowIcons(); update(); });
     qCDebug(views) << "PageSearchBar constructor finished";
 }
 
@@ -59,7 +82,7 @@ bool PageSearchBar::isFocus()
 {
     qCDebug(views) << "Enter PageSearchBar::isFocus";
     MainWindow *minwindow = Utils::getMainWindow(this);
-    DIconButton *addButton = minwindow->findChild<DIconButton *>("AddButton");
+    DIconButton *addButton = minwindow ? minwindow->findChild<DIconButton *>("AddButton") : nullptr;
     if (addButton != nullptr) {
         qCDebug(views) << "Branch: addButton is not null, setting tab order";
         QWidget::setTabOrder(m_findNextButton, addButton);
@@ -113,6 +136,7 @@ void PageSearchBar::recoveryHoldContent()
         qCDebug(views) << "Branch: iconBtn is not null, restoring icon";
         // 还原图标
         iconBtn->setIcon(DStyle::SP_IndicatorSearch);
+        iconBtn->setIconSize(QSize(12, 12));
     }
 }
 
@@ -158,7 +182,7 @@ void PageSearchBar::keyPressEvent(QKeyEvent *event)
     break;
     default:
         // qCDebug(views) << "Branch: default key";
-        DFloatingWidget::keyPressEvent(event);
+        QWidget::keyPressEvent(event);
         break;
     }
     // qCDebug(views) << "PageSearchBar::keyPressEvent finished";
@@ -168,8 +192,8 @@ void PageSearchBar::initFindPrevButton()
 {
     qCDebug(views) << "PageSearchBar::initFindPrevButton() entered";
 
-    m_findPrevButton = new DIconButton(QStyle::SP_ArrowUp);
-    m_findNextButton->setObjectName("PageSearchBarFindNextDIconButton");//Add by ut001000 renfeixiang 2020-08-13
+    m_findPrevButton = new DIconButton(this);
+    m_findPrevButton->setObjectName("PageSearchBarFindPrevDIconButton");//Add by ut001000 renfeixiang 2020-08-13
     m_findPrevButton->setFixedSize(widgetHight, widgetHight);
     m_findPrevButton->setFocusPolicy(Qt::TabFocus);
 
@@ -188,7 +212,7 @@ void PageSearchBar::initFindNextButton()
 {
     qCDebug(views) << "PageSearchBar::initFindNextButton() entered";
 
-    m_findNextButton = new DIconButton(QStyle::SP_ArrowDown);
+    m_findNextButton = new DIconButton(this);
     m_findNextButton->setObjectName("PageSearchBarFindNextDIconButton");//Add by ut001000 renfeixiang 2020-08-13
     m_findNextButton->setFixedSize(widgetHight, widgetHight);
     m_findNextButton->setFocusPolicy(Qt::TabFocus);
@@ -271,7 +295,7 @@ void PageSearchBar::updateSizeMode()
 
         if (searchIconBtn) {
             qCDebug(views) << "Branch: searchIconBtn exists, setting compact icon size";
-            searchIconBtn->setIconSize(QSize(ICON_CTX_SIZE_24, ICON_CTX_SIZE_24));
+            searchIconBtn->setIconSize(QSize(12, 12));
         }
     } else {
         // qCDebug(views) << "Branch: normal mode";
@@ -279,11 +303,11 @@ void PageSearchBar::updateSizeMode()
         setContentsMargins(defaultMarigin, defaultMarigin, defaultMarigin, defaultMarigin);
         m_findPrevButton->setFixedSize(widgetHight, widgetHight);
         m_findNextButton->setFixedSize(widgetHight, widgetHight);
-        m_searchEdit->setFixedHeight(COMMONHEIGHT);
+        m_searchEdit->setFixedHeight(widgetHight);
 
         if (searchIconBtn) {
             qCDebug(views) << "Branch: searchIconBtn exists, setting normal icon size";
-            searchIconBtn->setIconSize(QSize(ICON_CTX_SIZE_24, ICON_CTX_SIZE_24));
+            searchIconBtn->setIconSize(QSize(12, 12));
         }
     }
 
@@ -303,4 +327,61 @@ void PageSearchBar::setNoMatchAlert(bool isAlert)
     qCDebug(views) << "Setting no match alert:" << isAlert;
 
     m_searchEdit->setAlert(isAlert);
+}
+
+void PageSearchBar::setExpanded(bool expanded)
+{
+    if (m_expanded == expanded && (expanded == isVisible())) return;
+    m_expanded = expanded;
+    const qreal from = m_reveal->state() == QAbstractAnimation::Running
+        ? m_opacityEffect->opacity() : (isVisible() ? 1.0 : 0.0);
+    m_reveal->stop();
+    if (!style()->styleHint(QStyle::SH_Widget_Animate, nullptr, this)) {
+        m_opacityEffect->setEnabled(false);
+        setVisible(expanded);
+        return;
+    }
+    m_opacityEffect->setOpacity(from);
+    m_opacityEffect->setEnabled(true);
+    if (expanded) { show(); raise(); }
+    m_reveal->setStartValue(from);
+    m_reveal->setEndValue(expanded ? 1.0 : 0.0);
+    m_reveal->start();
+}
+
+void PageSearchBar::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    const bool dark = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::DarkType;
+    painter.setBrush(palette().color(QPalette::Window));
+    painter.setPen(QColor(dark ? "#404040" : "#cfcfcf"));
+    painter.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 4, 4);
+}
+
+void PageSearchBar::updateArrowIcons()
+{
+    // DSearchEdit has two search icons: the editing icon and the centered
+    // placeholder icon. Resize both, not just the first matching child.
+    for (auto icon : m_searchEdit->findChildren<DIconButton *>()) {
+        icon->setIconSize(QSize(12, 12));
+        // DTK positions this child using a 20px slot. Shrinking the slot
+        // leaves it above center; shrink only the glyph inside it.
+        icon->setFixedSize(20, 20);
+    }
+    const bool dark = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::DarkType;
+    for (auto button : {m_findPrevButton, m_findNextButton}) {
+        const qreal ratio = devicePixelRatioF();
+        QPixmap pixmap(qRound(12 * ratio), qRound(12 * ratio));
+        pixmap.setDevicePixelRatio(ratio);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(QPen(QColor(dark ? "#dedede" : "#303030"), 1.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        const bool up = button == m_findPrevButton;
+        painter.drawPolyline(QPolygonF({QPointF(3, up ? 7.5 : 4.5), QPointF(6, up ? 4.5 : 7.5), QPointF(9, up ? 7.5 : 4.5)}));
+        painter.end();
+        button->setIcon(QIcon(pixmap));
+        button->setIconSize(QSize(12, 12));
+    }
 }

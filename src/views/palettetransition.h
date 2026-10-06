@@ -15,7 +15,7 @@ inline void transitionPalette(QWidget *widget, const QPalette &target) {
     if (animation && animation->state() == QAbstractAnimation::Running
             && animation->property("targetPalette")
                 .value<QPalette>() == target) {
-        return
+        return;
     }
 
     if (animation) {

@@ -18,6 +18,9 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 
+class QVariantAnimation;
+class QGraphicsOpacityEffect;
+
 DWIDGET_USE_NAMESPACE
 
 /*******************************************************************************
@@ -27,7 +30,7 @@ DWIDGET_USE_NAMESPACE
  4. @说明:
 *******************************************************************************/
 
-class PageSearchBar : public DFloatingWidget
+class PageSearchBar : public QWidget
 {
     Q_OBJECT
 public:
@@ -39,6 +42,7 @@ public:
      * @return
      */
     bool isFocus();
+    void setExpanded(bool expanded);
     /**
      * @brief 焦点一进入以后，就设置文字和图标，用于失去焦点后显示
      * @author ut000439 wangpeili
@@ -86,6 +90,7 @@ protected:
      * @param event 键盘事件
      */
     void keyPressEvent(QKeyEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 
 private:
     /**
@@ -112,26 +117,29 @@ private:
     DIconButton *m_findPrevButton = nullptr;
     DSearchEdit *m_searchEdit = nullptr;
 
-    const int barHight = 62;
+    const int barHight = 44;
     const int barWidth = 382;
     const int layoutMargins = 7;
-    const int widgetHight = 36;
+    const int widgetHight = 24;
     const int widgetSpace = 10;
 
     const int iconHight = 6;
     const int iconWidth = 12;
 
     // 紧凑模式下控件调整
-    const int defaultMarigin = 6;
+    const int defaultMarigin = 0;
     const int compactMarigin = 3;
     const QMargins defaultLayoutMarigins = {7, 7, 7, 7};
     const QMargins compactLayoutMarigins = {11, 0, 10, 0};
     const int barWidthCompact = 358 + 5;
     const int barHeightCompact = 40;
     const int btnWidthCompact = 24;
-    const int btnHeightCompact = 22;
+    const int btnHeightCompact = 24;
 
-    const qreal opacity = 0.9;
+    QVariantAnimation *m_reveal = nullptr;
+    QGraphicsOpacityEffect *m_opacityEffect = nullptr;
+    bool m_expanded = false;
+    void updateArrowIcons();
     QString m_originalPlaceHolder; //原文字
 
     // 方便性能测试，记住查找开始时间
