@@ -185,6 +185,7 @@ void Vt102Emulation::resetTokenizer()
   tokenBufferPos = 0;
   argc = 0;
   argv[0] = 0;
+  argumentIsSubParameter[0] = false;
   argv[1] = 0;
   prevCC = 0;
 }
@@ -195,10 +196,11 @@ void Vt102Emulation::addDigit(int digit)
       argv[argc] = 10*argv[argc] + digit;
 }
 
-void Vt102Emulation::addArgument()
+void Vt102Emulation::addArgument(bool subParameter)
 {
   argc = qMin(argc+1,MAXARGS-1);
   argv[argc] = 0;
+  argumentIsSubParameter[argc] = subParameter;
 }
 
 void Vt102Emulation::addToCurrentToken(wchar_t cc)
@@ -392,7 +394,7 @@ void Vt102Emulation::receiveChar(wchar_t cc)
 
     if (epe(   )) { processToken( TY_CSI_PE(cc), 0, 0); resetTokenizer(); return; }
     if (ees(DIG)) { addDigit(cc-'0'); return; }
-    if (eec(';') || eec(':')) { addArgument(); return; }
+    if (eec(';') || eec(':')) { addArgument(eec(':')); return; }
     for (int i=0;i<=argc;i++)
     {
         if (epp())
@@ -401,6 +403,19 @@ void Vt102Emulation::receiveChar(wchar_t cc)
             processToken( TY_CSI_PG(cc), 0, 0); // spec. case for ESC]>0c or ESC]>c
         else if (p >= 3 && (s[2] == '<' || s[2] == '='))
             ; // silently ignore CSI < and CSI = sequences (e.g. Kitty keyboard pop)
+        else if (cc == 'm' && argv[i] == 58)
+        {
+            // Underline colors are not stored separately yet. Consume their
+            // entire payload: treating 58;5;9 as independent SGR commands would
+            // incorrectly turn on blinking and strikeout (e.g. clangd in ptre).
+            if (i < argc && argumentIsSubParameter[i + 1]) {
+                while (i < argc && argumentIsSubParameter[i + 1]) ++i;
+            } else if (i < argc) {
+                const int mode = argv[i + 1];
+                if (mode == 5) i = qMin(argc, i + 2);
+                else if (mode == 2) i = qMin(argc, i + 4);
+            }
+        }
         else if (cc == 'm' && argc - i >= 4 && (argv[i] == 38 || argv[i] == 48) && argv[i+1] == 2)
         {
             // ESC[ ... 48;2;<red>;<green>;<blue> ... m -or- ESC[ ... 38;2;<red>;<green>;<blue> ... m
@@ -624,6 +639,7 @@ void Vt102Emulation::processToken(int token, wchar_t p, int q)
     case TY_CSI_PS('s',   0) :      saveCursor           (          ); break;
     case TY_CSI_PS('u',   0) :      restoreCursor        (          ); break;
 
+    case TY_CSI_PS('m',  59) : /* Default underline color; currently follows foreground. */ break;
     case TY_CSI_PS('m',   0) : _currentScreen->setDefaultRendition  (          ); break;
     case TY_CSI_PS('m',   1) : _currentScreen->  setRendition     (RE_BOLD     ); break; //VT100
     case TY_CSI_PS('m',   2) : _currentScreen->  setRendition     (RE_FAINT    ); break;

@@ -141,8 +141,9 @@ private:
   int tokenBufferPos;
 #define MAXARGS 15
   void addDigit(int dig);
-  void addArgument();
+  void addArgument(bool subParameter = false);
   int argv[MAXARGS];
+  bool argumentIsSubParameter[MAXARGS] = {};
   int argc;
   void initTokenizer();
   int prevCC;
