@@ -11,6 +11,7 @@
 #include "windowsmanager.h"
 #include "mainwindow.h"
 #include "define.h"
+#include "splittransition.h"
 
 #include <DLog>
 #include <DDialog>
@@ -18,6 +19,13 @@
 #include <QVBoxLayout>
 #include <QApplication>
 #include <QLoggingCategory>
+
+static QList<QWidget *> terminalPanes(QWidget *page)
+{
+    QList<QWidget *> panes;
+    for (auto term : page->findChildren<TermWidget *>()) panes.append(term);
+    return panes;
+}
 
 // Find the previous term widget in the widget tree.
 static TermWidget* WidgetTreeReverseFindTerm(QWidget *widget)
@@ -171,6 +179,7 @@ void TermWidgetPage::split(Qt::Orientation orientation)
 {
     qCDebug(views) << "TermWidgetPage::split - Orientation:" << orientation;
     parentMainWindow()->showPlugin(MainWindow::PLUGIN_TYPE_NONE);
+    auto transition = SplitTransition::capture(this, terminalPanes(this));
     TermWidget *term = m_currentTerm;
 
     QSplitter *splitter = qobject_cast<QSplitter *>(term->parent());
@@ -219,6 +228,7 @@ void TermWidgetPage::split(Qt::Orientation orientation)
     if (!expandThemeStr.isEmpty())
         emit DGuiApplicationHelper::instance()->themeTypeChanged(DGuiApplicationHelper::instance()->themeType());
 
+    if (transition) transition->play(terminalPanes(this));
     return ;
 }
 
@@ -256,6 +266,7 @@ void TermWidgetPage::closeSplit(TermWidget *term, bool hasConfirmed)
             return;
         }
 
+        auto transition = SplitTransition::capture(this, terminalPanes(this));
         QWidget *parentWidget = term->parentWidget();
 
         // step1, delete the term
@@ -283,6 +294,7 @@ void TermWidgetPage::closeSplit(TermWidget *term, bool hasConfirmed)
         qCInfo(views) << "page terminal count =" << getTerminalCount();
         /******** Add by ut001000 renfeixiang 2020-08-07:关闭分屏时改变大小，bug#41436***************/
         parentMainWindow()->updateMinHeight();
+        if (transition) transition->play(terminalPanes(this));
         return;
     }
     parentMainWindow()->closeTab(identifier());
