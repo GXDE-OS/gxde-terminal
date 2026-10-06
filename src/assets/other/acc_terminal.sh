@@ -4,22 +4,22 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-#检查有没有deepin-terminal终端被安装
-dt=`which deepin-terminal`
+#检查有没有gxde-terminal终端被安装
+dt=`which gxde-terminal`
 echo $dt
 if [ ! $dt ] ; then
-    echo "没有发现 deepin-terminal 终端被安装" 
+    echo "没有发现 gxde-terminal 终端被安装"
     exit 0
 fi
 
 
-version=`deepin-terminal -v`
+version=`gxde-terminal -v`
 
 version=$(echo $version | sed -e 's/\(.*\)deepin-terminal\(.*\)/\2/g' -e 's/ //g')
 
 if [ ! "$version" ]; then
 #  version=5.2.19
-  echo "deepin-terminal 没有获取到相应的版本号"
+  echo "gxde-terminal 没有获取到相应的版本号"
   exit 0
 fi
 
@@ -49,11 +49,11 @@ if [ -f $accfile ]; then
     rm -rf $accfile
 fi
 
-#检检查是不是使用deepin-terminal终端
-pid=$(ps -eo pid,ppid,sid,comm | grep 'deepin-terminal' | awk '{print $1;}')
+#检检查是不是使用gxde-terminal终端
+pid=$(ps -eo pid,ppid,sid,comm | grep 'gxde-terminal' | awk '{print $1;}')
 
 if [ $pid ]; then
-    echo "为了准确性,关闭deepin-terminal 终端,使用其他终端测试" 
+    echo "为了准确性,关闭gxde-terminal 终端,使用其他终端测试"
     exit 0
 fi
 
@@ -79,7 +79,7 @@ echo "理论启动终端个数:$count"
 #每隔100ms启动终端
 
 #for (( i = 0; i < count; i++ )); do
-#    deepin-terminal &
+#    gxde-terminal &
 #    sleep 0.1
 #done
 i=0
@@ -88,24 +88,24 @@ firstvmsz=0
 first=1
 while [ $i -lt $count ] 
 do
-    deepin-terminal &
+    gxde-terminal &
     sleep $creat_term_delay
     i=$(grep -c "create NormalWindow, current count" $dtl)
    # if [ $i == 1 ]; then
-   #     pid=$(ps -eo pid,comm | grep 'deepin-terminal' | awk '{print $1;}')
+   #     pid=$(ps -eo pid,comm | grep 'gxde-terminal' | awk '{print $1;}')
 #        firstvmhw=$(grep "VmHWM" /proc/$pid/status | cut -d ":" -f 2 | cut -d "k" -f 1)
 #        firstvmsz=$(grep "VmSize" /proc/$pid/status | cut -d ":" -f 2 | cut -d "k" -f 1)
 #        first=0
 #   fi
     if [ $first == 1 ]; then
-        pid=$(ps -eo pid,comm | grep 'deepin-terminal' | awk '{print $1;}')
+        pid=$(ps -eo pid,comm | grep 'gxde-terminal' | awk '{print $1;}')
         firstvmhw=$(grep "VmHWM" /proc/$pid/status | cut -d ":" -f 2 | cut -d "k" -f 1)
         firstvmsz=$(grep "VmSize" /proc/$pid/status | cut -d ":" -f 2 | cut -d "k" -f 1)
         first=0
     fi
 done
 
-pid=$(ps -eo pid,comm | grep 'deepin-terminal' | awk '{print $1}')
+pid=$(ps -eo pid,comm | grep 'gxde-terminal' | awk '{print $1}')
 
 if [ ! $pid ]; then
     echo "没有终端被启动"
@@ -115,7 +115,7 @@ fi
 echo "分析中,请稍候..."
 sleep 5
 
-pid=$(ps -eo pid,comm | grep 'deepin-terminal' | awk '{print $1}')
+pid=$(ps -eo pid,comm | grep 'gxde-terminal' | awk '{print $1}')
 #echo "TermPid:  $pid" >> $accfile
 #启动终端数
 #echo "启动终端总数:  $tn" >> $accfile
@@ -142,7 +142,7 @@ tottime=$(echo "scale=2;$tottime/1000"|bc)
 echo "总计用时(S):  $tottime" >> $accfile
 
 
-pid=$(ps -eo pid,comm | grep 'deepin-terminal' | awk '{print $1;}')
+pid=$(ps -eo pid,comm | grep 'gxde-terminal' | awk '{print $1;}')
 
 #cat "/proc/$pid/status" | grep "Name" >> $accfile
 #cat "/proc/$pid/status" | grep "VmPeak" >> $accfile
@@ -187,7 +187,7 @@ echo "最终虚拟内存(M):  $vmsize" >> $accfile
 avgcpu=0;
 i=0
 echo "cpu采样次数为: $cpu_resample_number"
-termpid=$(ps -eo pid,comm | grep 'deepin-terminal' | awk '{print$1;}')
+termpid=$(ps -eo pid,comm | grep 'gxde-terminal' | awk '{print$1;}')
 for userpid in $termpid; do
 	if [ $userpid ] ; then
 	 	break
@@ -195,8 +195,8 @@ for userpid in $termpid; do
 done
 while [ $i -lt $cpu_resample_number ]
 do
- #   curcpu=$(top -n1 | grep "deepin-terminal" | awk '{print $10;}')
-#    curcpu=$(ps -eo pcpu,comm | grep "deepin-terminal" | awk '{print $1;}')
+ #   curcpu=$(top -n1 | grep "gxde-terminal" | awk '{print $10;}')
+#    curcpu=$(ps -eo pcpu,comm | grep "gxde-terminal" | awk '{print $1;}')
     curcpu=`top -n 1 -d 1 -p $userpid | grep deepin | awk '{print $10;}'`
 #    echo "====================$curcpu=================="
      if [ $curcpu ] ; then

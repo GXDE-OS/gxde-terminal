@@ -271,6 +271,8 @@ add_executable (${EXE_NAME}
     ${DTNG_QRC_FILES}
 )
 
+set_target_properties(${EXE_NAME} PROPERTIES OUTPUT_NAME gxde-terminal)
+
 target_include_directories(${EXE_NAME}
     PUBLIC
     ${PROJECT_BINARY_DIR}
@@ -306,11 +308,8 @@ install(FILES src/deepin-terminal.desktop
 install(FILES src/assets/logo/deepin-terminal.svg
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps/)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/deepin-terminal
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        PERMISSIONS OWNER_READ OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE)
+install(TARGETS ${EXE_NAME}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 # translation files
 TRANSLATION_GENERATE(QM_FILES ${CMAKE_SOURCE_DIR}/translations)

@@ -861,7 +861,7 @@ protected:
     RemoteManagementPlugin *remoteManagPlugin = nullptr;
     CustomCommandPlugin *customCommandPlugin = nullptr;
     QString m_strWindowId;
-    const char *cmd = "ps -elf|grep deepin-terminal$ |wc -l";
+    const char *cmd = "ps -elf|grep gxde-terminal$ |wc -l";
 
     /******** Modify by m000714 daizhengwen 2020-03-29: 终端窗口配置 ****************/
     QSettings *m_winInfoConfig = nullptr;

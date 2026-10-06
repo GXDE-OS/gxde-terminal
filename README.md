@@ -45,7 +45,7 @@ $ make
 $ sudo make install
 ```
 
-The executable binary file could be found at `/usr/bin/deepin-terminal` after the installation is finished.
+The executable binary file could be found at `/usr/bin/gxde-terminal` after the installation is finished.
 
 ### Other distro
 
@@ -64,7 +64,7 @@ CMake will tell you which package you are missing.
 
 ## Usage
 
-Execute `deepin-terminal -h` to get more details.
+Execute `gxde-terminal -h` to get more details.
 
 ## Getting help
 
