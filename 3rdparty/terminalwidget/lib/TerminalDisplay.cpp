@@ -144,12 +144,14 @@ ScreenWindow* TerminalDisplay::screenWindow() const
 }
 void TerminalDisplay::setScreenWindow(ScreenWindow* window)
 {
+    finishOutputScrollAnimation();
     // disconnect existing screen window if any
     if ( _screenWindow )
     {
         disconnect( _screenWindow , nullptr , this , nullptr );
     }
 
+    resetCursorAnimation();
     _screenWindow = window;
 
     if ( window )
@@ -336,6 +338,7 @@ void TerminalDisplay::calDrawTextAdditionHeight(QPainter& painter)
 
 void TerminalDisplay::setVTFont(const QFont& f)
 {
+    finishOutputScrollAnimation();
 
     /***add begin by ut001121 zhangmeng 20200908 限制字体大小 修复BUG42250***/
     /***add begin by ut001121 zhangmeng 20200908 限制字体大小 修复BUG42412***/
@@ -521,7 +524,31 @@ TerminalDisplay::TerminalDisplay(QWidget *parent)
   // setup timers for blinking cursor and text
   _blinkTimer   = new QTimer(this);
   connect(_blinkTimer, SIGNAL(timeout()), this, SLOT(blinkEvent()));
+  _outputScrollTimer = new QTimer(this);
+  _outputScrollTimer->setInterval(16);
+  _outputScrollTimer->setTimerType(Qt::PreciseTimer);
+  connect(_outputScrollTimer, &QTimer::timeout, this, [this] {
+      _outputScroll.advance(_outputScrollClock.nsecsElapsed() / 1e9);
+      _outputScrollClock.restart();
+      update(_outputScrollRegion);
+      if (!_outputScroll.active)
+          finishOutputScrollAnimation();
+  });
+  _cursorTrailTimer = new QTimer(this);
+  _cursorTrailTimer->setInterval(16);
+  _cursorTrailTimer->setTimerType(Qt::PreciseTimer);
+  connect(_cursorTrailTimer, &QTimer::timeout, this, [this] {
+      const QRect previous = _cursorTrail.damage();
+      _cursorTrail.advance(_cursorTrailClock.nsecsElapsed() / 1e9);
+      _cursorTrailClock.restart();
+      update(previous.united(_cursorTrail.damage()));
+      if (!_cursorTrail.active)
+          _cursorTrailTimer->stop();
+  });
   _blinkCursorTimer   = new QTimer(this);
+  _blinkCursorTimer->setInterval(16);
+  _blinkCursorTimer->setTimerType(Qt::PreciseTimer);
+  _cursorBlinkClock.start();
   connect(_blinkCursorTimer, SIGNAL(timeout()), this, SLOT(blinkCursorEvent()));
 
 //  KCursor::setAutoHideCursor( this, true );
@@ -648,6 +675,9 @@ void TerminalDisplay::drawLineCharString(QPainter& painter, int x, int y, const 
 
 void TerminalDisplay::setKeyboardCursorShape(QTermWidget::KeyboardCursorShape shape)
 {
+    if (_cursorShape == shape)
+        return;
+    resetCursorAnimation();
     _cursorShape = shape;
 
     updateCursor();
@@ -752,11 +782,16 @@ void TerminalDisplay::drawCursor(QPainter& painter,
                                  const QColor& backgroundColor,
                                  bool& invertCharacterColor)
 {
+    if (_drawingScrollContents)
+        return;
+    painter.save();
+    painter.setOpacity(painter.opacity() * _cursorOpacity);
     QRectF cursorRect = rect;
     cursorRect.setHeight(_fontHeight);
 
     if (_cursorBlinking)
     {
+       painter.restore();
        return;
     }
     else
@@ -832,6 +867,7 @@ void TerminalDisplay::drawCursor(QPainter& painter,
             }
         }
     }
+    painter.restore();
 }
 
 void TerminalDisplay::drawCharacters(QPainter& painter,
@@ -871,7 +907,13 @@ void TerminalDisplay::drawCharacters(QPainter& painter,
 
     // setup pen
     const CharacterColor& textColor = ( invertCharacterColor ? style->backgroundColor : style->foregroundColor );
-    const QColor color = textColor.color(_colorTable);
+    QColor color = textColor.color(_colorTable);
+    if (invertCharacterColor) {
+        const QColor foreground = style->foregroundColor.color(_colorTable);
+        color.setRedF(foreground.redF() + (color.redF() - foreground.redF()) * _cursorOpacity);
+        color.setGreenF(foreground.greenF() + (color.greenF() - foreground.greenF()) * _cursorOpacity);
+        color.setBlueF(foreground.blueF() + (color.blueF() - foreground.blueF()) * _cursorOpacity);
+    }
     QPen pen = painter.pen();
     if ( pen.color() != color )
     {
@@ -1185,8 +1227,13 @@ void TerminalDisplay::updateImage()
   // optimization - scroll the existing image where possible and
   // avoid expensive text drawing for parts of the image that
   // can simply be moved up or down
-  scrollImage( _screenWindow->scrollCount() ,
-               _screenWindow->scrollRegion() );
+  const int scrolledLines = _screenWindow->scrollCount();
+  if (scrolledLines != 0)
+      startOutputScrollAnimation(scrolledLines, _screenWindow->scrollRegion());
+  // QWidget::scroll would also move already-painted cursors/trails. The pixel
+  // animation renders from the current image instead of copying the backing store.
+  if (!_outputScroll.active)
+      scrollImage(scrolledLines, _screenWindow->scrollRegion());
 
   if (!_image) {
      // Create _image.
@@ -1364,6 +1411,7 @@ void TerminalDisplay::updateImage()
 
   dirtyRegion |= _inputMethodData.previousPreeditRect;
 
+  updateCursorAnimation();
   _screenWindow->resetScrollCount();
   // update the parts of the display which have changed
    //--modified and added by qinyaning(nyq) to solve When the screen zooms to 1.25 and 2.75,
@@ -1423,29 +1471,8 @@ void TerminalDisplay::showResizeNotification()
 
 void TerminalDisplay::setBlinkingCursor(bool blink)
 {
-    _hasBlinkingCursor=blink;
-
-    if (blink && !_blinkCursorTimer->isActive())
-    _blinkCursorTimer->start(QApplication::cursorFlashTime() / 2);
-
-    if (!blink && _blinkCursorTimer->isActive())
-    {
-        _blinkCursorTimer->stop();
-        if (_cursorBlinking)
-        blinkCursorEvent();
-        else
-        _cursorBlinking = false;
-    }
-    /******** Modify by n014361 wangpeili 2020-02-13: 修复“设置光标闪烁后，非焦点光标也在闪烁”***********×****/
-    if (hasFocus())
-    {
-        focusInEvent(nullptr);
-    }
-    else
-    {
-        focusOutEvent(nullptr);
-    }
-    /***************** Modify by n014361 End *************************/
+    _hasBlinkingCursor = blink;
+    resetCursorBlink();
 }
 
 void TerminalDisplay::setBlinkingTextEnabled(bool blink)
@@ -1464,6 +1491,9 @@ void TerminalDisplay::setBlinkingTextEnabled(bool blink)
 
 void TerminalDisplay::focusOutEvent(QFocusEvent*)
 {
+    finishOutputScrollAnimation();
+    resetCursorAnimation();
+    _cursorOpacity = 1.0;
     emit termLostFocus();
     // trigger a repaint of the cursor so that it is both visible (in case
     // it was hidden during blinking)
@@ -1483,8 +1513,9 @@ void TerminalDisplay::focusInEvent(QFocusEvent*)
     emit termGetFocus();
     if (_hasBlinkingCursor)
     {
-        _blinkCursorTimer->start();
+        resetCursorBlink();
     }
+    updateCursorAnimation();
     updateCursor();
 
     if (_hasBlinker)
@@ -1529,9 +1560,14 @@ void TerminalDisplay::paintEvent( QPaintEvent* pe )
   // set https://bugreports.qt.io/browse/QTBUG-66036
   paint.setRenderHint(QPainter::TextAntialiasing, _antialiasText);
 
-  for (const QRect &rect : qAsConst(dirtyImageRegion)) {
-      drawContents(paint, rect);
+  if (_outputScroll.active) {
+      drawScrollingContents(paint);
+      drawScrollCursor(paint);
+  } else {
+      for (const QRect &rect : qAsConst(dirtyImageRegion))
+          drawContents(paint, rect);
   }
+  drawCursorTrail(paint);
   drawInputMethodPreeditString(paint, preeditRect());
   paintFilters(paint);
 }
@@ -2005,13 +2041,218 @@ QRect TerminalDisplay::widgetToImage(const QRect &widgetArea) const
 void TerminalDisplay::updateCursor()
 {
     QRect cursorRect = imageToWidget( QRect(cursorPosition(),QSize(1,1)) );
-    const int margin = 1;
+    // Include wide glyphs and double-height/width terminal lines.
+    cursorRect.setSize(QSize(2 * _fontWidth, 2 * _fontHeight));
+    const int margin = 2;
     update(cursorRect.adjusted(-margin, -margin, margin, margin));
+}
+
+void TerminalDisplay::setPrimaryScreen(bool primary)
+{
+    if (_primaryScreen == primary)
+        return;
+    _primaryScreen = primary;
+    finishOutputScrollAnimation();
+    resetCursorAnimation();
+}
+
+void TerminalDisplay::finishOutputScrollAnimation()
+{
+    if (_outputScrollTimer)
+        _outputScrollTimer->stop();
+    if (!_outputScrollSnapshot.isNull())
+        update(_outputScrollRegion);
+    _outputScroll.reset();
+    _outputScrollSnapshot = QImage();
+}
+
+void TerminalDisplay::startOutputScrollAnimation(int lines, const QRect &region)
+{
+    // Only animate ordinary full-screen shell output. History navigation and
+    // alternate-screen TUIs keep their own timing and scrolling semantics.
+    if (!_image || !isVisible() || !hasFocus() || !_primaryScreen ||
+        !_screenWindow->trackOutput() || !_inputMethodData.preeditString.isEmpty() ||
+        _screenWindow->screen()->topMargin() != 0 ||
+        _screenWindow->screen()->bottomMargin() != _screenWindow->screen()->getLines() - 1 ||
+        region.top() != 0 || region.height() < _usedLines - 1 ||
+        lines <= 0 || lines >= _usedLines || _usedColumns <= 0) {
+        finishOutputScrollAnimation();
+        return;
+    }
+    if (_outputScroll.active) {
+        _outputScroll.advance(_outputScrollClock.nsecsElapsed() / 1e9);
+        _outputScrollClock.restart();
+    }
+    const qreal distance = lines * _fontHeight + _outputScroll.offset();
+    if (distance >= _usedLines * _fontHeight) {
+        finishOutputScrollAnimation(); // Do not accumulate a backlog on bulk output.
+        return;
+    }
+    const qreal ratio = devicePixelRatioF();
+    QImage snapshot(QSize(int(std::ceil(width() * ratio)), int(std::ceil(height() * ratio))),
+                    QImage::Format_ARGB32_Premultiplied);
+    snapshot.setDevicePixelRatio(ratio);
+    snapshot.fill(Qt::transparent);
+    QPainter painter(&snapshot);
+    painter.setFont(font());
+    painter.setRenderHint(QPainter::TextAntialiasing, _antialiasText);
+    _drawingScrollContents = true;
+    if (_outputScroll.active)
+        drawScrollingContents(painter);
+    else
+        drawContents(painter, QRect(0, 0, _usedColumns, _usedLines));
+    _drawingScrollContents = false;
+    painter.end();
+    _outputScrollSnapshot = snapshot;
+    _outputScrollRegion = QRect(2 * contentsRect().left(), 2 * contentsRect().top(),
+                                _usedColumns * _fontWidth, _usedLines * _fontHeight);
+    _outputScroll.start(distance);
+    _outputScrollClock.start();
+    _outputScrollTimer->start();
+}
+
+void TerminalDisplay::drawScrollingContents(QPainter &painter)
+{
+    const qreal offset = _outputScroll.offset();
+    const qreal travelled = _outputScroll.distance - offset;
+    const bool wasDrawing = _drawingScrollContents;
+    _drawingScrollContents = true;
+    painter.save();
+    painter.setClipRect(_outputScrollRegion, Qt::IntersectClip);
+    painter.save();
+    // Preserve the outgoing top strip, including its original glyphs/colors.
+    painter.setClipRect(QRectF(_outputScrollRegion.left(), _outputScrollRegion.top(),
+                               _outputScrollRegion.width(), offset), Qt::IntersectClip);
+    painter.drawImage(QPointF(0, -travelled), _outputScrollSnapshot);
+    painter.restore();
+    painter.setClipRect(QRectF(_outputScrollRegion.left(), _outputScrollRegion.top() + offset,
+                               _outputScrollRegion.width(), _outputScrollRegion.height() - offset),
+                        Qt::IntersectClip);
+    painter.translate(0, offset);
+    drawContents(painter, QRect(0, 0, _usedColumns, _usedLines));
+    painter.restore();
+    _drawingScrollContents = wasDrawing;
+}
+
+void TerminalDisplay::drawScrollCursor(QPainter &painter)
+{
+    const QPoint position = cursorPosition();
+    if (_hideCursor || position.x() < 0 || position.x() >= _usedColumns ||
+        position.y() < 0 || position.y() >= _usedLines)
+        return;
+    const Character &cell = _image[loc(position.x(), position.y())];
+    if (!(cell.rendition & RE_CURSOR))
+        return;
+    const QRect rect(2 * contentsRect().left() + position.x() * _fontWidth,
+                     2 * contentsRect().top() + position.y() * _fontHeight,
+                     qMax(1, cell.width()) * _fontWidth, _fontHeight);
+    bool invert = false;
+    painter.save();
+    drawCursor(painter, rect, cell.foregroundColor.color(_colorTable),
+               cell.backgroundColor.color(_colorTable), invert);
+    if (_cursorShape == Emulation::KeyboardCursorShape::BlockCursor && hasFocus() && _cursorOpacity > 0) {
+        QString text;
+        if (cell.rendition & RE_EXTENDED_CHAR) {
+            ushort count = 0;
+            const uint *chars = ExtendedCharTable::instance.lookupExtendedChar(cell.character, count);
+            if (chars)
+                text = QString::fromUcs4(chars, count);
+        } else {
+            const uint character = cell.character;
+            text = QString::fromUcs4(&character, 1);
+        }
+        painter.setOpacity(_cursorOpacity);
+        drawCharacters(painter, rect, text, &cell, invert);
+    }
+    painter.restore();
+}
+
+void TerminalDisplay::resetCursorBlink()
+{
+    _cursorBlinkClock.restart();
+    _cursorOpacity = 1.0;
+    _cursorBlinking = false;
+    if (_hasBlinkingCursor && hasFocus() && isVisible() && QApplication::cursorFlashTime() > 0)
+        _blinkCursorTimer->start(16);
+    else
+        _blinkCursorTimer->stop();
+    updateCursor();
+}
+
+void TerminalDisplay::resetCursorAnimation()
+{
+    if (_cursorTrail.active)
+        update(_cursorTrail.damage());
+    _cursorTrailTimer->stop();
+    _cursorTrail.reset();
+}
+
+void TerminalDisplay::updateCursorAnimation()
+{
+    const QPoint position = cursorPosition();
+    if (!isVisible() || !hasFocus() || _hideCursor || !_image ||
+        !_inputMethodData.preeditString.isEmpty() ||
+        position.x() < 0 || position.x() >= _usedColumns ||
+        position.y() < 0 || position.y() >= _usedLines ||
+        !(_image[position.y() * _columns + position.x()].rendition & RE_CURSOR)) {
+        resetCursorAnimation();
+        _blinkCursorTimer->stop();
+        return;
+    }
+    const Character &cell = _image[position.y() * _columns + position.x()];
+    // Match drawContents(), including DEC double-width/double-height lines.
+    const LineProperty line = _lineProperties.value(position.y());
+    QRectF target(2 * contentsRect().left() + position.x() * _fontWidth,
+                  2 * contentsRect().top() + position.y() * _fontHeight,
+                  qMax(1, cell.width()) * _fontWidth * ((line & LINE_DOUBLEWIDTH) ? 2 : 1),
+                  _fontHeight * ((line & LINE_DOUBLEHEIGHT) ? 2 : 1));
+    if (_cursorShape == Emulation::KeyboardCursorShape::IBeamCursor)
+        target.setWidth(1);
+    else if (_cursorShape == Emulation::KeyboardCursorShape::UnderlineCursor)
+        target.setTop(target.bottom() - 1);
+    else if (_cursorShape == Emulation::KeyboardCursorShape::BoldUnderlineCursor)
+        target.setTop(target.bottom() - qMin(4, _fontHeight));
+    const QRect previous = _cursorTrail.damage();
+    if (target != _cursorTrail.target || (_hasBlinkingCursor && !_blinkCursorTimer->isActive()))
+        resetCursorBlink();
+    _cursorTrailColor = _cursorColor.isValid() ? _cursorColor : cell.foregroundColor.color(_colorTable);
+    // Preserve the current animated position when a second move/CRLF arrives.
+    if (_cursorTrailTimer->isActive()) {
+        _cursorTrail.advance(_cursorTrailClock.nsecsElapsed() / 1e9);
+        _cursorTrailClock.restart();
+    }
+    _cursorTrail.viewport = window()->size();
+    _cursorTrail.moveTo(target);
+    if (_cursorTrail.active) {
+        update(previous.united(_cursorTrail.damage()));
+        if (!_cursorTrailTimer->isActive()) {
+            _cursorTrailClock.start();
+            _cursorTrailTimer->start();
+        }
+    }
+}
+
+void TerminalDisplay::drawCursorTrail(QPainter &painter)
+{
+    if (!_cursorTrail.active || !hasFocus() || _hideCursor)
+        return;
+    painter.save();
+    // Match kitty's trail.slang: only mask the actual cursor rectangle.
+    // Trail visibility is independent of blink opacity (mDECTCEM, not blinking).
+    const QRegion area(QRect(2 * contentsRect().left(), 2 * contentsRect().top(),
+                             _usedColumns * _fontWidth, _usedLines * _fontHeight));
+    painter.setClipRegion(area.subtracted(QRegion(_cursorTrail.target.toAlignedRect())), Qt::IntersectClip);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(_cursorTrailColor);
+    painter.setOpacity(1.0);
+    painter.drawPolygon(_cursorTrail.corners);
+    painter.restore();
 }
 
 void TerminalDisplay::blinkCursorEvent()
 {
-  _cursorBlinking = !_cursorBlinking;
+  _cursorOpacity = CursorAnimation::blinkOpacity(_cursorBlinkClock.elapsed(), QApplication::cursorFlashTime());
   updateCursor();
 }
 
@@ -2023,6 +2264,8 @@ void TerminalDisplay::blinkCursorEvent()
 
 void TerminalDisplay::resizeEvent(QResizeEvent*)
 {
+    finishOutputScrollAnimation();
+    resetCursorAnimation();
   initKeyBoardSelection();
   updateImageSize();
   processFilters();
@@ -2085,10 +2328,14 @@ void TerminalDisplay::updateImageSize()
 //the same signal as the one for a content size change
 void TerminalDisplay::showEvent(QShowEvent*)
 {
+    resetCursorBlink();
     emit changedContentSizeSignal(_contentHeight,_contentWidth);
 }
 void TerminalDisplay::hideEvent(QHideEvent*)
 {
+    finishOutputScrollAnimation();
+    resetCursorAnimation();
+    _blinkCursorTimer->stop();
     emit changedContentSizeSignal(_contentHeight,_contentWidth);
 }
 
@@ -2100,6 +2347,7 @@ void TerminalDisplay::hideEvent(QHideEvent*)
 
 void TerminalDisplay::scrollBarPositionChanged(int)
 {
+    finishOutputScrollAnimation();
   if ( !_screenWindow )
       return;
 
@@ -2187,6 +2435,7 @@ void TerminalDisplay::initKeyBoardSelection()
 
 void TerminalDisplay::mousePressEvent(QMouseEvent* ev)
 {
+    finishOutputScrollAnimation();
   //判断有鼠标点击的时候，初始化键盘选择状态
   initKeyBoardSelection();
 
@@ -2701,6 +2950,7 @@ void TerminalDisplay::getCharacterPosition(const QPoint& widgetPoint,int& line,i
 void TerminalDisplay::setHideCursor(bool hideCursor)
 {
     _hideCursor = hideCursor;
+    updateCursorAnimation();
     update();
 }
 
@@ -2818,6 +3068,7 @@ void TerminalDisplay::mouseDoubleClickEvent(QMouseEvent* ev)
 
 void TerminalDisplay::wheelEvent( QWheelEvent* ev )
 {
+    finishOutputScrollAnimation();
     // 当前窗口被激活,且有焦点,不处理Ctrl+滚轮事件
     if (isActiveWindow() && hasFocus()) {
         if (ev->modifiers() == Qt::ControlModifier) {
@@ -3279,14 +3530,7 @@ void TerminalDisplay::keyPressEvent( QKeyEvent* event )
     _actSel=0; // Key stroke implies a screen update, so TerminalDisplay won't
               // know where the current selection is.
 
-    if (_hasBlinkingCursor)
-    {
-      _blinkCursorTimer->start(QApplication::cursorFlashTime() / 2);
-      if (_cursorBlinking)
-        blinkCursorEvent();
-      else
-        _cursorBlinking = false;
-    }
+    resetCursorBlink();
 
     if ( emitKeyPressSignal )
     {
@@ -3364,7 +3608,10 @@ void TerminalDisplay::inputMethodEvent( QInputMethodEvent* event )
     QKeyEvent keyEvent(QEvent::KeyPress,0,Qt::NoModifier,event->commitString());
     emit keyPressedSignal(&keyEvent);
 
+    finishOutputScrollAnimation();
     _inputMethodData.preeditString = event->preeditString();
+    resetCursorBlink();
+    updateCursorAnimation();
     update(preeditRect() | _inputMethodData.previousPreeditRect);
 
     event->accept();

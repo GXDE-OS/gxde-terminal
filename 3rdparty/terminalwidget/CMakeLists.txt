@@ -176,6 +176,8 @@ set(HDRS_DISTRIB
     lib/Character.h
     lib/CharacterColor.h
     lib/TerminalDisplay.h
+    lib/CursorAnimation.h
+    lib/ScrollAnimation.h
 )
 
 option(RUNDIR_KEYBOARD_LAYOUT_FIRST "Load keyboard layouts from application runtime directory" OFF)

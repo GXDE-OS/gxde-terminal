@@ -23,6 +23,10 @@
 
 // Qt
 #include <QColor>
+#include <QElapsedTimer>
+#include "CursorAnimation.h"
+#include "ScrollAnimation.h"
+#include <QImage>
 #include <QPointer>
 #include <QWidget>
 
@@ -448,6 +452,7 @@ public:
     void setIsAllowScroll(bool isAllowScroll);
 
 public slots:
+    void setPrimaryScreen(bool primary);
 
     /**
      * Causes the terminal display to fetch the latest character image from the associated
@@ -752,6 +757,14 @@ private:
 
     // redraws the cursor
     void updateCursor();
+    void updateCursorAnimation();
+    void resetCursorAnimation();
+    void resetCursorBlink();
+    void drawCursorTrail(QPainter &painter);
+    void startOutputScrollAnimation(int lines, const QRect &region);
+    void finishOutputScrollAnimation();
+    void drawScrollingContents(QPainter &painter);
+    void drawScrollCursor(QPainter &painter);
 
     bool handleShortcutOverrideEvent(QKeyEvent* event);
 
@@ -835,6 +848,19 @@ private:
     TripleClickMode _tripleClickMode;
     bool _isFixedSize; //Columns / lines are locked.
     QTimer* _blinkTimer;  // active when hasBlinker
+    ScrollAnimation _outputScroll;
+    QTimer *_outputScrollTimer = nullptr;
+    QElapsedTimer _outputScrollClock;
+    QImage _outputScrollSnapshot;
+    QRect _outputScrollRegion;
+    bool _drawingScrollContents = false;
+    bool _primaryScreen = true;
+    CursorAnimation _cursorTrail;
+    QTimer* _cursorTrailTimer;
+    QElapsedTimer _cursorTrailClock;
+    QElapsedTimer _cursorBlinkClock;
+    qreal _cursorOpacity = 1.0;
+    QColor _cursorTrailColor;
     QTimer* _blinkCursorTimer;  // active when hasBlinkingCursor
 
     //QMenu* _drop;

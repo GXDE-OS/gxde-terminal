@@ -230,6 +230,9 @@ void Session::addView(TerminalDisplay * widget)
 
         widget->setBracketedPasteMode(_emulation->programBracketedPasteMode());
 
+        connect(_emulation, &Emulation::primaryScreenInUse,
+                widget, &TerminalDisplay::setPrimaryScreen);
+        widget->setPrimaryScreen(_isPrimaryScreen);
         widget->setScreenWindow(_emulation->createWindow());
     }
 
