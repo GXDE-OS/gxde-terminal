@@ -3,6 +3,8 @@
 #include "titlebar.h"
 #include "headertransition.h"
 #include <DBackgroundGroup>
+#include <DBlurEffectWidget>
+#include <DWindowManagerHelper>
 #include <DListView>
 #include <DTitlebar>
 #include <DSlider>
@@ -24,6 +26,50 @@
 DWIDGET_USE_NAMESPACE
 
 namespace {
+class SettingsBlur : public QObject
+{
+public:
+    explicit SettingsBlur(QWidget *dialog) : QObject(dialog), m_dialog(dialog)
+    {
+        // Reuse the native dialog blur surface when DTK already provides one.
+        m_blur = dialog->findChild<DBlurEffectWidget *>(QString(), Qt::FindDirectChildrenOnly);
+        if (!m_blur) m_blur = new DBlurEffectWidget(dialog);
+        m_blur->setObjectName("GXDESettingsBlur");
+        m_blur->setAttribute(Qt::WA_TransparentForMouseEvents);
+        m_blur->setBlendMode(DBlurEffectWidget::BehindWindowBlend);
+        m_blur->setFull(true);
+        m_blur->setBlurEnabled(true);
+        m_blur->setMaskColor(QColor("#252525"));
+        m_blur->setMaskAlpha(210);
+        m_blur->setBlurRectXRadius(8);
+        m_blur->setBlurRectYRadius(8);
+        dialog->setAttribute(Qt::WA_TranslucentBackground);
+        dialog->installEventFilter(this);
+        sync();
+    }
+protected:
+    bool eventFilter(QObject *, QEvent *event) override
+    {
+        if (event->type() == QEvent::Resize || event->type() == QEvent::Show)
+            sync();
+        return false;
+    }
+private:
+    void sync()
+    {
+        // DTK may install a window palette while enabling its blur surface.
+        auto palette = m_dialog->palette();
+        palette.setColor(QPalette::Window, Qt::transparent);
+        m_dialog->setPalette(palette);
+        m_dialog->setAutoFillBackground(false);
+        m_blur->setGeometry(m_dialog->rect());
+        m_blur->lower();
+        m_blur->show();
+    }
+    QWidget *m_dialog;
+    DBlurEffectWidget *m_blur;
+};
+
 bool isNavigationHeading(const QModelIndex &index);
 
 class SettingsScroll : public QObject
@@ -278,7 +324,6 @@ public:
         const bool selected = option.state & QStyle::State_Selected;
         p->save();
         p->setClipRect(option.rect, Qt::IntersectClip);
-        p->fillRect(option.rect, option.palette.color(QPalette::Window));
         if (index == m_hoverIndex && !selected) {
             p->fillRect(rect, QColor(255, 255, 255, qRound(14 * m_hover.value())));
         }
@@ -388,8 +433,6 @@ public:
         if (event->type() == QEvent::Paint) {
             auto widget = qobject_cast<QWidget *>(object);
             if (widget) {
-                QPainter painter(widget);
-                painter.fillRect(widget->rect(), widget->palette().color(QPalette::Window));
                 return true;
             }
         }
@@ -408,7 +451,7 @@ void applyGxdeSettingsStyle(QWidget *dialog)
     if (!style) style = QStyleFactory::create("Fusion");
     style->setParent(dialog);
     QPalette palette = style->standardPalette();
-    palette.setColor(QPalette::Window, QColor("#252525"));
+    palette.setColor(QPalette::Window, Qt::transparent);
     palette.setColor(QPalette::Base, QColor("#303030"));
     palette.setColor(QPalette::Button, QColor("#353535"));
     palette.setColor(QPalette::ButtonText, QColor("#dedede"));
@@ -424,18 +467,20 @@ void applyGxdeSettingsStyle(QWidget *dialog)
         widget->setStyle(style);
         widget->setPalette(palette);
     }
-    dialog->setAutoFillBackground(true);
+    dialog->setAutoFillBackground(false);
     dialog->setStyleSheet(QStringLiteral(
-        "QWidget#SettingDialog { background: #252525; color: #dedede; }"
+        "QWidget#SettingDialog { background: transparent; color: #dedede; }"
         "QLabel { color: #dedede; background: transparent; }"
-        "QScrollArea, QWidget#SettingsContent, QWidget#RightFrame { background: #252525; border: none; }"
-        "QWidget#LeftFrame { background: #252525; border-right: 1px solid #404040; }"
-        "QListView#NavigationBar { background: #252525; border: none; border-right: 1px solid #404040; padding: 0; }"
+        "QScrollArea, QWidget#SettingsContent, QWidget#RightFrame { background: transparent; border: none; }"
+        "QWidget#LeftFrame { background: transparent; border-right: 1px solid #404040; }"
+        "QListView#NavigationBar { background: transparent; border: none; border-right: 1px solid #404040; padding: 0; }"
         "QComboBox, QSpinBox, QLineEdit { min-height: 22px; }"));
     for (auto area : dialog->findChildren<QScrollArea *>()) {
         if (area->accessibleName() != "ContentScrollArea") continue;
         area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         area->setWidgetResizable(true);
+        area->viewport()->setAutoFillBackground(false);
+        if (area->widget()) area->widget()->setAutoFillBackground(false);
         auto scrolling = new SettingsScroll(area);
         if (auto nav = dialog->findChild<DListView *>("NavigationBar")) {
             QObject::connect(nav, &QAbstractItemView::clicked, scrolling, [scrolling] { scrolling->stop(); });
@@ -449,6 +494,7 @@ void applyGxdeSettingsStyle(QWidget *dialog)
     if (auto left = dialog->findChild<QWidget *>("LeftFrame")) left->setFixedWidth(160);
     if (auto nav = dialog->findChild<DListView *>("NavigationBar")) {
         nav->setFixedWidth(160);
+        nav->viewport()->setAutoFillBackground(false);
         nav->setViewportMargins(0, 0, 0, 0);
         nav->setContentsMargins(0, 0, 0, 0);
         nav->setMinimumHeight(0);
@@ -468,6 +514,7 @@ void applyGxdeSettingsStyle(QWidget *dialog)
     }
     auto flat = new FlatGroupBackground(dialog);
     for (auto group : dialog->findChildren<DBackgroundGroup *>()) {
+        static_cast<QWidget *>(group)->setAutoFillBackground(false);
         group->installEventFilter(flat);
         group->setItemSpacing(4);
         group->setItemMargins(QMargins());
@@ -517,6 +564,14 @@ void applyGxdeSettingsStyle(QWidget *dialog)
             line->setStyleSheet("background: #404040;");
         } else line->hide();
     }
+    if (DWindowManagerHelper::instance()->hasBlurWindow()) {
+        new SettingsBlur(dialog);
+    } else {
+        // Keep an opaque readable surface on platforms without compositor blur.
+        dialog->setStyleSheet(dialog->styleSheet() +
+            QStringLiteral("QWidget#SettingDialog { background: #252525; }"));
+    }
+
     // A null window icon inherits QApplication's terminal icon. Use an
     // explicit transparent icon for both native and DTK title bars.
     QPixmap emptyIcon(24, 24);
