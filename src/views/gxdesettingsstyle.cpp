@@ -5,6 +5,7 @@
 #include <DBackgroundGroup>
 #include <DBlurEffectWidget>
 #include <DWindowManagerHelper>
+#include <DGuiApplicationHelper>
 #include <DListView>
 #include <DTitlebar>
 #include <DSlider>
@@ -325,7 +326,11 @@ public:
         p->save();
         p->setClipRect(option.rect, Qt::IntersectClip);
         if (index == m_hoverIndex && !selected) {
-            p->fillRect(rect, QColor(255, 255, 255, qRound(14 * m_hover.value())));
+            p->fillRect(rect, QColor(option.palette.color(
+                QPalette::WindowText).red(), option.palette.color(
+                    QPalette::WindowText).green(), option.palette.color(
+                        QPalette::WindowText).blue(),
+                        qRound(14 * m_hover.value())));
         }
         const QRectF selection = m_selectionRect.isValid() ? m_selectionRect
             : (selected ? QRectF(rect) : QRectF());
@@ -335,7 +340,8 @@ public:
         font.setPixelSize(heading ? 16 : 13);
         font.setBold(heading);
         p->setFont(font);
-        p->setPen(selected ? QColor("#2ca7f8") : QColor(heading ? "#f0f0f0" : "#dedede"));
+        p->setPen(selected ? QColor("#2ca7f8") : option.palette.color(
+            QPalette::WindowText));
         p->drawText(rect.adjusted(heading ? 30 : 40, 0, -6, 0), Qt::AlignLeft | Qt::AlignVCenter, text);
         p->restore();
     }
@@ -441,40 +447,92 @@ public:
 };
 }
 
-void applyGxdeSettingsStyle(QWidget *dialog)
-{
-    dialog->setFixedSize(740, 670);
-    QFont font = dialog->font();
-    font.setPixelSize(13);
-    dialog->setFont(font);
-    auto style = QStyleFactory::create("ddark2");
-    if (!style) style = QStyleFactory::create("Fusion");
-    style->setParent(dialog);
+namespace {
+void updateSettingsTheme(QWidget *dialog) {
+    const bool dark = DGuiApplicationHelper::instance()
+        ->themeType() == DGuiApplicationHelper::DarkType;
+
+    const QString styleName = dark ? "ddark2" : "dlight2";
+    auto style = dialog->findChild<QStyle *>(
+        styleName, Qt::FindDirectChildrenOnly);
+
+    if (!style) {
+        style = QStyleFactory::create(styleName);
+        if (!style) style = QStyleFactory::create("Fusion");
+        style->setObjectName(styleName);
+        style->setParent(dialog);
+    }
+
+    const QString text = dark ? "#dedede" : "#303030";
+    const QString background = dark ? "#252525" : "#f5f5f5";
+    const QString border = dark ? "#404040" : "#d4d4d4";
+
     QPalette palette = style->standardPalette();
     palette.setColor(QPalette::Window, Qt::transparent);
-    palette.setColor(QPalette::Base, QColor("#303030"));
-    palette.setColor(QPalette::Button, QColor("#353535"));
-    palette.setColor(QPalette::ButtonText, QColor("#dedede"));
-    palette.setColor(QPalette::WindowText, QColor("#dedede"));
-    palette.setColor(QPalette::Text, QColor("#dedede"));
-    palette.setColor(QPalette::Disabled, QPalette::Text, QColor("#808080"));
-    palette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor("#808080"));
+    palette.setColor(QPalette::Base, QColor(dark ? "#303030" : "#ffffff"));
+    palette.setColor(QPalette::Button, QColor(dark ? "#353535" : "#eeeeee"));
+    for (auto role : {QPalette::ButtonText, QPalette::WindowText,
+            QPalette::Text}) {
+        palette.setColor(role, QColor(text));
+    }
+
     palette.setColor(QPalette::Highlight, QColor("#2ca7f8"));
     auto widgets = dialog->findChildren<QWidget *>();
     widgets.prepend(dialog);
     for (auto widget : widgets) {
-        if (qobject_cast<QMenu *>(widget)) continue;
+        if (qobject_cast<QMenu *>(widget) || qobject_cast<DBlurEffectWidget *>(
+                widget)) {
+            continue;
+    }
+
         widget->setStyle(style);
         widget->setPalette(palette);
     }
+
+    auto blur = dialog->findChild<DBlurEffectWidget *>("GXDESettingsBlur");
+    if (blur) {
+        blur->setMaskColor(QColor(background));
+        blur->setMaskAlpha(210);
+    }
+
     dialog->setAutoFillBackground(false);
     dialog->setStyleSheet(QStringLiteral(
-        "QWidget#SettingDialog { background: transparent; color: #dedede; }"
-        "QLabel { color: #dedede; background: transparent; }"
+        "QWidget#SettingDialog { background: %1; color: %2; }"
+        "QLabel { color: %2; background: transparent; }"
         "QScrollArea, QWidget#SettingsContent, QWidget#RightFrame { background: transparent; border: none; }"
-        "QWidget#LeftFrame { background: transparent; border-right: 1px solid #404040; }"
-        "QListView#NavigationBar { background: transparent; border: none; border-right: 1px solid #404040; padding: 0; }"
-        "QComboBox, QSpinBox, QLineEdit { min-height: 22px; }"));
+        "QWidget#LeftFrame { background: transparent; border-right: 1px solid %3; }"
+        "QListView#NavigationBar { background: transparent; border: none; border-right: 1px solid %3; padding: 0; }"
+        "QComboBox, QSpinBox, QLineEdit { min-height: 22px; }")
+        .arg(blur ? QStringLiteral("transparent") : background, text, border));
+
+    for (auto label : dialog->findChildren<QLabel *>("ContentTitleText")) {
+        label->setStyleSheet(QStringLiteral(
+            "color: %1; background: transparent;").arg(text));
+    }
+
+    for (auto line : dialog->findChildren<QLabel *>("ContentTitleLine")) {
+        line->setStyleSheet(QStringLiteral("background: %1;").arg(border));
+    }
+
+    for (auto close : dialog->findChildren<QAbstractButton *>(
+            "DTitlebarDWindowCloseButton")) {
+        close->setProperty("gxdeWindowButtonTheme", dark ? "dark" : "light");
+        close->update();
+    }
+
+    for (auto area : dialog->findChildren<QAbstractScrollArea *>()) {
+        area->viewport()->setAutoFillBackground(false);
+    }
+    dialog->update();
+}
+}
+
+void applyGxdeSettingsStyle(QWidget *dialog) {
+    dialog->setFixedSize(740, 670);
+    QFont font = dialog->font();
+    font.setPixelSize(13);
+    dialog->setFont(font);
+
     for (auto area : dialog->findChildren<QScrollArea *>()) {
         if (area->accessibleName() != "ContentScrollArea") continue;
         area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -551,7 +609,7 @@ void applyGxdeSettingsStyle(QWidget *dialog)
         titleFont.setBold(true);
         label->setFont(titleFont);
         label->setForegroundRole(QPalette::WindowText);
-        label->setStyleSheet("color: #dedede; background: transparent;");
+        label->setStyleSheet("background: transparent;");
     }
     for (auto slider : dialog->findChildren<DSlider *>()) {
         slider->setLeftIcon(QIcon());
@@ -583,8 +641,12 @@ void applyGxdeSettingsStyle(QWidget *dialog)
         title->setFixedHeight(39);
         title->setBackgroundTransparent(true);
         if (auto close = title->findChild<QAbstractButton *>("DTitlebarDWindowCloseButton")) {
-            close->setProperty("gxdeWindowButtonTheme", "dark");
             applyGxdeWindowButtonStyle(close, "close");
         }
     }
+    updateSettingsTheme(dialog);
+    QObject::connect(DGuiApplicationHelper::instance(),
+        &DGuiApplicationHelper::themeTypeChanged,
+        dialog, [dialog] { updateSettingsTheme(dialog); });
+
 }

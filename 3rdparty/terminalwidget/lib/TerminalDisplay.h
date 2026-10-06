@@ -22,6 +22,8 @@
 #define TERMINALDISPLAY_H
 
 // Qt
+#include <QVariantAnimation>
+
 #include <QColor>
 #include <QElapsedTimer>
 #include "CursorAnimation.h"
@@ -813,6 +815,9 @@ private:
     QVector<LineProperty> _lineProperties;
 
     ColorEntry _colorTable[TABLE_COLORS];
+    ColorEntry _colorTransitionStart[TABLE_COLORS];
+    ColorEntry _colorTransitionTarget[TABLE_COLORS];
+    QVariantAnimation *_colorTransition = nullptr;
     uint _randomSeed;
 
     bool _resizing;

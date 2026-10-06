@@ -192,12 +192,62 @@ void TerminalDisplay::setForegroundColor(const QColor& color)
 
     update();
 }
-void TerminalDisplay::setColorTable(const ColorEntry table[])
-{
-  for (int i = 0; i < TABLE_COLORS; i++)
-      _colorTable[i] = table[i];
+void TerminalDisplay::setColorTable(const ColorEntry table[]) {
+    if (_colorTransition && _colorTransition
+            ->state() == QAbstractAnimation::Running) {
+        bool sameTarget = true;
+        for (int i = 0; i < TABLE_COLORS; ++i) {
+            sameTarget = sameTarget && table[i]
+                .color == _colorTransitionTarget[i].color
+                && table[i].transparent == _colorTransitionTarget[i].transparent
+                && table[i].fontWeight == _colorTransitionTarget[i].fontWeight;
+        }
+        if (sameTarget) {
+            return;
+        }
+    }
+    if (_colorTransition) {
+        _colorTransition->stop();
+    }
 
-  setBackgroundColor(_colorTable[DEFAULT_BACK_COLOR].color);
+    if (!isVisible() || !style()->styleHint(
+            QStyle::SH_Widget_Animate, nullptr, this)) {
+        for (int i = 0; i < TABLE_COLORS; ++i) _colorTable[i] = table[i];
+        setBackgroundColor(_colorTable[DEFAULT_BACK_COLOR].color);
+        return;
+    }
+
+    if (!_colorTransition) {
+        _colorTransition = new QVariantAnimation(this);
+        _colorTransition->setObjectName("TerminalColorTransition");
+        _colorTransition->setDuration(220);
+        _colorTransition->setEasingCurve(QEasingCurve::OutCubic);
+        connect(_colorTransition,
+                &QVariantAnimation::valueChanged, this,
+                [this](const QVariant &value) {
+            const qreal t = value.toReal();
+            for (int i = 0; i < TABLE_COLORS; ++i) {
+                const QColor a = _colorTransitionStart[i].color;
+                const QColor b = _colorTransitionTarget[i].color;
+                _colorTable[i] = _colorTransitionTarget[i];
+                _colorTable[i].color = QColor::fromRgbF(
+                    a.redF() + (b.redF() - a.redF()) * t,
+                    a.greenF() + (b.greenF() - a.greenF()) * t,
+                    a.blueF() + (b.blueF() - a.blueF()) * t,
+                    a.alphaF() + (b.alphaF() - a.alphaF()) * t);
+            }
+            setBackgroundColor(_colorTable[DEFAULT_BACK_COLOR].color);
+        });
+    }
+
+    for (int i = 0; i < TABLE_COLORS; ++i) {
+        _colorTransitionStart[i] = _colorTable[i];
+        _colorTransitionTarget[i] = table[i];
+    }
+
+    _colorTransition->setStartValue(0.0);
+    _colorTransition->setEndValue(1.0);
+    _colorTransition->start();
 }
 
 /* ------------------------------------------------------------------------- */

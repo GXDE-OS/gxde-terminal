@@ -62,19 +62,28 @@ public:
 class GxdeMenuStyle : public QObject
 {
 public:
-    explicit GxdeMenuStyle(QApplication *app) : QObject(app), m_style(QStyleFactory::create("ddark2"))
-    {
-        // Keep the platform style when the optional GXDE style plugin is absent.
-        if (m_style) {
-            m_style = new GxdeMenuProxyStyle(m_style);
-            m_style->setObjectName("ddark2");
-            m_style->setParent(this);
-            app->installEventFilter(this);
-#ifdef HAVE_KWINDOWEFFECTS
-            // Start Wayland protocol discovery before the first menu is shown.
-            KWindowEffects::isEffectAvailable(KWindowEffects::BlurBehind);
-#endif
+    explicit GxdeMenuStyle(QApplication *app) : QObject(app) {
+        for (const QString &name : {QStringLiteral("ddark2"),
+                QStringLiteral("dlight2")}) {
+            if (auto base = QStyleFactory::create(name)) {
+                auto style = new GxdeMenuProxyStyle(base);
+                style->setObjectName(name);
+                style->setParent(this);
+                if (name == "ddark2") m_dark = style;
+                else m_light = style;
+            }
         }
+
+        app->installEventFilter(this);
+        connect(DGuiApplicationHelper::instance(),
+                &DGuiApplicationHelper::themeTypeChanged, this, [this] {
+            for (auto widget : QApplication::allWidgets())
+                if (auto menu = qobject_cast<QMenu *>(widget)) applyTheme(menu);
+        });
+
+#ifdef HAVE_KWINDOWEFFECTS
+        KWindowEffects::isEffectAvailable(KWindowEffects::BlurBehind);
+#endif
     }
 
 protected:
@@ -82,8 +91,7 @@ protected:
     {
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
             if (auto menu = qobject_cast<QMenu *>(object)) {
-                if (menu->style() != m_style)
-                    menu->setStyle(m_style);
+                applyTheme(menu);
                 // DDark2's own menu setup is guarded by isDXcbPlatform(),
                 // so Wayland menus need the translucent surface and blur request here.
                 if (QGuiApplication::platformName().startsWith("wayland")) {
@@ -104,7 +112,45 @@ protected:
     }
 
 private:
-    QStyle *m_style;
+    void applyTheme(QMenu *menu) {
+        auto style = DGuiApplicationHelper::instance()
+            ->themeType() == DGuiApplicationHelper::LightType ?
+                m_light : m_dark;
+
+        if (!style) {
+            return;
+        }
+
+        if (menu->style() != style) {
+            menu->setStyle(style);
+        }
+
+        QPalette palette = style->standardPalette();
+        style->polish(palette);
+        const bool dark = style == m_dark;
+        for (auto group : {QPalette::Active, QPalette::Inactive,
+                QPalette::Disabled}) {
+            const QColor text = group == QPalette::Disabled
+                ? QColor(dark ? "#909090" : "#808080")
+                : QColor(dark ? "#eeeeee" : "#252525");
+
+            for (auto role : {QPalette::WindowText, QPalette::Text,
+                    QPalette::ButtonText}) {
+                palette.setColor(group, role, text);
+            }
+
+            palette.setColor(group, QPalette::Window, QColor(
+                dark ? "#252525" : "#f5f5f5"));
+            palette.setColor(group, QPalette::Base, QColor(
+                dark ? "#252525" : "#f5f5f5"));
+        }
+
+        menu->setPalette(palette);
+        menu->update();
+    }
+
+    QStyle *m_dark = nullptr;
+    QStyle *m_light = nullptr;
 };
 }
 

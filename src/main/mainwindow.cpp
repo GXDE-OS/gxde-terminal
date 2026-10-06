@@ -5,6 +5,7 @@
 
 #include "mainwindow.h"
 #include "themepanel.h"
+#include "palettetransition.h"
 #include "mainwindowplugininterface.h"
 #include "settings.h"
 #include "shortcutmanager.h"
@@ -203,10 +204,18 @@ void MainWindow::initUI()
         const QString path = QFileInfo(name).isAbsolute()
             ? name : QStringLiteral(":/gxde-colors/%1.colorscheme").arg(name);
         QSettings scheme(path, QSettings::IniFormat);
-        const QStringList rgb = scheme.value("Background/Color").toStringList();
-        if (rgb.size() != 3)
-            return;
-        QColor background(rgb.at(0).toInt(), rgb.at(1).toInt(), rgb.at(2).toInt());
+
+        QColor background = QTermWidget::colorSchemePreview(name).value(
+            "background");
+        const auto themeType = background.lightnessF() > 0.5
+            ? DGuiApplicationHelper::LightType :
+                DGuiApplicationHelper::DarkType;
+
+        if (!settings->extendColorScheme().isEmpty() {
+            && DGuiApplicationHelper::instance()->themeType() != themeType)
+            DGuiApplicationHelper::instance()->setPaletteType(themeType);
+        }
+
         background.setAlphaF(settings->opacity());
 
         QStringList tabRgb = scheme.value("Tab/Color", scheme.value("Foreground/Color")).toStringList();
@@ -217,7 +226,7 @@ void MainWindow::initUI()
         QPalette tabPalette = m_tabbar->palette();
         tabPalette.setColor(QPalette::Window, background);
         tabPalette.setColor(QPalette::Highlight, accent);
-        m_tabbar->setPalette(tabPalette);
+        transitionPalette(m_tabbar, tabPalette);
         m_tabbar->update();
 
         for (auto button : m_tabbar->findChildren<DIconButton *>()) {
@@ -231,7 +240,11 @@ void MainWindow::initUI()
             colors.setColor(QPalette::Window, background);
             colors.setColor(QPalette::Base, background);
             colors.setColor(QPalette::Button, background);
-            header->setPalette(colors);
+            transitionPalette(header, colors);
+            for (auto button : header->findChildren<DIconButton *>()) {
+                button->setProperty("gxdeWindowButtonTheme", background.lightnessF() > 0.5 ? "light" : "dark");
+                button->update();
+            }
             header->update();
         }
         // The embedded bar inherits the DTitlebar background. Quake has its own bar.

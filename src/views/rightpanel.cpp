@@ -20,6 +20,7 @@
 #include <QLoggingCategory>
 #include <QDebug>
 #include <QPainter>
+#include <QStyle>
 
 Q_DECLARE_LOGGING_CATEGORY(views)
 
@@ -33,6 +34,40 @@ RightPanel::RightPanel(QWidget *parent) : QWidget(parent)
     QWidget::hide();
     // Init theme panel.
     setFixedWidth(260);
+    auto tint = new QVariantAnimation(this);
+    tint->setObjectName("SidebarColorTransition");
+    tint->setDuration(220);
+    tint->setEasingCurve(QEasingCurve::OutCubic);
+    setProperty("sidebarTint", DGuiApplicationHelper::instance()
+        ->themeType() == DGuiApplicationHelper::DarkType ? 72.0 : 18.0);
+
+    connect(tint, &QVariantAnimation::valueChanged, this,
+            [this](const QVariant &value) {
+        setProperty("sidebarTint", value);
+        update();
+    });
+
+    connect(DGuiApplicationHelper::instance(),
+        &DGuiApplicationHelper::themeTypeChanged, this, [this, tint] {
+        const qreal target = DGuiApplicationHelper::instance()
+            ->themeType() == DGuiApplicationHelper::DarkType ? 72.0 : 18.0;
+
+        if (tint->state() == QAbstractAnimation::Running && tint
+                ->endValue().toReal() == target) {
+            return;
+        }
+
+        tint->stop();
+        if (!isVisible() || !style()->styleHint(QStyle::SH_Widget_Animate,
+                nullptr, this)) {
+            setProperty("sidebarTint", target);
+            update();
+            return;
+        }
+        tint->setStartValue(property("sidebarTint").toReal());
+        tint->setEndValue(target);
+        tint->start();
+    });
 
 #ifdef DTKWIDGET_CLASS_DSizeMode
     qCDebug(views) << "Branch: DTKWIDGET_CLASS_DSizeMode defined";
@@ -178,7 +213,7 @@ void RightPanel::paintEvent(QPaintEvent *event)
 {
     QWidget::paintEvent(event);
     QPainter painter(this);
-    painter.fillRect(rect(), QColor(0, 0, 0, 72));
     const bool dark = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::DarkType;
+    painter.fillRect(rect(), QColor(0, 0, 0, qRound(property("sidebarTint").toReal())));
     painter.fillRect(QRect(0, 0, 1, height()), dark ? QColor(255, 255, 255, 20) : QColor(0, 0, 0, 30));
 }
