@@ -153,7 +153,7 @@ TermWidget::TermWidget(const TermProperties &properties, QWidget *parent) : QTer
         QTimer::singleShot(10, this, &TermWidget::onSetTerminalFont);
     } else {
         QFont font = getTerminalFont();
-        font.setFamily(Settings::instance()->fontName());
+        font.setFamilies(Settings::instance()->terminalFontFamilies(Settings::instance()->fontName()));
         font.setPointSize(Settings::instance()->fontSize());
         setTerminalFont(font);
     }
@@ -265,7 +265,7 @@ inline void TermWidget::onSetTerminalFont()
 {
     // qCDebug(views) << "Enter TermWidget::onSetTerminalFont";
     QFont font = getTerminalFont();
-    font.setFamily(Settings::instance()->fontName());
+    font.setFamilies(Settings::instance()->terminalFontFamilies(Settings::instance()->fontName()));
     font.setPointSize(Settings::instance()->fontSize());
     setTerminalFont(font);
 }
@@ -1178,7 +1178,7 @@ void TermWidget::setTermFont(const QString &fontName)
 {
     qCDebug(views) << "Enter TermWidget::setTermFont:" << fontName;
     QFont font = getTerminalFont();
-    font.setFamily(fontName);
+    font.setFamilies(Settings::instance()->terminalFontFamilies(fontName));
     setTerminalFont(font);
 }
 
@@ -1233,7 +1233,9 @@ void TermWidget::onSettingValueChanged(const QString &keyName)
         return;
     }
 
-    if ("basic.interface.font" == keyName) {
+    if ("basic.interface.font" == keyName
+            || "basic.interface.fallback_font" == keyName
+            || "basic.interface.allow_non_monospaced_fallback_fonts" == keyName) {
         qCDebug(views) << "Enter TermWidget::onSettingValueChanged: basic.interface.font";
         setTermFont(Settings::instance()->fontName());
         /******** Add by nt001000 renfeixiang 2020-05-20:增加字体变化时设置雷神窗口最小高度 Begin***************/

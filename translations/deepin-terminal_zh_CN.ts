@@ -959,6 +959,14 @@
         <source>Copy email address</source>
         <translation>复制邮箱地址</translation>
     </message>
+    <message>
+        <source>Fallback font</source>
+        <translation>回退字体</translation>
+    </message>
+    <message>
+        <source>Allow non-monospaced fonts for fallback fonts</source>
+        <translation>允许使用非等宽字体作为回退字体</translation>
+    </message>
 </context>
 <context>
     <name>QTermWidget</name>
@@ -1256,6 +1264,10 @@
         <location filename="../src/settings/settings.cpp" line="846"/>
         <source>Slow</source>
         <translation>慢速</translation>
+    </message>
+    <message>
+        <source>System default</source>
+        <translation>系统默认</translation>
     </message>
 </context>
 <context>

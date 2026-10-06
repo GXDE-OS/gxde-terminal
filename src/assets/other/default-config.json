@@ -29,6 +29,18 @@
                             "default": "Noto Sans Mono"
                         },
                         {
+                            "key": "fallback_font",
+                            "name": "Fallback font",
+                            "type": "fallbackfontcombobox",
+                            "default": ""
+                        },
+                        {
+                            "key": "allow_non_monospaced_fallback_fonts",
+                            "text": "Allow non-monospaced fonts for fallback fonts",
+                            "type": "checkbox",
+                            "default": false
+                        },
+                        {
                             "key": "font_size",
                             "name": "Font size",
                             "type": "spinbutton",

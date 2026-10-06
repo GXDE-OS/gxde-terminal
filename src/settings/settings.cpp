@@ -496,6 +496,18 @@ QString Settings::fontName()
     return fontName;
 }
 
+QStringList Settings::terminalFontFamilies(const QString &primary)
+{
+    QStringList families{primary};
+    const QString fallback = settings->option("basic.interface.fallback_font")->value().toString();
+    const bool allowVariable = settings->option("basic.interface.allow_non_monospaced_fallback_fonts")->value().toBool();
+    QFontDatabase database;
+    if (!fallback.isEmpty() && fallback != primary && database.families().contains(fallback)
+            && (allowVariable || database.isFixedPitch(fallback)))
+        families.append(fallback);
+    return families;
+}
+
 int Settings::fontSize()
 {
     // qCDebug(tsettings) << "Getting font size";
@@ -833,6 +845,33 @@ QPair<QWidget *, QWidget *> Settings::createFontComBoBoxHandle(QObject *obj)
     });
 
     return optionWidget;
+}
+
+QPair<QWidget *, QWidget *> Settings::createFallbackFontComboBoxHandle(QObject *obj)
+{
+    auto option = qobject_cast<DSettingsOption *>(obj);
+    auto combo = new DComboBox;
+    combo->setObjectName("SettingsFallbackFontComboBox");
+    auto allowVariable = instance()->settings->option("basic.interface.allow_non_monospaced_fallback_fonts");
+    const auto refresh = [option, combo, allowVariable] {
+        const QSignalBlocker blocker(combo);
+        combo->clear();
+        combo->addItem(tr("System default"), QString());
+        QFontDatabase database;
+        for (const auto &family : database.families()) {
+            if (allowVariable->value().toBool() || database.isFixedPitch(family))
+                combo->addItem(family, family);
+        }
+        const int index = combo->findData(option->value().toString());
+        combo->setCurrentIndex(index < 0 ? 0 : index);
+    };
+    refresh();
+    connect(allowVariable, &DSettingsOption::valueChanged, combo, [refresh] { refresh(); });
+    connect(option, &DSettingsOption::valueChanged, combo, [refresh] { refresh(); });
+    connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), option, [option, combo](int index) {
+        if (index >= 0) option->setValue(combo->itemData(index).toString());
+    });
+    return DSettingsWidgetFactory::createStandardItem(QByteArray(), option, combo);
 }
 
 QPair<QWidget *, QWidget *> Settings::createCustomSliderHandle(QObject *obj)

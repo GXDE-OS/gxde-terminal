@@ -92,6 +92,7 @@ public:
      * @return
      */
     QString fontName();
+    QStringList terminalFontFamilies(const QString &primary);
     /**
      * @brief 设置界面获取字体大小
      * @author ut001121 zhangmeng
@@ -265,6 +266,7 @@ public:
      * @return
      */
     static QPair<QWidget *, QWidget *> createFontComBoBoxHandle(QObject *obj);
+    static QPair<QWidget *, QWidget *> createFallbackFontComboBoxHandle(QObject *obj);
     /**
      * @brief 自定义slider控件样式
      * @author n014361 王培利
