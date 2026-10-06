@@ -17,6 +17,8 @@
 #include <QPainter>
 #include <QScrollArea>
 #include <QStyleFactory>
+#include <QProxyStyle>
+#include <QStyleOption>
 #include <QStyledItemDelegate>
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
@@ -489,6 +491,35 @@ public:
 }
 
 namespace {
+class SettingsStyle : public QProxyStyle
+{
+public:
+    explicit SettingsStyle(QStyle *base) : QProxyStyle(base) {}
+
+    void drawPrimitive(PrimitiveElement element, const QStyleOption *option,
+                       QPainter *painter, const QWidget *widget = nullptr) const override
+    {
+        if (element != PE_IndicatorArrowDown) {
+            QProxyStyle::drawPrimitive(element, option, painter, widget);
+            return;
+        }
+        // DDark2 otherwise loads go-down from the system icon theme, whose
+        // dark glyph does not follow a terminal's independently selected theme.
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        QColor color = option->palette.color(QPalette::ButtonText);
+        if (!(option->state & State_Enabled)) color.setAlphaF(color.alphaF() * 0.4);
+        painter->setPen(QPen(color, 1.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        const QPointF center = QRectF(option->rect).center();
+        const qreal halfWidth = qMin(4.0, qMax(0.0, (option->rect.width() - 2) / 2.0));
+        const qreal halfHeight = qMin(2.0, qMax(0.0, (option->rect.height() - 2) / 2.0));
+        painter->drawPolyline(QPolygonF({center + QPointF(-halfWidth, -halfHeight),
+                                       center + QPointF(0, halfHeight),
+                                       center + QPointF(halfWidth, -halfHeight)}));
+        painter->restore();
+    }
+};
+
 void updateSettingsTheme(QWidget *dialog) {
     const bool dark = DGuiApplicationHelper::instance()
         ->themeType() == DGuiApplicationHelper::DarkType;
@@ -498,8 +529,9 @@ void updateSettingsTheme(QWidget *dialog) {
         styleName, Qt::FindDirectChildrenOnly);
 
     if (!style) {
-        style = QStyleFactory::create(styleName);
-        if (!style) style = QStyleFactory::create("Fusion");
+        auto base = QStyleFactory::create(styleName);
+        if (!base) base = QStyleFactory::create("Fusion");
+        style = new SettingsStyle(base);
         style->setObjectName(styleName);
         style->setParent(dialog);
     }
