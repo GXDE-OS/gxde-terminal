@@ -100,6 +100,7 @@ public:
     // Default is application font with family Monospace, size 10
     // Beware of a performance penalty and display/alignment issues when using a proportional font.
     void setTerminalFont(const QFont &font);
+    void setLigaturesEnabled(bool enabled);
     QFont getTerminalFont();
     void setTerminalOpacity(qreal level);
     void setTerminalBackgroundImage(QString backgroundImage);

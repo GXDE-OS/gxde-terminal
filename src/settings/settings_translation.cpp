@@ -45,6 +45,8 @@ void GenerateSettingTranslate()
     Q_UNUSED(basic_interface_fallback_fontName);
     auto basic_interface_allow_non_monospaced_fallback_fontsText = QObject::tr("Allow non-monospaced fonts for fallback fonts");
     Q_UNUSED(basic_interface_allow_non_monospaced_fallback_fontsText);
+    auto basic_interface_enable_ligaturesText = QObject::tr("Enable ligatures");
+    Q_UNUSED(basic_interface_enable_ligaturesText);
     auto basic_interface_font_sizeName = QObject::tr("Font size");
     Q_UNUSED(basic_interface_font_sizeName);
     auto basic_interface_opacityName = QObject::tr("Opacity");

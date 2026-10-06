@@ -366,6 +366,7 @@ public:
      * is larger than the size of the display itself.
      */
     void setVTFont(const QFont& font);
+    void setLigaturesEnabled(bool enabled);
 
     /**
      * Specified whether anti-aliasing of text in the terminal display
@@ -781,6 +782,7 @@ private:
 
     QGridLayout* _gridLayout;
 
+    bool _ligaturesEnabled = false;
     bool _fixedFont; // has fixed pitch
     int  _fontHeight;     // height
     int  _fontWidth;     // width

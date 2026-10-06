@@ -148,6 +148,8 @@ TermWidget::TermWidget(const TermProperties &properties, QWidget *parent) : QTer
         }
     }
 
+    setLigaturesEnabled(Settings::instance()->settings->option("basic.interface.enable_ligatures")->value().toBool());
+
     // 字体和字体大小, 8#字体立即设置的时候会有BUG显示，做个延迟生效就好了。
     if (Settings::instance()->fontSize() == 8) {
         QTimer::singleShot(10, this, &TermWidget::onSetTerminalFont);
@@ -1230,6 +1232,11 @@ void TermWidget::onSettingValueChanged(const QString &keyName)
     if ("basic.interface.opacity" == keyName) {
         qCDebug(views) << "Enter TermWidget::onSettingValueChanged: basic.interface.opacity";
         setTermOpacity(Settings::instance()->opacity());
+        return;
+    }
+
+    if ("basic.interface.enable_ligatures" == keyName) {
+        setLigaturesEnabled(Settings::instance()->settings->option(keyName)->value().toBool());
         return;
     }
 

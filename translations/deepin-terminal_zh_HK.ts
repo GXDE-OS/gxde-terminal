@@ -967,6 +967,10 @@
         <source>Allow non-monospaced fonts for fallback fonts</source>
         <translation>允許使用非等寬字型作為後備字型</translation>
     </message>
+    <message>
+        <source>Enable ligatures</source>
+        <translation>啟用連字</translation>
+    </message>
 </context>
 <context>
     <name>QTermWidget</name>

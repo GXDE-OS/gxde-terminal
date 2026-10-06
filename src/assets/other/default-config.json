@@ -41,6 +41,12 @@
                             "default": false
                         },
                         {
+                            "key": "enable_ligatures",
+                            "text": "Enable ligatures",
+                            "type": "checkbox",
+                            "default": false
+                        },
+                        {
                             "key": "font_size",
                             "name": "Font size",
                             "type": "spinbutton",

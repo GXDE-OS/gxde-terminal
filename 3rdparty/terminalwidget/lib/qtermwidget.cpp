@@ -564,6 +564,11 @@ void QTermWidget::setTerminalFont(const QFont &font)
     m_impl->m_terminalDisplay->setVTFont(font);
 }
 
+void QTermWidget::setLigaturesEnabled(bool enabled)
+{
+    m_impl->m_terminalDisplay->setLigaturesEnabled(enabled);
+}
+
 QFont QTermWidget::getTerminalFont()
 {
     return m_impl->m_terminalDisplay->getVTFont();

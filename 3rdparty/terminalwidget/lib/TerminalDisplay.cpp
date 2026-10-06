@@ -386,6 +386,14 @@ void TerminalDisplay::calDrawTextAdditionHeight(QPainter& painter)
     update();
 }
 
+void TerminalDisplay::setLigaturesEnabled(bool enabled)
+{
+    if (_ligaturesEnabled == enabled) return;
+    _ligaturesEnabled = enabled;
+    setVTFont(font());
+    update();
+}
+
 void TerminalDisplay::setVTFont(const QFont& f)
 {
     finishOutputScrollAnimation();
@@ -420,6 +428,17 @@ void TerminalDisplay::setVTFont(const QFont& f)
     // mono-spaced font, in which case kerning information should have no effect.
     // Disabling kerning saves some computation when rendering text.
     font.setKerning(false);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    // Keep fixed cell advances; kerning and optional ligatures are independent.
+    for (const auto tag : {QFont::Tag("liga"), QFont::Tag("clig"), QFont::Tag("calt")})
+        font.setFeature(tag, _ligaturesEnabled ? 1 : 0);
+#else
+    auto strategy = static_cast<int>(font.styleStrategy());
+    if (_ligaturesEnabled) strategy &= ~QFont::PreferNoShaping;
+    else strategy |= QFont::PreferNoShaping;
+    font.setStyleStrategy(static_cast<QFont::StyleStrategy>(strategy));
+#endif
+
 
     // QFont::ForceIntegerMetrics has been removed.
     // Set full hinting instead to ensure the letters are aligned properly.
@@ -1594,7 +1613,12 @@ void TerminalDisplay::paintEvent( QPaintEvent* pe )
   const QRegion region = pe->region() & contentsRect();
 
   for (const QRect &rect : region) {
-      dirtyImageRegion += widgetToImage(rect);
+      QRect cells = widgetToImage(rect);
+      if (_ligaturesEnabled) {
+          cells.setLeft(0);
+          cells.setRight(_usedColumns - 1);
+      }
+      dirtyImageRegion += cells;
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
       #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
         drawBackground(paint, rect, palette().background().color(), true /* use opacity setting */);
@@ -2093,6 +2117,10 @@ void TerminalDisplay::updateCursor()
     QRect cursorRect = imageToWidget( QRect(cursorPosition(),QSize(1,1)) );
     // Include wide glyphs and double-height/width terminal lines.
     cursorRect.setSize(QSize(2 * _fontWidth, 2 * _fontHeight));
+    if (_ligaturesEnabled) {
+        cursorRect.setLeft(contentsRect().left());
+        cursorRect.setRight(contentsRect().right());
+    }
     const int margin = 2;
     update(cursorRect.adjusted(-margin, -margin, margin, margin));
 }

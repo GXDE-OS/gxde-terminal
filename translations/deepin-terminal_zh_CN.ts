@@ -967,6 +967,10 @@
         <source>Allow non-monospaced fonts for fallback fonts</source>
         <translation>允许使用非等宽字体作为回退字体</translation>
     </message>
+    <message>
+        <source>Enable ligatures</source>
+        <translation>启用连笔字</translation>
+    </message>
 </context>
 <context>
     <name>QTermWidget</name>
