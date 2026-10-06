@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: deepin-terminal
-Source: https://github.com/linuxdeepin/deepin-terminal
+Upstream-Name: gxde-terminal
+Source: https://github.com/GXDE-OS/gxde-terminal
 
 Files: *
 Copyright: 2019 ~ 2020 Uniontech Software Technology Co.,Ltd.
