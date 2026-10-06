@@ -2,3 +2,4 @@
 #pragma once
 class QWidget;
 void applyGxdeSettingsStyle(QWidget *dialog);
+void applyGxdeDialogStyle(QWidget *dialog);

@@ -145,7 +145,6 @@ private:
     QVBoxLayout *m_contentLayout = nullptr;
     QVBoxLayout *m_mainLayout = nullptr;
 
-    DLabel  *m_logoIcon = nullptr;
     DLabel  *m_titleText = nullptr;
 
     DLabel *m_titlelabel = nullptr;

@@ -5,6 +5,7 @@
 
 #include "tabrenamedlg.h"
 #include "utils.h"
+#include "gxdesettingsstyle.h"
 
 #include <DFontSizeManager>
 #include <DGuiApplicationHelper>
@@ -22,6 +23,7 @@ TabRenameDlg::TabRenameDlg(QWidget *parent) :  DAbstractDialog(parent)
     initUi();
     initContentWidget();
     initConnections();
+    applyGxdeDialogStyle(this);
     qCDebug(views) << "TabRenameDlg constructor exit";
 }
 
@@ -40,25 +42,19 @@ void TabRenameDlg::initUi()
 
     QHBoxLayout *titleLayout = new QHBoxLayout();
     titleLayout->setSpacing(0);
-    titleLayout->setContentsMargins(10, 0, 0, 0);
+    titleLayout->setContentsMargins(0, 0, 0, 0);
 
     m_titleBar = new QWidget(this);
     m_titleBar->setObjectName("titleBar");//Add by ut001000 renfeixiang 2020-08-13
-    m_titleBar->setFixedHeight(50);
+    m_titleBar->setFixedHeight(39);
     m_titleBar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_titleBar->setLayout(titleLayout);
-
-    m_logoIcon = new DLabel(this);
-    m_logoIcon->setObjectName("logoIcon");//Add by ut001000 renfeixiang 2020-08-13
-    m_logoIcon->setFixedSize(QSize(32, 32));
-    m_logoIcon->setFocusPolicy(Qt::NoFocus);
-    m_logoIcon->setAttribute(Qt::WA_TransparentForMouseEvents);
-    m_logoIcon->setPixmap(QIcon::fromTheme("deepin-terminal").pixmap(QSize(32, 32)));
 
     m_closeButton = new DWindowCloseButton(this);
     m_closeButton->setObjectName("closeButton");//Add by ut001000 renfeixiang 2020-08-13
     m_closeButton->setFocusPolicy(Qt::TabFocus);
-    m_closeButton->setIconSize(QSize(50, 50));
+    m_closeButton->setFixedSize(39, 39);
+    m_closeButton->setIconSize(QSize(16, 16));
 
     m_titleText = new DLabel(this);
     m_titleText->setObjectName("titleText");//Add by ut001000 renfeixiang 2020-08-13
@@ -66,7 +62,7 @@ void TabRenameDlg::initUi()
     m_titleText->setAlignment(Qt::AlignCenter);
     DFontSizeManager::instance()->bind(m_titleText, DFontSizeManager::T6);
 
-    titleLayout->addWidget(m_logoIcon, 0, Qt::AlignLeft | Qt::AlignVCenter);
+    titleLayout->addSpacing(39);
     titleLayout->addWidget(m_titleText);
     titleLayout->addWidget(m_closeButton, 0, Qt::AlignRight | Qt::AlignVCenter);
 
@@ -372,16 +368,14 @@ void TabRenameDlg::updateSizeMode()
 
     if (DGuiApplicationHelper::isCompactMode()) {
         qCDebug(views) << "Branch: Compact mode detected, applying compact layout";
-        m_titleBar->setFixedHeight(WIN_TITLE_BAR_HEIGHT_COMPACT);
-        m_logoIcon->setPixmap(QIcon::fromTheme("deepin-terminal").pixmap(QSize(ICON_CTX_SIZE_24, ICON_CTX_SIZE_24)));
-        m_closeButton->setIconSize(QSize(ICONSIZE_40_COMPACT, ICONSIZE_40_COMPACT));
+        m_titleBar->setFixedHeight(39);
+        m_closeButton->setIconSize(QSize(16, 16));
         m_verticalLine->setFixedSize(1, VERTICAL_HEIGHT_COMPACT);
 
     } else {
         qCDebug(views) << "Branch: Normal mode detected, applying normal layout";
-        m_titleBar->setFixedHeight(WIN_TITLE_BAR_HEIGHT);
-        m_logoIcon->setPixmap(QIcon::fromTheme("deepin-terminal").pixmap(QSize(ICON_CTX_SIZE_32, ICON_CTX_SIZE_32)));
-        m_closeButton->setIconSize(QSize(ICONSIZE_50, ICONSIZE_50));
+        m_titleBar->setFixedHeight(39);
+        m_closeButton->setIconSize(QSize(16, 16));
         m_verticalLine->setFixedSize(1, VERTICAL_HEIGHT);
     }
 

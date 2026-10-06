@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "gxdesettingsstyle.h"
+#include <DWindowCloseButton>
 #include "titlebar.h"
 #include "headertransition.h"
 #include <DBackgroundGroup>
@@ -497,7 +498,7 @@ void updateSettingsTheme(QWidget *dialog) {
 
     dialog->setAutoFillBackground(false);
     dialog->setStyleSheet(QStringLiteral(
-        "QWidget#SettingDialog { background: %1; color: %2; }"
+        "QWidget[gxdeSettingsSurface=\"true\"] { background: %1; color: %2; }"
         "QLabel { color: %2; background: transparent; }"
         "QScrollArea, QWidget#SettingsContent, QWidget#RightFrame { background: transparent; border: none; }"
         "QWidget#LeftFrame { background: transparent; border-right: 1px solid %3; }"
@@ -514,8 +515,7 @@ void updateSettingsTheme(QWidget *dialog) {
         line->setStyleSheet(QStringLiteral("background: %1;").arg(border));
     }
 
-    for (auto close : dialog->findChildren<QAbstractButton *>(
-            "DTitlebarDWindowCloseButton")) {
+    for (auto close : dialog->findChildren<DWindowCloseButton *>()) {
         close->setProperty("gxdeWindowButtonTheme", dark ? "dark" : "light");
         close->update();
     }
@@ -622,12 +622,20 @@ void applyGxdeSettingsStyle(QWidget *dialog) {
             line->setStyleSheet("background: #404040;");
         } else line->hide();
     }
+    applyGxdeDialogStyle(dialog);
+}
+
+void applyGxdeDialogStyle(QWidget *dialog) {
+    dialog->setProperty("gxdeSettingsSurface", true);
+    QFont font = dialog->font();
+    font.setPixelSize(13);
+    dialog->setFont(font);
     if (DWindowManagerHelper::instance()->hasBlurWindow()) {
         new SettingsBlur(dialog);
     } else {
         // Keep an opaque readable surface on platforms without compositor blur.
         dialog->setStyleSheet(dialog->styleSheet() +
-            QStringLiteral("QWidget#SettingDialog { background: #252525; }"));
+            QStringLiteral("QWidget[gxdeSettingsSurface=\"true\"] { background: #252525; }"));
     }
 
     // A null window icon inherits QApplication's terminal icon. Use an
@@ -640,10 +648,9 @@ void applyGxdeSettingsStyle(QWidget *dialog) {
         title->setIcon(noTerminalIcon);
         title->setFixedHeight(39);
         title->setBackgroundTransparent(true);
-        if (auto close = title->findChild<QAbstractButton *>("DTitlebarDWindowCloseButton")) {
-            applyGxdeWindowButtonStyle(close, "close");
-        }
     }
+    for (auto close : dialog->findChildren<DWindowCloseButton *>())
+        applyGxdeWindowButtonStyle(close, "close");
     updateSettingsTheme(dialog);
     QObject::connect(DGuiApplicationHelper::instance(),
         &DGuiApplicationHelper::themeTypeChanged,
