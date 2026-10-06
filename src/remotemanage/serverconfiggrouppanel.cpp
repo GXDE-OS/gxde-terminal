@@ -41,7 +41,7 @@ void ServerConfigGroupPanel::initUI()
     m_listWidget = new ListView(ListType_Remote, this);
     m_listWidget->setObjectName("RemoteGroupListWidget");//Add by ut001000 renfeixiang 2020-08-14
 
-    m_rebackButton->setIcon(DStyle::StandardPixmap::SP_ArrowLeave);
+    m_rebackButton->setBackArrow();
     m_rebackButton->setObjectName("RemoteGroupRebackButton");
 
     m_searchEdit->setFixedWidth(GROUPSEARCHWIDTH);

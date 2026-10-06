@@ -29,6 +29,7 @@ class IconButton : public DIconButton
     Q_OBJECT
 public:
     explicit IconButton(QWidget *parent = nullptr);
+    void setBackArrow();
 
 signals:
     // 焦点交给前一个
@@ -51,6 +52,11 @@ protected:
      * @param event 焦点移出事件
      */
     void focusOutEvent(QFocusEvent *event) override;
+    void changeEvent(QEvent *event) override;
+
+private:
+    void updateBackArrow();
+    bool m_backArrow = false;
 };
 
 #endif // ICONBUTTON_H

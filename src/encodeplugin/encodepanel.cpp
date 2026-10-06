@@ -8,6 +8,7 @@
 #include "encodelistview.h"
 #include "encodelistmodel.h"
 #include "settings.h"
+#include "gxderemotestyle.h"
 
 #include <DLog>
 #include <QScroller>
@@ -27,18 +28,12 @@ EncodePanel::EncodePanel(QWidget *parent)
     setAutoFillBackground(true);
     setFocusProxy(m_encodeView);
 
-    QHBoxLayout *hLayout = new QHBoxLayout();
-    hLayout->addWidget(m_encodeView);
-
-    // init layout.
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    /******** Modify by nt001000 renfeixiang 2020-05-16:解决Alt+F2显示Encode时，高度变长的问题 Begin***************/
-    /*layout->addSpacing(10);增加的spacing会影响m_encodeView的高度*/
-    layout->addLayout(hLayout);
-    layout->addStretch();
-    layout->setContentsMargins(0, 0, 0, 0);//增加的Margin会影响m_encodeView的高度
+    // Let the list follow the panel throughout resizing and slide animations.
+    auto layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    /******** Modify by nt001000 renfeixiang 2020-05-16:解决Alt+F2显示Encode时，高度变长的问题 Begin***************/
+    layout->addWidget(m_encodeView);
+    applyGxdePanelStyle(this);
 
     connect(m_encodeView, &EncodeListView::focusOut, this, &RightPanel::hideAnim);
     qCDebug(encodeplugin) << "EncodePanel constructor exit";
@@ -49,9 +44,6 @@ void EncodePanel::show()
     qCDebug(encodeplugin) << "EncodePanel show enter";
     this->showAnim();
 
-    //解决Alt+F2显示Encode时，高度变长的问题 每次显示时，设置固定高度 Begin
-    m_encodeView->setFixedHeight(size().height());
-    //解决Alt+F2显示Encode时，高度变长的问题 End
     qCDebug(encodeplugin) << "EncodePanel show exit";
 }
 

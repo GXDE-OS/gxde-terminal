@@ -83,7 +83,7 @@ ServerConfigOptDlg::ServerConfigOptDlg(ServerConfigOptType type, ServerConfig *c
     setAutoFillBackground(true);
     initUI();
     initData();
-    applyGxdeRemoteStyle(this);
+    applyGxdePanelStyle(this);
 }
 
 void ServerConfigOptDlg::initUI()

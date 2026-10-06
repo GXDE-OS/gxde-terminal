@@ -149,5 +149,5 @@ GroupConfigOptDlg::GroupConfigOptDlg(const QString &groupName, QWidget *parent)
     m_mainLayout->addLayout(pBtHbLayout);
     setLayout(m_mainLayout);
     m_groupNameEdit->setFocus();
-    applyGxdeRemoteStyle(this);
+    applyGxdePanelStyle(this);
 }

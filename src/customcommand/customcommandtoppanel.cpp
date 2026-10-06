@@ -5,6 +5,7 @@
 
 #include "customcommandtoppanel.h"
 #include "service.h"
+#include "gxderemotestyle.h"
 
 #include <DPushButton>
 #include <DLog>
@@ -46,6 +47,7 @@ CustomCommandTopPanel::CustomCommandTopPanel(QWidget *parent)
             &CustomCommandSearchRstPanel::handleCustomCurCommand,
             this,
             &CustomCommandTopPanel::handleCustomCurCommand);
+    applyGxdePanelStyle(this);
     m_customCommandPanel->hide();
     m_customCommandSearchPanel->hide();
     connect(Service::instance(), &Service::refreshCommandPanel, this, &CustomCommandTopPanel::slotsRefreshCommandPanel);

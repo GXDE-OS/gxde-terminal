@@ -233,6 +233,8 @@ void CustomCommandPanel::initUI()
     m_pushButton = new DPushButton(this);
     m_pushButton->setObjectName("CustomAddCommandButton");//Add by ut001000 renfeixiang 2020-08-13
     m_pushButton->setText(tr("Add Command"));
+    m_pushButton->setFixedHeight(COMMONHEIGHT);
+    m_pushButton->setFocusPolicy(Qt::TabFocus);
 
     m_textLabel = new DLabel(this);
     m_textLabel->resize(136, 18);
@@ -264,9 +266,9 @@ void CustomCommandPanel::initUI()
     m_backLayout->setContentsMargins(0, 0, 0, 0);
 
     QHBoxLayout *btnLayout = new QHBoxLayout();
-    btnLayout->addSpacing(10);
+    btnLayout->setContentsMargins(SPACEWIDTH, SPACEWIDTH, SPACEWIDTH, SPACEWIDTH);
+    btnLayout->setSpacing(0);
     btnLayout->addWidget(m_pushButton);
-    btnLayout->addSpacing(10);
 
     QHBoxLayout *hLayout = new QHBoxLayout();
     hLayout->setSpacing(0);

@@ -41,7 +41,7 @@ void CustomCommandSearchRstPanel::initUI()
     m_rebackButton = new IconButton(this);
     m_rebackButton->setObjectName("CustomRebackButton");
     m_backButton = m_rebackButton;
-    m_backButton->setIcon(DStyle::StandardPixmap::SP_ArrowLeave);
+    m_rebackButton->setBackArrow();
     m_backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     m_backButton->setFocusPolicy(Qt::TabFocus);
 

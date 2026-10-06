@@ -43,7 +43,7 @@ EncodeListView::EncodeListView(QWidget *parent) : DListView(parent), m_encodeMod
     /** mod by ut001121 zhangmeng 20200718 for sp3 keyboard interaction */
     setSelectionMode(QListView::SingleSelection);
 
-    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     /***add by ut001121 zhangmeng 20200628 设置视图边距,留出空间给滚动条显示 修复BUG35378***/
@@ -130,7 +130,7 @@ void EncodeListView::resizeEvent(QResizeEvent *event)
 {
     // qCDebug(encodeplugin) << "Enter resizeEvent";
     /***add by ut001121 zhangmeng 20200701 修改滚动条高度,解决滚动条被窗口特效圆角切割的问题***/
-    verticalScrollBar()->setFixedHeight(height() - 10);
+    verticalScrollBar()->setMaximumHeight(qMax(0, height() - MARGINS_TOP - MARGINS_BOTTOM));
 
     return DListView::resizeEvent(event);
 }
@@ -344,15 +344,14 @@ void EncodeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt,
         painter->setFont(textFont);
 
         // 设置画笔
-        DGuiApplicationHelper *appHelper = DGuiApplicationHelper::instance();
-        DPalette pa = appHelper->standardPalette(appHelper->themeType());
-        painter->setPen(pa.color(DPalette::Text));
+        painter->setPen(m_parentView->palette().color(QPalette::Text));
 
         // 绘画文本
         int checkIconSize = 16;
         QString strCmdName = index.data().toString();
-        QRect cmdNameRect = QRect(10, bgRect.top(), bgRect.width() - checkIconSize, bgRect.height());
-        painter->drawText(cmdNameRect, Qt::AlignLeft | Qt::AlignVCenter, strCmdName);
+        QRect cmdNameRect = bgRect.adjusted(10, 0, -checkIconSize - 16, 0);
+        painter->drawText(cmdNameRect, Qt::AlignLeft | Qt::AlignVCenter,
+                          QFontMetrics(textFont).elidedText(strCmdName, Qt::ElideRight, cmdNameRect.width()));
 
         // 绘画边框
         Qt::FocusReason focusReason = qobject_cast<EncodeListView *>(m_parentView)->getFocusReason();

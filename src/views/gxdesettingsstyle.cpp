@@ -517,9 +517,14 @@ void applyGxdeSettingsStyle(QWidget *dialog)
             line->setStyleSheet("background: #404040;");
         } else line->hide();
     }
+    // A null window icon inherits QApplication's terminal icon. Use an
+    // explicit transparent icon for both native and DTK title bars.
+    QPixmap emptyIcon(24, 24);
+    emptyIcon.fill(Qt::transparent);
+    const QIcon noTerminalIcon(emptyIcon);
+    dialog->setWindowIcon(noTerminalIcon);
     for (auto title : dialog->findChildren<DTitlebar *>()) {
-        const QIcon icon(":/logo/gxde-title.svg");
-        title->setIcon(QIcon(icon.pixmap(QSize(24, 24), title->devicePixelRatioF())));
+        title->setIcon(noTerminalIcon);
         title->setFixedHeight(39);
         title->setBackgroundTransparent(true);
         if (auto close = title->findChild<QAbstractButton *>("DTitlebarDWindowCloseButton")) {

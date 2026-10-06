@@ -43,7 +43,7 @@ RemoteManagementTopPanel::RemoteManagementTopPanel(QWidget *parent) : RightPanel
     m_serverConfigGroupPanel->hide();
     m_remoteManagementSearchPanel->hide();
     m_remoteManagementPanel->hide();
-    applyGxdeRemoteStyle(this);
+    applyGxdePanelStyle(this);
     qCDebug(remotemanage) << "RemoteManagementTopPanel initialization complete";
 }
 

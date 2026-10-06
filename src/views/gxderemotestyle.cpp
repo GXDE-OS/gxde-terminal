@@ -10,10 +10,10 @@
 #include <QStyleFactory>
 
 namespace {
-class RemoteStyle : public QObject
+class PanelStyle : public QObject
 {
 public:
-    explicit RemoteStyle(QWidget *root) : QObject(root), m_root(root),
+    explicit PanelStyle(QWidget *root) : QObject(root), m_root(root),
         m_dark(QStyleFactory::create("ddark2")), m_light(QStyleFactory::create("dlight2"))
     {
         if (m_dark) m_dark->setParent(this);
@@ -29,7 +29,7 @@ public:
 protected:
     bool eventFilter(QObject *object, QEvent *event) override
     {
-        // Covers newly created server/group dialogs and list rows as well as
+        // Covers newly created panel dialogs and list rows as well as
         // combo-box popups. Menus retain the application's separate menu style.
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
             auto widget = qobject_cast<QWidget *>(object);
@@ -55,13 +55,15 @@ private:
         QPalette palette = style->standardPalette();
         style->polish(palette);
         widget->setPalette(palette);
-        if (widget->objectName() == "RemoteIconLabel") {
+        if ((widget->objectName() == "RemoteIconLabel" || widget->objectName() == "CustomLogoIcon")) {
             if (auto label = qobject_cast<QLabel *>(widget)) {
                 label->setFixedSize(48, 39);
                 label->setAlignment(Qt::AlignCenter);
                 label->setPixmap(QIcon(":/logo/gxde-title.svg").pixmap(QSize(24, 24), label->devicePixelRatioF()));
             }
         }
+        if (widget->objectName() == "CustomTitleBar")
+            widget->setFixedHeight(39);
         if (widget->inherits("Dtk::Widget::DWindowCloseButton")) {
             widget->setProperty("gxdeWindowButtonTheme", dark ? "dark" : "light");
             if (!widget->property("gxdeCloseStyled").toBool()) {
@@ -76,7 +78,7 @@ private:
 };
 }
 
-void applyGxdeRemoteStyle(QWidget *root)
+void applyGxdePanelStyle(QWidget *root)
 {
-    new RemoteStyle(root);
+    new PanelStyle(root);
 }
