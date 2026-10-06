@@ -102,3 +102,5 @@ Bold=true
 Color=0, 205, 0
 Transparency=false
 
+[Tab]
+Color=44,167,248

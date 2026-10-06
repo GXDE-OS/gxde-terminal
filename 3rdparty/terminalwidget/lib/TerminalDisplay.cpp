@@ -1956,14 +1956,14 @@ void TerminalDisplay::drawContents(QPainter &paint, const QRect &rect)
             if(IsCodecGB18030()){
                 QFontMetrics fm(paint.font());
                 int textWidth = fm.size(Qt::TextSingleLine | Qt::TextExpandTabs,unistr).width();
-                 textArea =QRect(contentsRect().left() + contentsRect().left() +xOffset,
-                                       contentsRect().top() + contentsRect().top() + _fontHeight * y,
+                 textArea =QRect(contentsRect().left() + _leftMargin + xOffset,
+                                       contentsRect().top() + _topMargin + _fontHeight * y,
                                        textWidth,
                                        _fontHeight);
                  xOffset += textWidth;
             }else{
-                 textArea = QRect(contentsRect().left() + contentsRect().left() + _fontWidth * x,
-                                       contentsRect().top() + contentsRect().top() + _fontHeight * y,
+                 textArea = QRect(contentsRect().left() + _leftMargin + _fontWidth * x,
+                                       contentsRect().top() + _topMargin + _fontHeight * y,
                                        _fontWidth * len,
                                        _fontHeight);
             }
@@ -2104,7 +2104,7 @@ void TerminalDisplay::startOutputScrollAnimation(int lines, const QRect &region)
     _drawingScrollContents = false;
     painter.end();
     _outputScrollSnapshot = snapshot;
-    _outputScrollRegion = QRect(2 * contentsRect().left(), 2 * contentsRect().top(),
+    _outputScrollRegion = QRect(contentsRect().left() + _leftMargin, contentsRect().top() + _topMargin,
                                 _usedColumns * _fontWidth, _usedLines * _fontHeight);
     _outputScroll.start(distance);
     _outputScrollClock.start();
@@ -2143,8 +2143,8 @@ void TerminalDisplay::drawScrollCursor(QPainter &painter)
     const Character &cell = _image[loc(position.x(), position.y())];
     if (!(cell.rendition & RE_CURSOR))
         return;
-    const QRect rect(2 * contentsRect().left() + position.x() * _fontWidth,
-                     2 * contentsRect().top() + position.y() * _fontHeight,
+    const QRect rect(contentsRect().left() + _leftMargin + position.x() * _fontWidth,
+                     contentsRect().top() + _topMargin + position.y() * _fontHeight,
                      qMax(1, cell.width()) * _fontWidth, _fontHeight);
     bool invert = false;
     painter.save();
@@ -2202,8 +2202,8 @@ void TerminalDisplay::updateCursorAnimation()
     const Character &cell = _image[position.y() * _columns + position.x()];
     // Match drawContents(), including DEC double-width/double-height lines.
     const LineProperty line = _lineProperties.value(position.y());
-    QRectF target(2 * contentsRect().left() + position.x() * _fontWidth,
-                  2 * contentsRect().top() + position.y() * _fontHeight,
+    QRectF target(contentsRect().left() + _leftMargin + position.x() * _fontWidth,
+                  contentsRect().top() + _topMargin + position.y() * _fontHeight,
                   qMax(1, cell.width()) * _fontWidth * ((line & LINE_DOUBLEWIDTH) ? 2 : 1),
                   _fontHeight * ((line & LINE_DOUBLEHEIGHT) ? 2 : 1));
     if (_cursorShape == Emulation::KeyboardCursorShape::IBeamCursor)
@@ -2239,7 +2239,7 @@ void TerminalDisplay::drawCursorTrail(QPainter &painter)
     painter.save();
     // Match kitty's trail.slang: only mask the actual cursor rectangle.
     // Trail visibility is independent of blink opacity (mDECTCEM, not blinking).
-    const QRegion area(QRect(2 * contentsRect().left(), 2 * contentsRect().top(),
+    const QRegion area(QRect(contentsRect().left() + _leftMargin, contentsRect().top() + _topMargin,
                              _usedColumns * _fontWidth, _usedLines * _fontHeight));
     painter.setClipRegion(area.subtracted(QRegion(_cursorTrail.target.toAlignedRect())), Qt::IntersectClip);
     painter.setRenderHint(QPainter::Antialiasing, true);
@@ -3845,7 +3845,7 @@ void TerminalDisplay::calcGeometry()
   }
 
   _topMargin = _topBaseMargin;
-  _contentHeight = contentsRect().height() - 2 * _topBaseMargin + /* mysterious */ 1;
+  _contentHeight = contentsRect().height() - 2 * _topBaseMargin;
 
   if (!_isFixedSize)
   {
@@ -4065,8 +4065,13 @@ int TerminalDisplay::margin() const
 
 void TerminalDisplay::setMargin(int i)
 {
+    i = qMax(0, i);
+    if (_topBaseMargin == i && _leftBaseMargin == i)
+        return;
     _topBaseMargin = i;
     _leftBaseMargin = i;
+    propagateSize();
+    update();
 }
 
 AutoScrollHandler::AutoScrollHandler(QWidget* parent)

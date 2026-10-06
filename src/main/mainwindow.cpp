@@ -207,6 +207,22 @@ void MainWindow::initUI()
             return;
         QColor background(rgb.at(0).toInt(), rgb.at(1).toInt(), rgb.at(2).toInt());
         background.setAlphaF(settings->opacity());
+
+        QStringList tabRgb = scheme.value("Tab/Color", scheme.value("Foreground/Color")).toStringList();
+        const QColor accent = tabRgb.size() == 3
+            ? QColor(tabRgb.at(0).toInt(), tabRgb.at(1).toInt(), tabRgb.at(2).toInt())
+            : QColor("#2ca7f8");
+
+        QPalette tabPalette = m_tabbar->palette();
+        tabPalette.setColor(QPalette::Window, background);
+        tabPalette.setColor(QPalette::Highlight, accent);
+        m_tabbar->setPalette(tabPalette);
+        m_tabbar->update();
+
+        for (auto button : m_tabbar->findChildren<DIconButton *>()) {
+            button->setProperty("gxdeWindowButtonTheme", background.lightnessF() > 0.5 ? "light" : "dark");
+            button->update();
+        }
         for (QWidget *header : {static_cast<QWidget *>(titlebar()), static_cast<QWidget *>(m_titleBar)}) {
             if (!header)
                 continue;
@@ -3055,7 +3071,7 @@ void NormalWindow::initTitleBar()
 
     titlebar()->setCustomWidget(m_titleBar);
     titlebar()->setTitle("");
-    titlebar()->setIcon(QIcon(":/logo/gxde-title.svg"));
+    titlebar()->setIcon(QIcon(QIcon(":/logo/gxde-title.svg").pixmap(QSize(24, 24), devicePixelRatioF())));
     titlebar()->setFixedHeight(WIN_TITLE_BAR_HEIGHT);
     titlebar()->setSeparatorVisible(false);
     const QPair<QString, QString> windowButtons[] = {

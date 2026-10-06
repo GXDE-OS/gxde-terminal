@@ -49,6 +49,7 @@ TermWidget::TermWidget(const TermProperties &properties, QWidget *parent) : QTer
 {
     qCDebug(views) << "TermWidget constructor enter";
     Utils::set_Object_Name(this);
+    setMargin(2);
     // 窗口数量加1
     qCDebug(views) << "Increasing terminal count";
     WindowsManager::instance()->terminalCountIncrease();

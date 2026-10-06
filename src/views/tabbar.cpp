@@ -3,12 +3,15 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <gio/gio.h>
+
 #include "tabbar.h"
 #include "utils.h"
 #include "termwidget.h"
 #include "termwidgetpage.h"
 #include "windowsmanager.h"
 #include "terminalapplication.h"
+#include "titlebar.h"
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include "private/qtabbar_p.h"
 #endif
@@ -30,6 +33,7 @@
 #include <QAbstractButton>
 #include <QCursor>
 #include <QTimer>
+#include <QRegularExpression>
 
 #ifdef DTKWIDGET_CLASS_DSizeMode
 #include <DSizeMode>
@@ -38,6 +42,32 @@
 
 Q_DECLARE_LOGGING_CATEGORY(views)
 namespace {
+QFont gxdeTabFont()
+{
+    QFont font = QApplication::font();
+    auto source = g_settings_schema_source_get_default();
+    auto schema = source ? g_settings_schema_source_lookup(
+        source, "org.gnome.desktop.interface", true) : nullptr;
+    if (schema) {
+        if (g_settings_schema_has_key(schema, "font-name")) {
+            auto settings = g_settings_new_full(schema, nullptr, nullptr);
+            auto value = g_settings_get_string(settings, "font-name");
+            QString family = QString::fromUtf8(value).trimmed();
+            family.remove(QRegularExpression(QStringLiteral("\\s+\\d+(?:\\.\\d+)?$")));
+            family.remove(QRegularExpression(QStringLiteral("(?:\\s+(?:Bold|Italic|Oblique|Regular))+$")));
+            if (!family.isEmpty())
+                font.setFamily(family);
+            g_free(value);
+            g_object_unref(settings);
+        }
+        g_settings_schema_unref(schema);
+    }
+
+    font.setPointSize(11);
+    font.setWeight(QFont::Normal);
+    return font;
+}
+
 // Keep a stable hit area without painting a button outside the hovered tab.
 class GxdeTabCloseButton : public QAbstractButton
 {
@@ -137,6 +167,13 @@ int TermTabStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *op
     return QProxyStyle::pixelMetric(metric, option, widget);
 }
 
+QRect TermTabStyle::subElementRect(SubElement element, const QStyleOption *option, const QWidget *widget) const
+{
+    if (element == SE_TabBarTabRightButton)
+        return QRect(option->rect.right() + 1 - 28, option->rect.top(), 28, option->rect.height());
+    return QProxyStyle::subElementRect(element, option, widget);
+}
+
 void TermTabStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
 {
     const auto *tab = qstyleoption_cast<const QStyleOptionTab *>(option);
@@ -145,17 +182,17 @@ void TermTabStyle::drawControl(ControlElement element, const QStyleOption *optio
         return;
     }
     painter->save();
-    const bool light = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::LightType;
+    const bool light = tab->palette.color(QPalette::Window).lightnessF() > 0.5;
     const bool selected = tab->state & State_Selected;
     const bool hover = tab->state & State_MouseOver;
-    const QColor accent("#2ca7f8");
+    const QColor accent = tab->palette.color(QPalette::Highlight);
     const QColor separator = light ? QColor(0, 0, 0, 13) : QColor(255, 255, 255, 13);
     if (element != CE_TabBarTabLabel) {
         if (hover && !selected)
             painter->fillRect(tab->rect, separator);
-        painter->fillRect(QRect(tab->rect.topRight(), QSize(1, tab->rect.height())), separator);
+        painter->fillRect(QRect(tab->rect.topLeft(), QSize(1, tab->rect.height())), separator);
         if (selected)
-            painter->fillRect(QRect(tab->rect.left(), tab->rect.bottom() - 1, tab->rect.width(), 2), accent);
+            painter->fillRect(QRect(tab->rect.left() + 1, tab->rect.bottom() - 1, tab->rect.width() - 1, 2), accent);
     }
     if (element != CE_TabBarTabShape) {
         const QString id = tab->styleObject
@@ -167,14 +204,16 @@ void TermTabStyle::drawControl(ControlElement element, const QStyleOption *optio
             text = QColor("#ff9600");
         else if (hover)
             text = light ? Qt::black : Qt::white;
-        QFont font = QApplication::font();
-        font.setPointSize(11);
-        font.setWeight(QFont::Normal);
+        const QFont font = widget ? widget->font() : QApplication::font();
         painter->setFont(font);
         painter->setPen(text);
-        const QRect textRect = tab->rect.adjusted(20, 0, -28, -2);
-        const QString label = QFontMetrics(font).elidedText(tab->text, Qt::ElideRight, qMax(0, textRect.width()));
-        painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, label);
+        const QRect textRect = tab->rect.adjusted(20, 0, hover ? -34 : -20, 0);
+        painter->save();
+        painter->setClipRect(textRect, Qt::IntersectClip);
+        painter->drawText(QRect(tab->rect.left() + 20, tab->rect.top(),
+            QFontMetrics(font).horizontalAdvance(tab->text), tab->rect.height()),
+            Qt::AlignLeft | Qt::AlignVCenter | Qt::TextSingleLine, tab->text);
+        painter->restore();
         if (tab->state & State_HasFocus) {
             QPen pen(accent, 1, Qt::DotLine);
             painter->setPen(pen);
@@ -226,6 +265,11 @@ TabBar::TabBar(QWidget *parent) : DTabBar(parent), m_rightClickTab(-1)
     Utils::set_Object_Name(this);
     m_termTabStyle = new TermTabStyle();
     setStyle(m_termTabStyle);
+    setFont(gxdeTabFont());
+    if (auto tabs = findChild<QTabBar *>()) {
+        tabs->setStyle(m_termTabStyle);
+        tabs->setFont(font());
+    }
 
     qCDebug(views) << "Branch: Clearing maps";
     m_sessionIdTabIndexMap.clear();
@@ -240,14 +284,14 @@ TabBar::TabBar(QWidget *parent) : DTabBar(parent), m_rightClickTab(-1)
     setEnableCloseTabAnimation(true);
     setTabsClosable(false);
     setVisibleAddButton(true);
-    setElideMode(Qt::ElideRight);
+    setElideMode(Qt::ElideNone);
     setFocusPolicy(Qt::TabFocus);
     setStartDragDistance(40);
 
     qCDebug(views) << "Branch: Setting tab width limits";
     setTabItemMinWidth(80);
     setExpanding(false);
-    setTabItemMaxWidth(450);
+    setTabItemMaxWidth(QWIDGETSIZE_MAX);
 
     qCDebug(views) << "Branch: Updating tab drag move status";
     //统一设置Tab拖动/移动状态
@@ -260,6 +304,7 @@ TabBar::TabBar(QWidget *parent) : DTabBar(parent), m_rightClickTab(-1)
         addButton->setFocusPolicy(Qt::TabFocus);
         addButton->setFlat(true);
         addButton->setFixedSize(50, WIN_TITLE_BAR_HEIGHT);
+        applyGxdeWindowButtonStyle(addButton, QStringLiteral("tab_add"));
     }
 
     qCDebug(views) << "Branch: Connecting tab bar signals";
@@ -306,6 +351,7 @@ TabBar::~TabBar()
 void TabBar::paintTab(QPainter *painter, int index, const QStyleOptionTab &option) const
 {
     QStyleOptionTab opt(option);
+    opt.text = tabText(index);
     // Feed the same renderer on Qt 5 and Qt 6, retaining tab identity after reordering.
     opt.row = index;
     opt.styleObject = const_cast<TabBar *>(this);
@@ -1052,6 +1098,12 @@ void TabBar::handleTabDroped(int index, Qt::DropAction dropAction, QObject *targ
     updateTabDragMoveStatus();
 }
 
+QSize TabBar::tabSizeHint(int index) const
+{
+    return QSize(qBound(m_tabItemMinWidth, fontMetrics().horizontalAdvance(tabText(index)) + 40,
+        m_tabItemMaxWidth), m_tabHeight);
+}
+
 QSize TabBar::minimumTabSizeHint(int index) const
 {
     // qCDebug(views) << "Enter TabBar::minimumTabSizeHint with index:" << index;
@@ -1062,8 +1114,7 @@ QSize TabBar::minimumTabSizeHint(int index) const
 QSize TabBar::maximumTabSizeHint(int index) const
 {
     // qCDebug(views) << "Enter TabBar::maximumTabSizeHint with index:" << index;
-    Q_UNUSED(index)
-    return QSize(m_tabItemMaxWidth, m_tabHeight);
+    return tabSizeHint(index);
 }
 
 void TabBar::setNeedChangeTextColor(const QString &tabIdentifier, const QColor &color)

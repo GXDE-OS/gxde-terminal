@@ -10,7 +10,8 @@ option(INSTALL_USER_MANUAL "Install the screenshot-heavy offline user manual" OF
 
 if(TERM_RPATH)
 set(CMAKE_SKIP_INSTALL_RPATH YES)
-set(CMAKE_SKIP_RPATH YES)
+set(CMAKE_SKIP_RPATH NO)
+set(CMAKE_SKIP_BUILD_RPATH NO)
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -96,6 +97,7 @@ endif()
 include(FindPkgConfig)
 
 pkg_search_module(GOBJECT REQUIRED gobject-2.0)
+pkg_check_modules(GIO REQUIRED gio-2.0)
 pkg_check_modules(LIBSECRET REQUIRED libsecret-1)
 pkg_check_modules(XCB_EWMH REQUIRED xcb-ewmh x11)
 
@@ -131,6 +133,7 @@ set(LINK_LIBS
     Dtk${DTK_VERSION_MAJOR}::Core
     Dtk${DTK_VERSION_MAJOR}::Gui
     ${GOBJECT_LIBRARIES}
+    ${GIO_LIBRARIES}
     ${LIBSECRET_LIBRARIES}
     ${XCB_EWMH_LIBRARIES}
 )
@@ -272,6 +275,7 @@ target_include_directories(${EXE_NAME}
     ${PROJECT_BINARY_DIR}
     ${ATSPI2_INCLUDE_DIRS}
     ${GOBJECT_INCLUDE_DIRS}
+    ${GIO_INCLUDE_DIRS}
     ${LIBSECRET_INCLUDE_DIRS}
     ${XCB_EWMH_INCLUDE_DIRS}
 )

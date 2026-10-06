@@ -81,3 +81,6 @@ Transparency=false
 [General]
 Description=GXDE Deepin
 Opacity=1
+
+[Tab]
+Color=44,167,248

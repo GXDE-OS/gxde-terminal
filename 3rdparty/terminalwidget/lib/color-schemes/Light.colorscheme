@@ -102,3 +102,6 @@ Transparency=false
 [General]
 Description=Green on Black
 Opacity=1
+
+[Tab]
+Color=44,167,248

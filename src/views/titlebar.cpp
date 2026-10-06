@@ -32,7 +32,7 @@ public:
         : QObject(button), m_button(button), m_iconName(iconName)
     {
         button->installEventFilter(this);
-        button->setFixedSize(40, 39);
+        button->setFixedSize(iconName == "tab_add" ? 50 : 40, WIN_TITLE_BAR_HEIGHT);
         button->setCursor(Qt::PointingHandCursor);
         connect(Dtk::Gui::DGuiApplicationHelper::instance(),
                 &Dtk::Gui::DGuiApplicationHelper::themeTypeChanged, button,
@@ -52,14 +52,16 @@ protected:
                 == Dtk::Gui::DGuiApplicationHelper::LightType ? "light" : "dark";
         const QString state = m_button->underMouse()
             ? (m_button->isDown() ? "press" : "hover") : "normal";
-        const QIcon icon(QStringLiteral(":/other/gxde-window/window_%1_%2_%3.svg")
-                         .arg(name, theme, state));
+        const QString prefix = name == "tab_add" ? QString() : QStringLiteral("window_");
+        const QIcon icon(QStringLiteral(":/other/gxde-window/%1%2_%3_%4.svg")
+            .arg(prefix, name, theme, state));
         QPainter painter(m_button);
         if (!m_button->isEnabled())
             painter.setOpacity(0.4);
         // GXDE draws the original 40px asset centered in its 39px header.
         painter.drawPixmap(QPoint(0, (m_button->height() - 40) / 2),
-                           icon.pixmap(QSize(40, 40), m_button->devicePixelRatioF()));
+            icon.pixmap(QSize(m_button->width(), 40), m_button->devicePixelRatioF()));
+
         if (m_button->hasFocus()) {
             painter.setPen(QPen(QColor("#2ca7f8"), 1, Qt::DotLine));
             painter.drawRect(m_button->rect().adjusted(2, 2, -3, -3));

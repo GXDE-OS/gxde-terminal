@@ -25,6 +25,12 @@
         <file alias="gxde-colors/Theme8.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme8.colorscheme</file>
         <file alias="gxde-colors/Theme9.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Theme9.colorscheme</file>
         <file alias="gxde-colors/Ubuntu.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Ubuntu.colorscheme</file>
+        <file>other/gxde-window/tab_add_light_normal.svg</file>
+        <file>other/gxde-window/tab_add_light_hover.svg</file>
+        <file>other/gxde-window/tab_add_light_press.svg</file>
+        <file>other/gxde-window/tab_add_dark_normal.svg</file>
+        <file>other/gxde-window/tab_add_dark_hover.svg</file>
+        <file>other/gxde-window/tab_add_dark_press.svg</file>
         <file>logo/gxde-title.svg</file>
         <file>other/gxde-window/window_menu_dark_normal.svg</file>
         <file>other/gxde-window/window_menu_dark_hover.svg</file>
