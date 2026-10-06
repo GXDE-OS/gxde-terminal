@@ -10,8 +10,122 @@
 #include <QLabel>
 #include <QStyle>
 #include <QStyleFactory>
+#include <QLineEdit>
+#include <QPainter>
+#include <QVariantAnimation>
+#include <QTimer>
 
 namespace {
+// DTK switches between two search icons. Draw one moving glyph while those
+// native icons change visibility, then return painting to DTK at the endpoint.
+class SearchFocusTransition : public QWidget
+{
+public:
+    explicit SearchFocusTransition(Dtk::Widget::DSearchEdit *search)
+        : QWidget(search), m_search(search), m_animation(this)
+    {
+        setObjectName("SearchFocusTransition");
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+        setAttribute(Qt::WA_NoSystemBackground);
+        setFocusPolicy(Qt::NoFocus);
+        hide();
+        m_animation.setObjectName("SearchFocusAnimation");
+        m_animation.setDuration(180);
+        m_animation.setEasingCurve(QEasingCurve::OutCubic);
+        connect(&m_animation, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+            m_rect = value.toRectF();
+            update();
+        });
+        connect(&m_animation, &QVariantAnimation::finished, this, [this] { finish(); });
+        for (auto icon : search->findChildren<Dtk::Widget::DIconButton *>())
+            icon->installEventFilter(this);
+        connect(search, &Dtk::Widget::DSearchEdit::textChanged, this, [this] { schedule(); });
+        search->lineEdit()->installEventFilter(this);
+        search->installEventFilter(this);
+        schedule();
+    }
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event) override
+    {
+        if (object == m_search && (event->type() == QEvent::Hide || event->type() == QEvent::Resize
+                || event->type() == QEvent::PaletteChange)) {
+            m_animation.stop();
+            finish();
+            m_initialized = false;
+            schedule();
+        }
+        if (qobject_cast<Dtk::Widget::DIconButton *>(object)
+                && event->type() == QEvent::Paint && m_moving)
+            return true;
+        if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut
+                || event->type() == QEvent::Show || event->type() == QEvent::Hide)
+            schedule();
+        return false;
+    }
+
+    void paintEvent(QPaintEvent *) override
+    {
+        QPainter painter(this);
+        m_icon.paint(&painter, m_rect.toAlignedRect(), Qt::AlignCenter,
+                     m_search->isEnabled() ? QIcon::Normal : QIcon::Disabled);
+    }
+
+private:
+    void finish()
+    {
+        m_moving = false;
+        hide();
+        for (auto icon : m_search->findChildren<Dtk::Widget::DIconButton *>()) icon->update();
+    }
+
+    void schedule()
+    {
+        if (m_pending) return;
+        m_pending = true;
+        // Let DTK finish updating its placeholder and editing layouts first.
+        QTimer::singleShot(0, this, [this] {
+            m_pending = false;
+            if (!m_search->isVisible()) return;
+            for (auto icon : m_search->findChildren<Dtk::Widget::DIconButton *>()) {
+                if (!icon->isVisible() || icon->icon().isNull()) continue;
+                const QPoint origin = icon->mapTo(m_search, QPoint());
+                const QSize size = icon->iconSize();
+                const QRectF target(QPointF(origin) + QPointF((icon->width() - size.width()) / 2.0,
+                                                            (icon->height() - size.height()) / 2.0), size);
+                m_icon = icon->icon();
+                if (m_initialized && target == m_target) return;
+                m_target = target;
+                m_animation.stop();
+                if (!m_initialized || !m_search->style()->styleHint(QStyle::SH_Widget_Animate, nullptr, m_search)) {
+                    m_initialized = true;
+                    m_rect = target;
+                    finish();
+                    return;
+                }
+                setGeometry(m_search->rect());
+                m_moving = true;
+                show();
+                raise();
+                for (auto nativeIcon : m_search->findChildren<Dtk::Widget::DIconButton *>()) nativeIcon->update();
+                m_animation.setStartValue(m_rect);
+                m_animation.setEndValue(target);
+                m_animation.start();
+                return;
+            }
+        });
+    }
+
+    Dtk::Widget::DSearchEdit *m_search;
+    QVariantAnimation m_animation;
+    QIcon m_icon;
+    QRectF m_rect;
+    QRectF m_target;
+    bool m_pending = false;
+    bool m_initialized = false;
+    bool m_moving = false;
+};
+
 class PanelStyle : public QObject
 {
 public:
@@ -57,6 +171,10 @@ private:
         QPalette palette = style->standardPalette();
         style->polish(palette);
         widget->setPalette(palette);
+        if (auto search = qobject_cast<Dtk::Widget::DSearchEdit *>(widget)) {
+            if (!search->findChild<QWidget *>("SearchFocusTransition", Qt::FindDirectChildrenOnly))
+                new SearchFocusTransition(search);
+        }
         if (auto icon = qobject_cast<Dtk::Widget::DIconButton *>(widget)) {
             for (auto parent = icon->parentWidget(); parent; parent = parent->parentWidget()) {
                 if (auto search = qobject_cast<Dtk::Widget::DSearchEdit *>(parent)) {
