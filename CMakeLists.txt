@@ -6,6 +6,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
 
 include (src/DtkSettingsToolsMacros)
 option(TERM_RPATH "Do you want to use compiled libraries" ON)
+option(INSTALL_USER_MANUAL "Install the screenshot-heavy offline user manual" OFF)
 
 if(TERM_RPATH)
 set(CMAKE_SKIP_INSTALL_RPATH YES)
@@ -314,8 +315,10 @@ add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_qm_files)
 # Install translations
 install(FILES ${QM_FILES} DESTINATION share/${PROJECT_NAME}/translations)
 
-install(DIRECTORY src/assets/deepin-terminal
-        DESTINATION /usr/share/deepin-manual/manual-assets/application/)
+if(INSTALL_USER_MANUAL)
+    install(DIRECTORY src/assets/deepin-terminal
+            DESTINATION share/deepin-manual/manual-assets/application/)
+endif()
 message("CMAKE_INSTALL_PREFIX: " ${CMAKE_INSTALL_PREFIX})
 #安装日志调试模式配置文件
 install(FILES src/assets/config/debugconfig/org.deepin.terminal.json
