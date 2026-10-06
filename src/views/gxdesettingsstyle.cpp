@@ -28,6 +28,46 @@
 DWIDGET_USE_NAMESPACE
 
 namespace {
+class DialogCloseAlignment : public QObject {
+public:
+    DialogCloseAlignment(QWidget *dialog, DWindowCloseButton *button)
+            : QObject(dialog), m_dialog(dialog), m_button(button) {
+        if (button->parentWidget()->layout()) {
+            button->parentWidget()->layout()->removeWidget(button);
+        }
+
+        button->setParent(dialog);
+        dialog->installEventFilter(this);
+        button->installEventFilter(this);
+        sync();
+    }
+
+protected:
+    bool eventFilter(QObject *, QEvent *event) override {
+        if (!m_syncing && (event->type() == QEvent::Show ||
+                event->type() == QEvent::Resize
+                || event->type() == QEvent::Move ||
+                event->type() == QEvent::LayoutRequest)) {
+            sync();
+        }
+        return false;
+    }
+
+private:
+    void sync() {
+        m_syncing = true;
+        m_button->setFixedSize(40, 39);
+        m_button->move(m_dialog->width() - m_button->width(), 0);
+        m_button->show();
+        m_button->raise();
+        m_syncing = false;
+    }
+
+    QWidget *m_dialog;
+    DWindowCloseButton *m_button;
+    bool m_syncing = false;
+};
+
 class SettingsBlur : public QObject
 {
 public:
@@ -648,6 +688,9 @@ void applyGxdeDialogStyle(QWidget *dialog) {
         title->setIcon(noTerminalIcon);
         title->setFixedHeight(39);
         title->setBackgroundTransparent(true);
+        if (auto close = title->findChild<DWindowCloseButton *>()) {
+            new DialogCloseAlignment(dialog, close);
+        }
     }
     for (auto close : dialog->findChildren<DWindowCloseButton *>())
         applyGxdeWindowButtonStyle(close, "close");
