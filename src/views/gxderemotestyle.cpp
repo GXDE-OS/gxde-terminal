@@ -2,6 +2,8 @@
 #include "gxderemotestyle.h"
 #include "titlebar.h"
 #include <DGuiApplicationHelper>
+#include <DSearchEdit>
+#include <DIconButton>
 #include <QApplication>
 #include <QAbstractButton>
 #include <QMenu>
@@ -55,6 +57,20 @@ private:
         QPalette palette = style->standardPalette();
         style->polish(palette);
         widget->setPalette(palette);
+        if (auto icon = qobject_cast<Dtk::Widget::DIconButton *>(widget)) {
+            for (auto parent = icon->parentWidget(); parent; parent = parent->parentWidget()) {
+                if (auto search = qobject_cast<Dtk::Widget::DSearchEdit *>(parent)) {
+                    if (search->objectName().startsWith("Remote")) {
+                        // Both editing and placeholder glyphs use a small icon
+                        // inside DTK's original slot to preserve vertical centering.
+                        icon->setIconSize(QSize(12, 12));
+                        icon->setFixedSize(20, 20);
+                    }
+                    break;
+                }
+                if (parent == m_root) break;
+            }
+        }
         if (widget == m_root || widget->inherits("CommonPanel"))
             widget->setAutoFillBackground(false);
         if ((widget->objectName() == "RemoteIconLabel" || widget->objectName() == "CustomLogoIcon")) {
