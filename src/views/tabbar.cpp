@@ -12,6 +12,7 @@
 #include "windowsmanager.h"
 #include "terminalapplication.h"
 #include "titlebar.h"
+#include "headertransition.h"
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include "private/qtabbar_p.h"
 #endif
@@ -72,19 +73,30 @@ QFont gxdeTabFont()
 class GxdeTabCloseButton : public QAbstractButton
 {
 public:
-    explicit GxdeTabCloseButton(TabBar *bar) : QAbstractButton(bar), m_bar(bar)
+    explicit GxdeTabCloseButton(TabBar *bar)
+        : QAbstractButton(bar), m_bar(bar), m_reveal(this), m_hover(this), m_press(this, 70)
     {
         setObjectName("GXDETabCloseButton");
         setAccessibleName(TabBar::tr("Close tab"));
         setFocusPolicy(Qt::NoFocus);
         setFixedSize(28, WIN_TITLE_BAR_HEIGHT);
         setMouseTracking(true);
+        installEventFilter(this);
         bar->installEventFilter(this);
         if (auto tabs = bar->findChild<QTabBar *>()) {
             tabs->setMouseTracking(true);
             tabs->installEventFilter(this);
         }
+        connect(this, &QAbstractButton::pressed, this, [this] { m_press.transitionTo(1.0); });
+        connect(this, &QAbstractButton::released, this, [this] { m_press.transitionTo(0.0); });
+        connect(&m_reveal, &QVariantAnimation::valueChanged, bar, [bar] {
+            if (auto tabs = bar->findChild<QTabBar *>())
+                tabs->update();
+            bar->update();
+        });
     }
+
+    qreal hoverProgress() const { return m_reveal.value(); }
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -98,7 +110,12 @@ protected:
         case QEvent::Move:
         case QEvent::Resize:
             // Enter/leave state is updated after the event filters run.
-            QTimer::singleShot(0, this, [this] { update(); });
+            QTimer::singleShot(0, this, [this] { updateHover(); });
+            break;
+        case QEvent::Hide:
+            m_reveal.transitionTo(0.0, false);
+            m_hover.transitionTo(0.0, false);
+            m_press.transitionTo(0.0, false);
             break;
         default:
             break;
@@ -108,26 +125,152 @@ protected:
 
     void paintEvent(QPaintEvent *) override
     {
-        if (!m_bar->underMouse())
-            return;
         if ((QApplication::mouseButtons() & Qt::LeftButton) && !isDown())
             return; // Do not put a close icon in a dragged tab.
+        if (m_reveal.value() <= 0.0)
+            return;
+        QPainter painter(this);
+        const auto drawState = [&](const QString &state, qreal weight) {
+            if (weight <= 0.0)
+                return;
+            painter.setOpacity(m_reveal.value() * weight);
+            QIcon(QStringLiteral(":/other/tab_close_%1.svg").arg(state)).paint(
+                &painter, QRect(0, (height() - 17) / 2, 17, 17));
+        };
+        drawState("normal", (1.0 - m_hover.value()) * (1.0 - m_press.value()));
+        drawState("hover", m_hover.value() * (1.0 - m_press.value()));
+        drawState("press", m_press.value());
+    }
+
+private:
+    void updateHover()
+    {
+        bool hovered = false;
         const QPoint position = m_bar->mapFromGlobal(QCursor::pos());
         for (int i = 0; i < m_bar->count(); ++i) {
             if (m_bar->tabButton(i, QTabBar::RightSide) != this)
                 continue;
-            if (!m_bar->tabRect(i).contains(position))
-                return;
-            const QString state = isDown() ? "press" : underMouse() ? "hover" : "normal";
-            QPainter painter(this);
-            QIcon(QStringLiteral(":/other/tab_close_%1.svg").arg(state)).paint(
-                &painter, QRect(0, (height() - 17) / 2, 17, 17));
-            return;
+            hovered = m_bar->underMouse() && m_bar->tabRect(i).contains(position);
+            break;
         }
+        m_reveal.transitionTo(hovered ? 1.0 : 0.0);
+        m_hover.transitionTo(hovered && underMouse() ? 1.0 : 0.0);
+    }
+    TabBar *m_bar;
+    HeaderTransition m_reveal;
+    HeaderTransition m_hover;
+    HeaderTransition m_press;
+};
+
+class GxdeTabUnderline : public QWidget
+{
+public:
+    GxdeTabUnderline(TabBar *bar, QTabBar *tabs)
+        : QWidget(tabs), m_bar(bar), m_tabs(tabs), m_motion(this)
+    {
+        setObjectName("GXDETabUnderline");
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+        setAttribute(Qt::WA_NoSystemBackground);
+        setFocusPolicy(Qt::NoFocus);
+        bar->setProperty("gxdeAnimatedUnderline", true);
+        tabs->setProperty("gxdeAnimatedUnderline", true);
+        tabs->installEventFilter(this);
+        m_motion.setDuration(180);
+        m_motion.setEasingCurve(QEasingCurve::OutCubic);
+        connect(&m_motion, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+            m_rect = value.toRectF();
+            update();
+        });
+
+        const auto follow = [this] {
+            QTimer::singleShot(0, this, [this] { followCurrent(true); raise(); });
+        };
+
+        connect(bar, &DTabBar::currentChanged, this, follow);
+        connect(bar, &DTabBar::tabMoved, this, follow);
+        connect(bar, &DTabBar::tabIsInserted, this, follow);
+        connect(bar, &DTabBar::tabIsRemoved, this, follow);
+        connect(bar, &DTabBar::dragStarted, this, [this] {
+            m_dragging = true;
+            m_motion.stop();
+        });
+
+        connect(bar, &DTabBar::dragEnd, this, [this] {
+            m_dragging = false;
+            followCurrent(false);
+        });
+
+        setGeometry(tabs->rect());
+        show();
+    }
+
+protected:
+    bool eventFilter(QObject *, QEvent *event) override
+    {
+        switch (event->type()) {
+        case QEvent::Resize:
+            setGeometry(m_tabs->rect());
+            followCurrent(false);
+            break;
+        case QEvent::Paint:
+            followCurrent(true);
+            break;
+        case QEvent::Show:
+            followCurrent(false);
+            break;
+        case QEvent::Hide:
+            m_motion.stop();
+            m_rect = m_target = QRectF();
+            break;
+        default:
+            break;
+        }
+        return false;
+    }
+
+    void paintEvent(QPaintEvent *) override
+    {
+        if (!m_rect.isValid())
+            return;
+        QPainter painter(this);
+        painter.fillRect(m_rect, m_bar->palette().color(QPalette::Highlight));
     }
 
 private:
+    void followCurrent(bool animate)
+    {
+        const int index = m_bar->currentIndex();
+        if (index < 0 || index >= m_bar->count()) {
+            m_motion.stop();
+            if (m_rect.isValid() || m_target.isValid()) {
+                m_rect = m_target = QRectF();
+                update();
+            }
+            return;
+        }
+        const QRect tab = m_tabs->tabRect(index);
+        const QRectF target(tab.left() + 1, tab.bottom() - 1, tab.width() - 1, 2);
+        if (target == m_target)
+            return;
+        m_target = target;
+        m_motion.stop();
+        if (!animate || m_dragging || !isVisible() || !m_rect.isValid()
+            || !style()->styleHint(QStyle::SH_Widget_Animate, nullptr, this)) {
+            m_rect = target;
+            update();
+            return;
+        }
+        m_motion.setStartValue(m_rect);
+        m_motion.setEndValue(target);
+        m_motion.start();
+    }
+
     TabBar *m_bar;
+    QTabBar *m_tabs;
+    QVariantAnimation m_motion;
+    QRectF m_rect;
+    QRectF m_target;
+    bool m_dragging = false;
 };
 }
 
@@ -185,13 +328,22 @@ void TermTabStyle::drawControl(ControlElement element, const QStyleOption *optio
     const bool light = tab->palette.color(QPalette::Window).lightnessF() > 0.5;
     const bool selected = tab->state & State_Selected;
     const bool hover = tab->state & State_MouseOver;
+    auto bar = qobject_cast<const TabBar *>(tab->styleObject);
+    if (!bar && widget)
+        bar = qobject_cast<const TabBar *>(widget->parentWidget());
+    const auto closeButton = bar
+        ? dynamic_cast<GxdeTabCloseButton *>(bar->tabButton(tab->row, QTabBar::RightSide)) : nullptr;
+    const qreal hoverProgress = closeButton ? closeButton->hoverProgress() : (hover ? 1.0 : 0.0);
     const QColor accent = tab->palette.color(QPalette::Highlight);
     const QColor separator = light ? QColor(0, 0, 0, 13) : QColor(255, 255, 255, 13);
     if (element != CE_TabBarTabLabel) {
-        if (hover && !selected)
-            painter->fillRect(tab->rect, separator);
+        if (hoverProgress > 0.0 && !selected) {
+            QColor background = separator;
+            background.setAlphaF(background.alphaF() * hoverProgress);
+            painter->fillRect(tab->rect, background);
+        }
         painter->fillRect(QRect(tab->rect.topLeft(), QSize(1, tab->rect.height())), separator);
-        if (selected)
+        if (selected && !(bar && bar->property("gxdeAnimatedUnderline").toBool()))
             painter->fillRect(QRect(tab->rect.left() + 1, tab->rect.bottom() - 1, tab->rect.width() - 1, 2), accent);
     }
     if (element != CE_TabBarTabShape) {
@@ -202,12 +354,12 @@ void TermTabStyle::drawControl(ControlElement element, const QStyleOption *optio
             text = accent;
         else if (m_tabStatusMap.value(id) == TabTextColorStatus_Changed)
             text = QColor("#ff9600");
-        else if (hover)
-            text = light ? Qt::black : Qt::white;
+        else
+            text.setAlphaF(0.8 + 0.2 * hoverProgress);
         const QFont font = widget ? widget->font() : QApplication::font();
         painter->setFont(font);
         painter->setPen(text);
-        const QRect textRect = tab->rect.adjusted(20, 0, hover ? -34 : -20, 0);
+        const QRect textRect = tab->rect.adjusted(20, 0, -20 - qRound(14 * hoverProgress), 0);
         painter->save();
         painter->setClipRect(textRect, Qt::IntersectClip);
         painter->drawText(QRect(tab->rect.left() + 20, tab->rect.top(),
@@ -329,6 +481,8 @@ TabBar::TabBar(QWidget *parent) : DTabBar(parent), m_rightClickTab(-1)
     qCDebug(views) << "Branch: Size mode handling not available, setting fixed height";
     setTabHeight(WIN_TITLE_BAR_HEIGHT);
 #endif
+    if (auto tabs = findChild<QTabBar *>())
+        new GxdeTabUnderline(this, tabs);
     qCDebug(views) << "TabBar constructor finished";
 }
 

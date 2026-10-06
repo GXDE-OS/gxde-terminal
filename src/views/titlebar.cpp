@@ -5,6 +5,7 @@
 
 #include "titlebar.h"
 #include "utils.h"
+#include "headertransition.h"
 
 #include <DApplication>
 #include <DIconButton>
@@ -29,11 +30,13 @@ class GxdeWindowButtonStyle : public QObject
 {
 public:
     GxdeWindowButtonStyle(QAbstractButton *button, const QString &iconName)
-        : QObject(button), m_button(button), m_iconName(iconName)
+        : QObject(button), m_button(button), m_iconName(iconName), m_hover(button), m_press(button, 70)
     {
         button->installEventFilter(this);
         button->setFixedSize(iconName == "tab_add" ? 50 : 40, WIN_TITLE_BAR_HEIGHT);
         button->setCursor(Qt::PointingHandCursor);
+        connect(button, &QAbstractButton::pressed, this, [this] { m_press.transitionTo(1.0); });
+        connect(button, &QAbstractButton::released, this, [this] { m_press.transitionTo(0.0); });
         connect(Dtk::Gui::DGuiApplicationHelper::instance(),
                 &Dtk::Gui::DGuiApplicationHelper::themeTypeChanged, button,
                 [button] { button->update(); });
@@ -42,7 +45,17 @@ public:
 protected:
     bool eventFilter(QObject *object, QEvent *event) override
     {
-        if (object != m_button || event->type() != QEvent::Paint)
+        if (object != m_button)
+            return false;
+        if (event->type() == QEvent::Enter)
+            m_hover.transitionTo(1.0);
+        else if (event->type() == QEvent::Leave)
+            m_hover.transitionTo(0.0);
+        else if (event->type() == QEvent::Hide || event->type() == QEvent::EnabledChange) {
+            m_hover.transitionTo(0.0, false);
+            m_press.transitionTo(0.0, false);
+        }
+        if (event->type() != QEvent::Paint)
             return false;
         const QString name = m_iconName == "max" && m_button->property("isMaximized").toBool()
             ? QStringLiteral("unmax") : m_iconName;
@@ -50,17 +63,22 @@ protected:
         if (theme.isEmpty())
             theme = Dtk::Gui::DGuiApplicationHelper::instance()->themeType()
                 == Dtk::Gui::DGuiApplicationHelper::LightType ? "light" : "dark";
-        const QString state = m_button->underMouse()
-            ? (m_button->isDown() ? "press" : "hover") : "normal";
         const QString prefix = name == "tab_add" ? QString() : QStringLiteral("window_");
-        const QIcon icon(QStringLiteral(":/other/gxde-window/%1%2_%3_%4.svg")
-            .arg(prefix, name, theme, state));
         QPainter painter(m_button);
-        if (!m_button->isEnabled())
-            painter.setOpacity(0.4);
-        // GXDE draws the original 40px asset centered in its 39px header.
-        painter.drawPixmap(QPoint(0, (m_button->height() - 40) / 2),
-            icon.pixmap(QSize(m_button->width(), 40), m_button->devicePixelRatioF()));
+        const qreal opacity = m_button->isEnabled() ? 1.0 : 0.4;
+        const auto drawState = [&](const QString &state, qreal weight) {
+            if (weight <= 0.0)
+                return;
+            const QIcon icon(QStringLiteral(":/other/gxde-window/%1%2_%3_%4.svg")
+                .arg(prefix, name, theme, state));
+            painter.setOpacity(opacity * weight);
+            painter.drawPixmap(QPoint(0, (m_button->height() - 40) / 2),
+                icon.pixmap(QSize(m_button->width(), 40), m_button->devicePixelRatioF()));
+        };
+        drawState("normal", (1.0 - m_hover.value()) * (1.0 - m_press.value()));
+        drawState("hover", m_hover.value() * (1.0 - m_press.value()));
+        drawState("press", m_press.value());
+        painter.setOpacity(opacity);
 
         if (m_button->hasFocus()) {
             painter.setPen(QPen(QColor("#2ca7f8"), 1, Qt::DotLine));
@@ -72,6 +90,8 @@ protected:
 private:
     QAbstractButton *m_button;
     QString m_iconName;
+    HeaderTransition m_hover;
+    HeaderTransition m_press;
 };
 }
 
