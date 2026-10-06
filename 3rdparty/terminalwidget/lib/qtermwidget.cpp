@@ -683,6 +683,23 @@ void QTermWidget::setColorScheme(const QString &origName, bool needReloadTheme)
     m_impl->m_terminalDisplay->setColorTable(table);
 }
 
+QMap<QString, QColor> QTermWidget::colorSchemePreview(const QString &name)
+{
+    auto manager = ColorSchemeManager::instance();
+    const bool isFile = QFile::exists(name);
+    const QString key = isFile ? QFileInfo(name).baseName() : name;
+    const auto *scheme = manager->findColorScheme(key);
+    if (!scheme && isFile && manager->loadCustomColorScheme(name))
+        scheme = manager->findColorScheme(key);
+    if (!scheme) scheme = manager->defaultColorScheme();
+    ColorEntry colors[TABLE_COLORS];
+    scheme->getColorTable(colors);
+    return {{QStringLiteral("background"), scheme->backgroundColor()},
+            {QStringLiteral("foreground"), scheme->foregroundColor()},
+            {QStringLiteral("host"), colors[4].color},
+            {QStringLiteral("path"), colors[6].color}};
+}
+
 QStringList QTermWidget::availableColorSchemes()
 {
     QStringList ret;

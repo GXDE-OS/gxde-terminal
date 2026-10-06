@@ -47,15 +47,6 @@ RemoteManagementTopPanel::RemoteManagementTopPanel(QWidget *parent) : RightPanel
     qCDebug(remotemanage) << "RemoteManagementTopPanel initialization complete";
 }
 
-void RemoteManagementTopPanel::paintEvent(QPaintEvent *event)
-{
-    RightPanel::paintEvent(event);
-    QPainter painter(this);
-    painter.fillRect(rect(), QColor(0, 0, 0, 72));
-    const bool dark = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::DarkType;
-    painter.fillRect(QRect(0, 0, 1, height()), dark ? QColor(255, 255, 255, 20) : QColor(0, 0, 0, 30));
-}
-
 void RemoteManagementTopPanel::show()
 {
     // qDebug() << "Enter RemoteManagementTopPanel::show";

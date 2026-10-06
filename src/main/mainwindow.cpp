@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "mainwindow.h"
+#include "themepanel.h"
 #include "mainwindowplugininterface.h"
 #include "settings.h"
 #include "shortcutmanager.h"
@@ -2597,7 +2598,35 @@ void MainWindow::addThemeMenuItems()
         themeCustomAction->setCheckable(true);
         group->addAction(themeCustomAction);
 
-        menu->addMenu(switchThemeMenu);
+        QVector<ThemePanel::Entry> entries = {
+            {autoThemeAction, QString()}, {lightThemeAction, THEME_LIGHT}, {darkThemeAction, THEME_DARK},
+            {themeOneAction, THEME_ONE}, {themeTwoAction, THEME_TWO}, {themeThreeAction, THEME_THREE},
+            {themeFourAction, THEME_FOUR}, {themeFiveAction, THEME_FIVE}, {themeSixAction, THEME_SIX},
+            {themeSevenAction, THEME_SEVEN}, {themeEightAction, THEME_EIGHT},
+            {themeNineAction, THEME_NINE}, {themeTenAction, THEME_TEN}
+        };
+        for (auto action : switchThemeMenu->actions()) {
+            for (auto it = themeBuiltinActionMap.cbegin(); it != themeBuiltinActionMap.cend(); ++it)
+                if (it.value() == action) entries.append({action, it.key()});
+        }
+        entries.append({themeCustomAction, Settings::instance()->m_configCustomThemePath});
+        auto themePanel = new ThemePanel(entries, centralWidget());
+        auto themeEntry = menu->addAction(qApp->translate("TitleBarMenu", THEME));
+        connect(themeEntry, &QAction::triggered, this, [this, themePanel] {
+            showPlugin(themePanel->isVisible() ? PLUGIN_TYPE_NONE : PLUGIN_TYPE_THEME);
+        });
+        connect(this, &MainWindow::showPluginChanged, themePanel, [this, themePanel](const QString &name) {
+            if (name == PLUGIN_TYPE_THEME) {
+                checkThemeItem();
+                themePanel->open();
+            } else {
+                themePanel->hideAnim();
+            }
+        });
+        connect(this, &MainWindow::quakeHidePlugin, themePanel, &QWidget::hide);
+        connect(group, &QActionGroup::triggered, themePanel, [this] {
+            QTimer::singleShot(0, this, [this] { checkThemeItem(); });
+        });
         themeSeparator = menu->addSeparator();
 
         switchThemeMenu->menuAction()->setVisible(true);

@@ -55,6 +55,8 @@ private:
         QPalette palette = style->standardPalette();
         style->polish(palette);
         widget->setPalette(palette);
+        if (widget == m_root || widget->inherits("CommonPanel"))
+            widget->setAutoFillBackground(false);
         if ((widget->objectName() == "RemoteIconLabel" || widget->objectName() == "CustomLogoIcon")) {
             if (auto label = qobject_cast<QLabel *>(widget)) {
                 label->setFixedSize(48, 39);

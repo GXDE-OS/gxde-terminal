@@ -21,6 +21,7 @@
 #define _Q_TERM_WIDGET
 
 #include <QTranslator>
+#include <QMap>
 #include <QWidget>
 #include <QPointer>
 #include "Emulation.h"
@@ -129,6 +130,8 @@ public:
     //设置主题的配色方案
     void setColorScheme(const QString &name, bool needReloadTheme = false);
     static QStringList availableColorSchemes();
+    // Read preview colors without creating a terminal session.
+    static QMap<QString, QColor> colorSchemePreview(const QString &name);
     static void addCustomColorSchemeDir(const QString &custom_dir);
 
     // History size for scrolling

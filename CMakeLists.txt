@@ -198,6 +198,7 @@ set (DTNG_CPP_FILES
     src/views/iconbutton.cpp
     src/views/listview.cpp
     src/views/customthemesettingdialog.cpp
+    src/views/themepanel.cpp
     src/views/themepreviewarea.cpp
 )
 

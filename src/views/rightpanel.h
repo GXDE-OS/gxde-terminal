@@ -27,6 +27,9 @@ public:
      * @param event 隐藏事件
      */
     void hideEvent(QHideEvent *event) override;
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
 public slots:
     /**
      * @brief 动画显示

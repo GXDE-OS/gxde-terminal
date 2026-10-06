@@ -19,6 +19,7 @@
 #include <QPropertyAnimation>
 #include <QLoggingCategory>
 #include <QDebug>
+#include <QPainter>
 
 Q_DECLARE_LOGGING_CATEGORY(views)
 
@@ -171,4 +172,13 @@ void RightPanel::hideEvent(QHideEvent *event)
 
     qInfo() << "RightPanel hidden";
     QWidget::hideEvent(event);
+}
+
+void RightPanel::paintEvent(QPaintEvent *event)
+{
+    QWidget::paintEvent(event);
+    QPainter painter(this);
+    painter.fillRect(rect(), QColor(0, 0, 0, 72));
+    const bool dark = DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::DarkType;
+    painter.fillRect(QRect(0, 0, 1, height()), dark ? QColor(255, 255, 255, 20) : QColor(0, 0, 0, 30));
 }

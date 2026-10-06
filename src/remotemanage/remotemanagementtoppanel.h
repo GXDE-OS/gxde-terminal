@@ -75,7 +75,6 @@ signals:
     void doConnectServer(ServerConfig *curServer);
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
 
 private:
     // 远程主界面
