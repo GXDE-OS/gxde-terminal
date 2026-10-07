@@ -1,3 +1,9 @@
+gxde-terminal (7.0.3) unstable; urgency=medium
+
+  * Added a CI script.
+
+ -- CharOfString <root@charofstring.cc>  Wed, 07 Oct 2026 00:17:03 -0500
+
 gxde-terminal (7.0.2) unstable; urgency=medium
 
   * Fixed terminal color rendering issue when using codex.
