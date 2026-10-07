@@ -186,6 +186,15 @@ void TerminalDisplay::setBackgroundColor(const QColor& color)
 
     update();
 }
+void TerminalDisplay::setDefaultBackgroundColor(const QColor& color)
+{
+    if (_colorTransition && _colorTransition->state() == QAbstractAnimation::Running) {
+        _colorTransitionStart[DEFAULT_BACK_COLOR].color = color;
+        _colorTransitionTarget[DEFAULT_BACK_COLOR].color = color;
+    }
+    setBackgroundColor(color);
+}
+
 void TerminalDisplay::setForegroundColor(const QColor& color)
 {
     _colorTable[DEFAULT_FORE_COLOR].color = color;

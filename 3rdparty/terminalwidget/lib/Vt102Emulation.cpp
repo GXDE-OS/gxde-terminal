@@ -543,6 +543,11 @@ void Vt102Emulation::processWindowAttributeChange()
       return;
   }
 
+  if (attributeToChange == 11) {
+      emit titleChanged(attributeToChange, newValue);
+      return;
+  }
+
   _pendingTitleUpdates[attributeToChange] = newValue;
   _titleUpdateTimer->start(20);
 }

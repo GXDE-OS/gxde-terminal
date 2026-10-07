@@ -551,6 +551,9 @@ public slots:
      */
     void setBackgroundColor(const QColor& color);
 
+    /** Apply an OSC background immediately, including any ongoing palette transition. */
+    void setDefaultBackgroundColor(const QColor& color);
+
     /**
      * Sets the text of the display to the specified color.
      * @see setColorTable(), setBackgroundColor()

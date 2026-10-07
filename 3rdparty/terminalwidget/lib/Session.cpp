@@ -483,21 +483,41 @@ void Session::setUserTitle( int what, const QString & caption )
     }
 
     if (what == 11) {
-        QString colorString = caption.section(QLatin1Char(';'),0,0);
-        //qDebug() << __FILE__ << __LINE__ << ": setting background colour to " << colorString;
-        QColor backColor = QColor(colorString);
-        if (backColor.isValid()) { // change color via \033]11;Color\007
-            if (backColor != _modifiedBackground) {
-                _modifiedBackground = backColor;
-
-                // bail out here until the code to connect the terminal display
-                // to the changeBackgroundColor() signal has been written
-                // and tested - just so we don't forget to do this.
-                Q_ASSERT( 0 );
-
-                emit changeBackgroundColorRequest(backColor);
+        const QString colorString = caption.section(QLatin1Char(';'), 0, 0);
+        QColor backColor;
+        if (colorString.startsWith(QLatin1String("rgb:"))) {
+            const QStringList components = colorString.mid(4).split(QLatin1Char('/'));
+            if (components.size() != 3)
+                return;
+            int rgb[3];
+            for (int i = 0; i < 3; ++i) {
+                const QString &component = components[i];
+                if (component.isEmpty() || component.size() > 4)
+                    return;
+                for (const QChar c : component) {
+                    if (!((c >= QLatin1Char('0') && c <= QLatin1Char('9')) ||
+                          (c >= QLatin1Char('a') && c <= QLatin1Char('f')) ||
+                          (c >= QLatin1Char('A') && c <= QLatin1Char('F'))))
+                        return;
+                }
+                const uint maximum = (1u << (4 * component.size())) - 1;
+                rgb[i] = int((component.toUInt(nullptr, 16) * 255 + maximum / 2) / maximum);
             }
+            backColor = QColor(rgb[0], rgb[1], rgb[2]);
+        } else {
+            backColor = QColor(colorString);
         }
+        if (!backColor.isValid())
+            return;
+
+        bool changed = backColor != _modifiedBackground;
+        _modifiedBackground = backColor;
+        for (TerminalDisplay *view : qAsConst(_views)) {
+            changed |= view->colorTable()[DEFAULT_BACK_COLOR].color != backColor;
+            view->setDefaultBackgroundColor(backColor);
+        }
+        if (changed)
+            emit changeBackgroundColorRequest(backColor);
     }
 
     if (what == 30) {

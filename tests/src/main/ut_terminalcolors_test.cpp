@@ -87,3 +87,75 @@ TEST(TerminalColors, PartialRepaintPreservesBackgroundAtRowBottom)
     painter.end();
     EXPECT_EQ(image.pixelColor(strip.center()), QColor(55, 57, 65));
 }
+
+TEST(TerminalColors, RemoteBackgroundSequenceDoesNotAbortAndQueriesSeeNewColor)
+{
+    Session session;
+    TerminalDisplay first, second;
+    for (TerminalDisplay *view : {&first, &second}) {
+        view->setVTFont(QFont(QStringLiteral("DejaVu Sans Mono"), 12));
+        view->resize(480, 240);
+        session.addView(view);
+        view->show();
+    }
+    const QColor foreground = first.colorTable()[DEFAULT_FORE_COLOR].color;
+    QList<QByteArray> replies;
+    QObject::connect(session.emulation(), &Emulation::sendData, &first,
+                     [&replies](const char *data, int length, const QTextCodec *) {
+        replies.append(QByteArray(data, length));
+    });
+    const QByteArray stream("\033]11;#123456\007\033]11;?\007"
+                            "\033]11;rgb:ab/cd/ef\033\\\033]11;?\033\\");
+    for (int i = 0; i < stream.size(); ++i)
+        session.emulation()->receiveData(stream.constData() + i, 1, false);
+    ASSERT_EQ(replies.size(), 2);
+    EXPECT_EQ(replies[0], QByteArray("\033]11;rgb:1212/3434/5656\007"));
+    EXPECT_EQ(replies[1], QByteArray("\033]11;rgb:abab/cdcd/efef\033\\"));
+    EXPECT_EQ(first.colorTable()[DEFAULT_BACK_COLOR].color, QColor(0xab, 0xcd, 0xef));
+    EXPECT_EQ(second.colorTable()[DEFAULT_BACK_COLOR].color, QColor(0xab, 0xcd, 0xef));
+    EXPECT_EQ(first.palette().color(first.backgroundRole()), QColor(0xab, 0xcd, 0xef));
+    EXPECT_EQ(first.colorTable()[DEFAULT_FORE_COLOR].color, foreground);
+    QTest::qWait(40); // No queued title update may revert the background later.
+    EXPECT_EQ(first.colorTable()[DEFAULT_BACK_COLOR].color, QColor(0xab, 0xcd, 0xef));
+}
+
+TEST(TerminalColors, BackgroundCommandsValidateRgbAndReapplyAfterThemeChange)
+{
+    Session session;
+    TerminalDisplay view;
+    session.addView(&view);
+    auto feed = [&](const QByteArray &sequence) {
+        session.emulation()->receiveData(sequence.constData(), sequence.size(), false);
+    };
+    feed("\033]11;rgb:f/80/0000\007");
+    EXPECT_EQ(view.colorTable()[DEFAULT_BACK_COLOR].color, QColor(255, 128, 0));
+    for (const QByteArray &color : {QByteArray("not-a-color"), QByteArray("rgb:1/2"),
+                                   QByteArray("rgb:10000/0/0"), QByteArray("rgb:+1/0/0"),
+                                   QByteArray("rgb:gg/00/00"), QByteArray("rgb:/0/0")}) {
+        feed("\033]11;" + color + "\007");
+        EXPECT_EQ(view.colorTable()[DEFAULT_BACK_COLOR].color, QColor(255, 128, 0));
+    }
+    // Receiving the same OSC value again must apply even after a theme change.
+    view.setBackgroundColor(Qt::black);
+    feed("\033]11;rgb:f/80/0000\007");
+    EXPECT_EQ(view.colorTable()[DEFAULT_BACK_COLOR].color, QColor(255, 128, 0));
+}
+
+TEST(TerminalColors, RemoteBackgroundSurvivesPaletteAnimation)
+{
+    Session session;
+    TerminalDisplay view;
+    session.addView(&view);
+    view.setVTFont(QFont(QStringLiteral("DejaVu Sans Mono"), 12));
+    view.resize(480, 240);
+    view.show();
+    ColorEntry palette[TABLE_COLORS];
+    std::copy(view.colorTable(), view.colorTable() + TABLE_COLORS, palette);
+    palette[DEFAULT_BACK_COLOR].color = Qt::blue;
+    view.setColorTable(palette);
+    const QByteArray sequence("\033]11;#123456\007");
+    session.emulation()->receiveData(sequence.constData(), sequence.size(), false);
+    EXPECT_EQ(view.colorTable()[DEFAULT_BACK_COLOR].color, QColor(0x12, 0x34, 0x56));
+    QTest::qWait(300);
+    EXPECT_EQ(view.colorTable()[DEFAULT_BACK_COLOR].color, QColor(0x12, 0x34, 0x56));
+}
