@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+set -euo pipefail
+
+usage() {
+  cat <<'HELP'
+Usage: ./build-arch [--prepare-only] [--output-dir DIR] [-- MAKEPKG_OPTIONS...]
+
+Build an Arch package from the current working tree, including local edits.
+  --prepare-only   Generate source archive and PKGBUILD without invoking makepkg.
+  --output-dir DIR Store build workspace and packages here (default: build-arch-output).
+  --help           Show this help.
+
+Requires base-devel and makepkg on Arch; makepkg --syncdeps installs missing deps.
+Pass -- --install to install the resulting package explicitly.
+HELP
+}
+fail() { printf 'Error: %s\n' "$*" >&2; exit 1; }
+repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+output="$repo/build-arch-output"
+prepare_only=false
+makepkg_args=()
+while (($#)); do
+  case $1 in
+    --prepare-only) prepare_only=true; shift ;;
+    --output-dir)
+      (($# >= 2)) || fail '--output-dir needs a directory'
+      output=$2; shift 2 ;;
+    --help|-h) usage; exit 0 ;;
+    --) shift; makepkg_args=("$@"); break ;;
+    *) fail "Unknown option: $1 (use --help)" ;;
+  esac
+done
+if ! "$prepare_only"; then
+  command -v makepkg >/dev/null || fail 'makepkg is required; use --prepare-only to prepare sources on another distribution.'
+  ((EUID != 0)) || fail 'Run makepkg as a normal user, not root.'
+fi
+for tool in tar sha256sum sed mktemp; do
+  command -v "$tool" >/dev/null || fail "Required command not found: $tool"
+done
+read -r _ version _ < "$repo/debian/changelog"
+version=${version#(}
+version=${version%)}
+[[ $version =~ ^[0-9][0-9A-Za-z.+_]*$ ]] || fail "Unsupported Arch package version: $version"
+epoch=${SOURCE_DATE_EPOCH:-$(git -C "$repo" log -1 --format=%ct 2>/dev/null || printf '0')}
+[[ $epoch =~ ^[0-9]+$ ]] || fail 'SOURCE_DATE_EPOCH must be a non-negative integer'
+mkdir -p -- "$output"
+output=$(cd -- "$output" && pwd)
+work=$(mktemp -d "$output/work.XXXXXXXX")
+archive="gxde-terminal-$version.tar.gz"
+# Explicit inputs keep build products, caches, Git metadata and local settings out.
+tar --sort=name --mtime="@$epoch" --owner=0 --group=0 --numeric-owner \
+  --exclude='*.qm' --exclude='__pycache__' \
+  --transform="flags=r;s,^,gxde-terminal-$version/," \
+  -czf "$work/$archive" -C "$repo" \
+  CMakeLists.txt cmake src 3rdparty translations tests LICENSE LICENSES THIRD_PARTY_NOTICES.md
+checksum=$(sha256sum "$work/$archive")
+checksum=${checksum%% *}
+sed -e "s/@VERSION@/$version/g" -e "s/@SHA256@/$checksum/g" \
+  "$repo/arch/PKGBUILD.in" > "$work/PKGBUILD"
+printf 'Prepared: %s\n' "$work"
+if "$prepare_only"; then
+  printf 'On Arch, cd into this directory and run: makepkg --syncdeps\n'
+  exit 0
+fi
+cd -- "$work"
+export PKGDEST="$output"
+makepkg --printsrcinfo > .SRCINFO
+makepkg --syncdeps "${makepkg_args[@]}"
+printf 'Packages: %s\n' "$output"

@@ -144,6 +144,13 @@ $ ./build-nix            # Start building
 $ nix profile add .#gxde-terminal # Installation
 ```
 
+#### Arch
+We also have a Arch `.pkg.tar.zst` building script:
+```shell
+$ chmod a+x ./build-arch  # Handle permission issue
+$ ./build-arch            # Start building
+```
+
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -162,9 +169,9 @@ There is nothing special for GXDE terminal, you may use it in the same way as yo
 - [x] Add fallback font system.
 - [x] Add support for font ligature.
 - [x] Add support for Kitty graphics protocol.
-- [ ] Packaging
+- [x] Packaging
     - [x] Debian.
-    - [ ] Arch.
+    - [x] Arch.
     - [x] Nix.
 
 See the [open issues](https://gitee.com/GXDE-OS/gxde-terminal/issues) for a full list of proposed features (and known issues).

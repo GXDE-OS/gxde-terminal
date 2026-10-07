@@ -144,6 +144,13 @@ $ ./build-nix            # 开始构建
 $ nix profile add .#gxde-terminal # 安装
 ```
 
+#### Arch
+现在我们也提供Arch `.pkg.tar.zst`打包脚本:
+```shell
+$ chmod a+x ./build-arch  # 处理权限问题
+$ ./build-arch            # 开始构建
+```
+
 
 <!-- USAGE EXAMPLES -->
 ## 用法
@@ -162,9 +169,9 @@ GXDE Terminal跟深度终端相比没什么特别的，除了我们多加了几�
 - [x] 新增回退字体系统。
 - [x] 新增连笔字支持。
 - [x] 增加对Kitty图形协议的支持。
-- [ ] 打包
+- [x] 打包
     - [x] Debian.
-    - [ ] Arch.
+    - [x] Arch.
     - [x] Nix.
 
 对于所有的功能请求，您可能希望阅读「[打开的Issues](https://gitee.com/GXDE-OS/gxde-terminal/issues)」。
