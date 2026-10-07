@@ -21,6 +21,11 @@ Q_DECLARE_LOGGING_CATEGORY(remotemanage)
 struct PasswordReBack {
     QString key;
     ServerConfigManager *manager = nullptr;
+    QString userName;
+    QString address;
+    QString port;
+    // 是否已尝试过旧版（com.deepin.terminal.password）的密码 schema
+    bool triedOld = false;
 };
 
 
@@ -199,6 +204,29 @@ void ServerConfigManager::initServerConfig()
 
     QString serverConfigFilePath(serverConfigBasePath.filePath("server-config.conf"));
     qCInfo(remotemanage) << "load Server Config: " << serverConfigFilePath;
+
+    // 兼容旧版 GXDE Terminal（master 分支，Vala 实现）的远程管理数据。
+    // 旧版配置文件位于 ~/.config/deepin/gxde-terminal/server-config.conf，
+    // 而本版（dtk6）读取路径为 AppConfigLocation 下的 server-config.conf，
+    // 两者路径不同，导致旧数据无法被识别。这里在新文件不存在时，将旧文件迁移过来，
+    // 后续的解析逻辑已兼容旧版的 3 段式分组名（user@host@port）。
+    if (!QFile::exists(serverConfigFilePath)) {
+        QString oldConfigDirPath = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+                                   + QDir::separator() + "deepin" + QDir::separator() + "gxde-terminal";
+        QString oldConfigFilePath = oldConfigDirPath + QDir::separator() + "server-config.conf";
+        if (QFile::exists(oldConfigFilePath)) {
+            qCInfo(remotemanage) << "old server config found at" << oldConfigFilePath << ", migrating...";
+            if (!serverConfigBasePath.exists()) {
+                serverConfigBasePath.mkpath(serverConfigBasePath.absolutePath());
+            }
+            if (QFile::copy(oldConfigFilePath, serverConfigFilePath)) {
+                qCInfo(remotemanage) << "old server config migrated to" << serverConfigFilePath;
+            } else {
+                qCWarning(remotemanage) << "failed to migrate old server config";
+            }
+        }
+    }
+
     if (!QFile::exists(serverConfigFilePath)) {
         qCDebug(remotemanage) << "server config file does not exist";
         return;
@@ -612,6 +640,25 @@ static void on_password_lookup(GObject *source, GAsyncResult *result, gpointer u
         /* password will be null, if no matching password found */
         // 密码回调
         qCInfo(remotemanage) << "password is Null server name : " << reback->key;
+        // 兼容旧版 GXDE Terminal（master 分支）的密码：旧版使用
+        // com.deepin.terminal.password 前缀，本版使用 com.gxde.terminal.password。
+        // 新前缀查不到时，回退到旧前缀再查一次。
+        if (!reback->triedOld) {
+            reback->triedOld = true;
+            QString oldSchemaName = QString("com.deepin.terminal.password.%1.%2.%3")
+                                        .arg(reback->userName).arg(reback->address).arg(reback->port);
+            const SecretSchema *oldScheme =
+                secret_schema_new(oldSchemaName.toUtf8().data(), SECRET_SCHEMA_NONE,
+                                   "number", SECRET_SCHEMA_ATTRIBUTE_INTEGER,
+                                   "string", SECRET_SCHEMA_ATTRIBUTE_STRING,
+                                   "even", SECRET_SCHEMA_ATTRIBUTE_BOOLEAN, NULL);
+            secret_password_lookup(oldScheme, NULL, on_password_lookup, reback,
+                                   "number", 8,
+                                   "string", "eight",
+                                   "even", TRUE,
+                                   NULL);
+            return;
+        }
         emit reback->manager->lookupSerceats(reback->key, "");
 
     } else {
@@ -635,6 +682,9 @@ void ServerConfigManager::remoteGetSecreats(const QString &userName, const QStri
     PasswordReBack *reback = new PasswordReBack;
     reback->key = key;
     reback->manager = this;
+    reback->userName = userName;
+    reback->address = address;
+    reback->port = port;
     // 获取密码
     secret_password_lookup(scheme, NULL, on_password_lookup, reback,
                            "number", 8,
