@@ -34,13 +34,17 @@ TerminalApplication::TerminalApplication(int &argc, char *argv[]) : DApplication
     } else {
         delete translator;
     }
-    setApplicationDisplayName(QObject::tr("Terminal"));
+    const QString productName = QObject::tr("GXDE Terminal");
+    setApplicationDisplayName(productName);
+    setProductName(productName);
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 #endif
     setProductIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
     QString appDesc = QObject::tr("Terminal is an advanced terminal emulator with workspace"
                                   ", multiple windows, remote management, quake mode and other features.");
+    appDesc += QStringLiteral("\n\n") + QObject::tr("Acknowledgements")
+        + QStringLiteral("\nDeepin Terminal\nQTerminalWidget\nKitty");
     setApplicationDescription(appDesc);
 
     /***add by ut001121 zhangmeng 20200617 禁用应用程序自动退出 修复BUG33541***/

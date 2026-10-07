@@ -317,6 +317,14 @@
 <context>
     <name>QObject</name>
     <message>
+        <source>Acknowledgements</source>
+        <translation>感謝</translation>
+    </message>
+    <message>
+        <source>GXDE Terminal</source>
+        <translation>GXDE終端</translation>
+    </message>
+    <message>
         <location filename="../src/common/utils.cpp" line="291"/>
         <location filename="../src/views/listview.cpp" line="349"/>
         <location filename="../src/views/listview.cpp" line="590"/>
