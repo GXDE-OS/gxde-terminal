@@ -19,11 +19,18 @@ TerminalApplication::TerminalApplication(int &argc, char *argv[]) : DApplication
 {
     qCDebug(mainprocess) << "TerminalApplication constructing with arguments:" << QCoreApplication::arguments();
     Utils::set_Object_Name(this);
-    qCDebug(mainprocess) << "Loading translations";
-    loadTranslator();
     setOrganizationName("deepin");
     setApplicationVersion(VERSION);
     setApplicationName("deepin-terminal");
+    qCDebug(mainprocess) << "Loading translations";
+    loadTranslator();
+    auto *translator = new QTranslator(this);
+    if (translator->load(QLocale::system(), QStringLiteral("deepin-terminal"),
+                         QStringLiteral("_"), QCoreApplication::applicationDirPath())) {
+        installTranslator(translator);
+    } else {
+        delete translator;
+    }
     setApplicationDisplayName(QObject::tr("Terminal"));
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     setAttribute(Qt::AA_UseHighDpiPixmaps, true);
@@ -36,11 +43,6 @@ TerminalApplication::TerminalApplication(int &argc, char *argv[]) : DApplication
     /***add by ut001121 zhangmeng 20200617 禁用应用程序自动退出 修复BUG33541***/
     setQuitOnLastWindowClosed(false);
 
-#ifdef QT_DEBUG
-    QTranslator translator;
-    translator.load(QString("deepin-terminal_%1").arg(QLocale::system().name()));
-    installTranslator(&translator);
-#endif  // QT_DEBUG
 }
 
 TerminalApplication::~TerminalApplication()
