@@ -131,6 +131,7 @@ Q_OBJECT
      * used by this teletype.
      */
     void setWindowSize(int lines, int cols);
+    void setCellSize(QSize size) { _cellSize = size; }
 
     /** Returns the size of the window used by this teletype.  See setWindowSize() */
     QSize windowSize() const;
@@ -218,6 +219,7 @@ Q_OBJECT
 
     int  _windowColumns;
     int  _windowLines;
+    QSize _cellSize;
     char _eraseChar;
     bool _xonXoff;
     bool _utf8;

@@ -6,6 +6,17 @@ Files: *
 Copyright: 2019 ~ 2020 Uniontech Software Technology Co.,Ltd.
 License: GPL-3+
 
+Files: 3rdparty/terminalwidget/lib/KittyGraphics.cpp
+       3rdparty/terminalwidget/lib/KittyGraphics.h
+Copyright: 2026 GXDE Terminal contributors
+License: GPL-3+
+Comment: Separately written Qt implementation of the Kitty graphics protocol.
+ Reference implementation by Kovid Goyal and contributors, revision
+ 24f7369bb6385e06c44c35702a1478b51611510d.
+ Upstream graphics.c/.h state: Copyright (C) 2017 Kovid Goyal
+ <kovid at kovidgoyal.net>; Distributed under terms of the GPL3 license.
+ No Kitty source is vendored. See THIRD_PARTY_NOTICES.md for source links.
+
 Files:     tests/src/stub/addr_pri.h
            tests/src/stub/stub.h
 Copyright: 2019 coolxv

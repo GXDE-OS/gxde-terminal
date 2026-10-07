@@ -32,6 +32,7 @@
 
 // Konsole
 #include "Character.h"
+#include "KittyGraphics.h"
 
 #define MODE_Origin    0
 #define MODE_Wrap      1
@@ -77,6 +78,7 @@ class EscapeSequenceUrlExtractor;
 class Screen
 {
 public:
+    KittyGraphics graphics;
     /* PlainText: Return plain text (default)
      * ConvertToHtml: Specifies if returned text should have HTML tags.
      * PreserveLineBreaks: Specifies whether new line characters should be

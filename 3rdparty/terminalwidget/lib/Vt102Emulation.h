@@ -236,6 +236,10 @@ private:
   QTimer* _titleUpdateTimer;
 
     bool _reportFocusEvents;
+    bool _apcActive = false;
+    bool _apcEscape = false;
+    bool _apcOverflow = false;
+    QByteArray _apcData;
 
     // ========== OSC52 Clipboard Support ==========
     /**

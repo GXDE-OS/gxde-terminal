@@ -514,6 +514,15 @@ char Emulation::eraseChar() const
     return '\b';
 }
 
+void Emulation::setImageCellSize(QSize size) {
+    if (size.width() <= 0 || size.height() <= 0) {
+        return;
+    }
+
+    _screen[0]->graphics.cellSize = size;
+    _screen[1]->graphics.cellSize = size;
+}
+
 void Emulation::setImageSize(int lines, int columns)
 {
     if ((lines < 1) || (columns < 1))

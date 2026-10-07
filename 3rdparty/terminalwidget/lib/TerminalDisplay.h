@@ -698,6 +698,8 @@ private:
     // fragments according to their colors and styles and calls
     // drawTextFragment() to draw the fragments
     void drawContents(QPainter &paint, const QRect &rect);
+    void drawGraphics(QPainter &paint, int layer);
+    bool _hadGraphics = false;
     // draws a section of text, all the text in this section
     // has a common color and style
     void drawTextFragment(QPainter& painter, const QRect& rect,

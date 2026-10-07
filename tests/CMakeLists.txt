@@ -130,9 +130,10 @@ target_include_directories(${PROJECT_NAME_TEST} PUBLIC
                                                         ${LIBSECRET_INCLUDE_DIRS}
                                                         ${chardet_INCLUDE_DIRS})
 
+find_package(ZLIB REQUIRED)
 find_package(ICU COMPONENTS i18n uc REQUIRED)
 
-target_link_libraries(${PROJECT_NAME_TEST} PUBLIC ${LINK_LIBS} Qt${QT_VERSION_MAJOR}::Test ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} -lpthread -lm ICU::i18n ICU::uc chardet uchardet)
+target_link_libraries(${PROJECT_NAME_TEST} PUBLIC ${LINK_LIBS} Qt${QT_VERSION_MAJOR}::Test ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} -lpthread -lm ICU::i18n ICU::uc ZLIB::ZLIB chardet uchardet)
 
 #------------------------------ 创建'make test'指令---------------------------------------
 add_custom_target(test

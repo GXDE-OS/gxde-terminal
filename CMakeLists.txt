@@ -352,3 +352,7 @@ install(FILES src/assets/config/logconfig/org.gxde.terminal.json
 if (CMAKE_BUILD_TYPE MATCHES Debug)
 add_subdirectory(tests)
 endif()
+
+# 开源合规
+install(FILES THIRD_PARTY_NOTICES.md
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/gxde-terminal)

@@ -89,3 +89,11 @@ Copyright: 2007-2008 by Robert Knight <robertknight@gmail.com>
            1997,1998 by Lars Doelle <lars.doelle@on-line.de>
 License: BSD-3-Clause
 
+
+# Used Kitty Protocol
+Files: 3rdparty/terminalwidget/lib/KittyGraphics.cpp
+       3rdparty/terminalwidget/lib/KittyGraphics.h
+Copyright: 2026 GXDE Terminal contributors
+License: GPL-3.0-or-later
+Comment: Kitty protocol and reference implementation by Kovid Goyal and contributors.
+ See THIRD_PARTY_NOTICES.md for upstream attribution and source revision.

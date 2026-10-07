@@ -82,6 +82,8 @@ void Vt102Emulation::clearEntireScreen()
 
 void Vt102Emulation::reset()
 {
+  _apcActive = _apcEscape = _apcOverflow = false;
+  _apcData.clear();
   resetTokenizer();
   resetModes();
   resetCharset(0);
@@ -291,6 +293,58 @@ void Vt102Emulation::initTokenizer()
 // process an incoming unicode character
 void Vt102Emulation::receiveChar(wchar_t cc)
 {
+  // APC is a string, not text. Keep it separate from the small CSI/OSC tokenizer
+  // and preserve state across arbitrary PTY reads. Unknown APCs are swallowed.
+  if (_apcActive) {
+      if (cc == 0x18 || cc == 0x1a) {
+          _apcActive = _apcEscape = false;
+          _apcData.clear();
+          _currentScreen->graphics.cancelUpload();
+          resetTokenizer();
+          return;
+      }
+      if ((_apcEscape && cc == '\\') || cc == 0x9c) {
+          if (!_apcOverflow && _apcData.startsWith('G')) {
+              auto result = _currentScreen->graphics.command(_apcData.mid(1),
+                  QPoint(_currentScreen->getCursorX(), _currentScreen->getCursorY()),
+                  QSize(_currentScreen->getColumns(), _currentScreen->getLines()));
+              if (!result.response.isEmpty()) sendString(result.response.constData(), result.response.size());
+              if (result.cursorAdvance.isValid()) {
+                  // Bound work independently of untrusted image dimensions.
+                  const int rows = qMin(result.cursorAdvance.height(), _currentScreen->getLines());
+                  for (int row = 0; row < rows; ++row) _currentScreen->index();
+                  _currentScreen->cursorRight(result.cursorAdvance.width());
+              }
+              bufferedUpdate();
+          } else if (_apcOverflow) _currentScreen->graphics.cancelUpload();
+          _apcActive = _apcEscape = _apcOverflow = false;
+          _apcData.clear();
+          resetTokenizer();
+          return;
+      }
+      if (_apcEscape) {
+          // An ESC not followed by ST cancels the string and begins a new escape.
+          _apcActive = _apcEscape = false;
+          _apcData.clear();
+          _currentScreen->graphics.cancelUpload();
+          resetTokenizer();
+          receiveChar(ESC);
+          receiveChar(cc);
+          return;
+      }
+      if (cc == ESC) { _apcEscape = true; return; }
+      if (cc < 0x20 || cc > 0x7e || _apcData.size() >= 8192) _apcOverflow = true;
+      if (!_apcOverflow) _apcData.append(char(cc));
+      return;
+  }
+  if ((tokenBufferPos == 1 && tokenBuffer[0] == ESC && cc == '_') || cc == 0x9f) {
+      _apcActive = true;
+      _apcEscape = _apcOverflow = false;
+      _apcData.clear();
+      resetTokenizer();
+      return;
+  }
+
   if (cc == DEL)
     return; //VT100: ignore.
 
@@ -625,6 +679,18 @@ void Vt102Emulation::processToken(int token, wchar_t p, int q)
                                break;
 
 // change tab text color : \e[28;<color>t  color: 0-16,777,215
+    case TY_CSI_PS('t',   14):
+    case TY_CSI_PS('t',   16):
+    case TY_CSI_PS('t',   18): {
+        const bool cells = token == TY_CSI_PS('t', 16);
+        const bool grid = token == TY_CSI_PS('t', 18);
+        const QSize cell = _currentScreen->graphics.cellSize;
+        const int h = cells ? cell.height() : _currentScreen->getLines() * (grid ? 1 : cell.height());
+        const int w = cells ? cell.width() : _currentScreen->getColumns() * (grid ? 1 : cell.width());
+        const QByteArray reply = "\033[" + QByteArray::number(grid ? 8 : cells ? 6 : 4) + ';' + QByteArray::number(h) + ';' + QByteArray::number(w) + 't';
+        sendString(reply.constData(), reply.size());
+        break;
+    }
     case TY_CSI_PS('t',   28) : emit changeTabTextColorRequest      ( p        );          break;
 
     case TY_CSI_PS('K',   0) : _currentScreen->clearToEndOfLine     (          ); break;

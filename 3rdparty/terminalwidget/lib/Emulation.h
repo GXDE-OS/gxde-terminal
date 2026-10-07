@@ -267,6 +267,7 @@ public slots:
 
     /** Change the size of the emulation's image */
     virtual void setImageSize(int lines, int columns);
+    void setImageCellSize(QSize size);
 
     /**
      * Interprets a sequence of characters and sends the result to the terminal.

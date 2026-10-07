@@ -630,6 +630,7 @@ void Session::updateTerminalSize(int height, int width)
 
     int minLines = -1;
     int minColumns = -1;
+    QSize cellSize;
 
     // minimum number of lines and columns that views require for
     // their size to be taken into consideration ( to avoid problems
@@ -644,6 +645,10 @@ void Session::updateTerminalSize(int height, int width)
         if ( view->isHidden() == false &&
                 view->lines() >= VIEW_LINES_THRESHOLD &&
                 view->columns() >= VIEW_COLUMNS_THRESHOLD ) {
+            // The wire protocol and TIOCGWINSZ use physical pixels. Qt widget
+            // geometry is in logical pixels, so clients need the device scale.
+            cellSize = QSize(qMax(1, qRound(view->fontWidth() * view->devicePixelRatioF())),
+                             qMax(1, qRound(view->fontHeight() * view->devicePixelRatioF())));
             minLines = (minLines == -1) ? view->lines() : qMin( minLines , view->lines() );
             minColumns = (minColumns == -1) ? view->columns() : qMin( minColumns , view->columns() );
         }
@@ -651,7 +656,9 @@ void Session::updateTerminalSize(int height, int width)
 
     // backend emulation must have a _terminal of at least 1 column x 1 line in size
     if ( minLines > 0 && minColumns > 0 ) {
+        _emulation->setImageCellSize(cellSize);
         _emulation->setImageSize( minLines , minColumns );
+        _shellProcess->setCellSize(cellSize);
         _shellProcess->setWindowSize( minLines , minColumns );
     }
 

@@ -141,7 +141,7 @@ public:
      * @param columns the number of columns
      * @return @c true on success, false otherwise
      */
-    bool setWinSize(int lines, int columns);
+    bool setWinSize(int lines, int columns, int pixelWidth = 0, int pixelHeight = 0);
 
     /**
      * Set whether the pty should echo input.

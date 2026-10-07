@@ -690,14 +690,15 @@ bool KPty::tcSetAttr(struct ::termios * ttmode)
     return _tcsetattr(d->masterFd, ttmode) == 0;
 }
 
-bool KPty::setWinSize(int lines, int columns)
-{
+bool KPty::setWinSize(int lines, int columns, int pixelWidth, int pixelHeight) {
     Q_D(KPty);
 
     struct winsize winSize;
     memset(&winSize, 0, sizeof(winSize));
     winSize.ws_row = (unsigned short)lines;
     winSize.ws_col = (unsigned short)columns;
+    winSize.ws_xpixel = static_cast<unsigned short>(qBound(0, pixelWidth, 65535));
+    winSize.ws_ypixel = static_cast<unsigned short>(qBound(0, pixelHeight, 65535));
     return ioctl(d->masterFd, TIOCSWINSZ, (char *)&winSize) != -1;
 }
 

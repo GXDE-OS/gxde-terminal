@@ -1080,6 +1080,12 @@ void TerminalDisplay::drawTextFragment(QPainter& painter ,
         drawBackground(painter,rect,backgroundColor,
                        false /* do not use transparency */);
 
+    // Negative z images above cell backgrounds but below glyphs.
+    painter.save();
+    painter.setClipRect(rect, Qt::IntersectClip);
+    drawGraphics(painter, -1);
+    painter.restore();
+
     // draw cursor shape if the current character is the cursor
     bool invertCharacterColor = false;
 
@@ -1296,12 +1302,19 @@ void TerminalDisplay::updateImage()
   // optimization - scroll the existing image where possible and
   // avoid expensive text drawing for parts of the image that
   // can simply be moved up or down
+  const bool graphics = _screenWindow->screen()->graphics.hasPlacements();
+  const bool repaintGraphics = graphics || _hadGraphics;
+  _hadGraphics = graphics;
+  if (repaintGraphics) {
+      finishOutputScrollAnimation();
+      update(); // Image-only updates and deletions do not change Character cells.
+  }
   const int scrolledLines = _screenWindow->scrollCount();
-  if (scrolledLines != 0)
+  if (scrolledLines != 0 && !repaintGraphics)
       startOutputScrollAnimation(scrolledLines, _screenWindow->scrollRegion());
   // QWidget::scroll would also move already-painted cursors/trails. The pixel
   // animation renders from the current image instead of copying the backing store.
-  if (!_outputScroll.active)
+  if (!_outputScroll.active && !repaintGraphics)
       scrollImage(scrolledLines, _screenWindow->scrollRegion());
 
   if (!_image) {
@@ -1591,6 +1604,18 @@ void TerminalDisplay::focusInEvent(QFocusEvent*)
         _blinkTimer->start();
 }
 
+void TerminalDisplay::drawGraphics(QPainter &paint, int layer)
+{
+    if (!_screenWindow) return;
+    Screen *screen = _screenWindow->screen();
+    if (!screen->graphics.hasPlacements()) return;
+    const QPoint origin(contentsRect().left() + _leftMargin, contentsRect().top() + _topMargin);
+    paint.save();
+    paint.setClipRect(QRect(origin, QSize(_usedColumns * _fontWidth, _usedLines * _fontHeight)), Qt::IntersectClip);
+    screen->graphics.paint(paint, origin, screen->getHistLines() - _screenWindow->currentLine(), layer, QSizeF(_fontWidth, _fontHeight));
+    paint.restore();
+}
+
 void TerminalDisplay::paintEvent( QPaintEvent* pe )
 {
   QPainter paint(this);
@@ -1634,6 +1659,7 @@ void TerminalDisplay::paintEvent( QPaintEvent* pe )
   // set https://bugreports.qt.io/browse/QTBUG-66036
   paint.setRenderHint(QPainter::TextAntialiasing, _antialiasText);
 
+  drawGraphics(paint, -2);
   if (_outputScroll.active) {
       drawScrollingContents(paint);
       drawScrollCursor(paint);
@@ -1641,6 +1667,7 @@ void TerminalDisplay::paintEvent( QPaintEvent* pe )
       for (const QRect &rect : qAsConst(dirtyImageRegion))
           drawContents(paint, rect);
   }
+  drawGraphics(paint, 1);
   drawCursorTrail(paint);
   drawInputMethodPreeditString(paint, preeditRect());
   paintFilters(paint);
@@ -3796,6 +3823,16 @@ bool TerminalDisplay::event(QEvent* event)
   bool eventHandled = false;
   switch (event->type())
   {
+    case QEvent::ScreenChangeInternal:
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    case QEvent::DevicePixelRatioChange:
+#endif
+        // Refresh PTY/protocol pixel dimensions even if the cell grid did not resize.
+        QTimer::singleShot(0, this, [this] {
+            emit changedContentSizeSignal(_lines, _columns);
+            update();
+        });
+        break;
     case QEvent::ShortcutOverride:
         eventHandled = handleShortcutOverrideEvent((QKeyEvent*)event);
         break;

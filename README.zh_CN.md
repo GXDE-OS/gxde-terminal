@@ -88,3 +88,5 @@ Deepin Terminal 根据 [GPL-3.0-or-later]（许可证）获得许可.
 
 ### 引用
 终端动画效果来自Kitty，其使用[GPL 3.0](https://github.com/kovidgoyal/kitty/blob/master/LICENSE)协议授权。
+
+Kitty 静态图形协议支持和使用示例见 [协议说明](docs/kitty-graphics.md)。

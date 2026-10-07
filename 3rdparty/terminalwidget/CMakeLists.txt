@@ -57,6 +57,7 @@ if(NOT lxqt2-build-tools_FOUND)
     find_package(lxqt-build-tools ${LXQTBT_MINIMUM_VERSION} REQUIRED)
 endif()
 
+find_package(ZLIB REQUIRED)
 find_package(ICU COMPONENTS i18n uc REQUIRED)
 
 if(USE_UTF8PROC)
@@ -107,6 +108,7 @@ set(SRCS
     lib/ProcessInfo.cpp
     lib/Pty.cpp
     lib/qtermwidget.cpp
+    lib/KittyGraphics.cpp
     lib/Screen.cpp
     lib/ScreenWindow.cpp
     lib/SearchBar.cpp
@@ -230,6 +232,7 @@ target_link_libraries(${TERMINALWIDGET_LIBRARY_NAME}
     ${LINK_LIBS}
     ICU::i18n
     ICU::uc
+    ZLIB::ZLIB
     -lm
     uchardet
     chardet

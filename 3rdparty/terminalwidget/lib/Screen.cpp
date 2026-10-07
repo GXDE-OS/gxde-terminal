@@ -352,6 +352,8 @@ void Screen::resizeImage(int new_lines, int new_columns)
         return;
     }
 
+    graphics.clearPlacements();
+
     // Adjust scroll position, and fix glitches
     _oldTotalLines = getLines() + getHistLines();
     _isResize = true;
@@ -663,6 +665,7 @@ int Screen::getScreenLineColumns(const int line) const
 
 void Screen::reset(bool clearScreen)
 {
+    graphics.reset();
     setMode(MODE_Wrap  ); saveMode(MODE_Wrap  );  // wrap at end of margin
     resetMode(MODE_Origin); saveMode(MODE_Origin);  // position refere to [1,1]
     resetMode(MODE_Insert); saveMode(MODE_Insert);  // overstroke
@@ -958,6 +961,7 @@ void Screen::scrollUp(int from, int n)
     if (from + n > _bottomMargin)
         n = _bottomMargin + 1 - from;
 
+    graphics.scroll(from, _bottomMargin, -n, getHistLines(), _bottomMargin == _lines - 1);
     _scrolledLines -= n;
     _lastScrolledRegion = QRect(0, _topMargin, _columns - 1,(_bottomMargin - _topMargin));
 
@@ -983,6 +987,7 @@ void Screen::scrollDown(int from, int n)
         return;
     if (from + n > _bottomMargin)
         n = _bottomMargin - from;
+    graphics.scroll(from, _bottomMargin, n, getHistLines(), _bottomMargin == _lines - 1);
     moveImage(loc(0,from+n),loc(0,from),loc(_columns - 1,_bottomMargin - n));
     clearImage(loc(0,from),loc(_columns - 1,from+n-1),' ');
 }
@@ -1169,6 +1174,7 @@ void Screen::clearToBeginOfScreen()
 
 void Screen::clearEntireScreen()
 {
+    graphics.clearVisible(_lines);
     clearImage(loc(0, 0), loc(_columns - 1, _lines - 1), ' ');
 }
 
@@ -1673,6 +1679,7 @@ void Screen::setScroll(const HistoryType& t , bool copyPreviousScroll)
         _history = t.scroll(nullptr);
         delete oldScroll;
     }
+    graphics.trimHistory(getHistLines());
 }
 
 bool Screen::hasScroll() const

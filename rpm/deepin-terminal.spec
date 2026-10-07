@@ -16,6 +16,7 @@ Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 Provides:      deepin-terminal-data
 Obsoletes:     deepin-terminal-data
 
+BuildRequires: zlib-devel
 BuildRequires: gcc-c++
 BuildRequires: cmake3
 BuildRequires: qt5-linguist
@@ -96,6 +97,7 @@ ldconfig
 
 %files
 %doc README.md
+%doc %{_datadir}/doc/gxde-terminal/THIRD_PARTY_NOTICES.md
 %license LICENSE
 %{_bindir}/%{name}
 %{_datadir}/%{name}/translations/*.qm
