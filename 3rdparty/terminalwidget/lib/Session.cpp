@@ -93,6 +93,20 @@ Session::Session(QObject* parent) :
 
     connect( _emulation, SIGNAL( titleChanged( int, const QString & ) ),
              this, SLOT( setUserTitle( int, const QString & ) ) );
+    connect(_emulation, &Emulation::colorRequested, this, [this](int what, bool useBel) {
+        if (_views.isEmpty())
+            return;
+        const QColor color = _views.first()->colorTable()[
+            what == 10 ? DEFAULT_FORE_COLOR : DEFAULT_BACK_COLOR].color;
+        QByteArray reply = QStringLiteral("\033]%1;rgb:%2/%3/%4")
+            .arg(what)
+            .arg(color.red() * 257, 4, 16, QLatin1Char('0'))
+            .arg(color.green() * 257, 4, 16, QLatin1Char('0'))
+            .arg(color.blue() * 257, 4, 16, QLatin1Char('0')).toLatin1();
+        reply += useBel ? "\007" : "\033\\";
+        _emulation->sendString(reply.constData(), reply.size());
+    });
+
     connect( _emulation, SIGNAL( stateSet(int) ),
              this, SLOT( activityStateSet(int) ) );
 //    connect( _emulation, SIGNAL( zmodemDetected() ), this ,

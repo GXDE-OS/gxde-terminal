@@ -2094,8 +2094,8 @@ void TerminalDisplay::blinkEvent()
 QRect TerminalDisplay::imageToWidget(const QRect& imageArea) const
 {
     QRect result;
-    result.setLeft( _leftMargin + _fontWidth * imageArea.left() );
-    result.setTop( _topMargin + _fontHeight * imageArea.top() );
+    result.setLeft( contentsRect().left() + _leftMargin + _fontWidth * imageArea.left() );
+    result.setTop( contentsRect().top() + _topMargin + _fontHeight * imageArea.top() );
     result.setWidth( _fontWidth * imageArea.width() );
     result.setHeight( _fontHeight * imageArea.height() );
 
@@ -2104,11 +2104,13 @@ QRect TerminalDisplay::imageToWidget(const QRect& imageArea) const
 
 QRect TerminalDisplay::widgetToImage(const QRect &widgetArea) const
 {
+    const QRect area = widgetArea.translated(-contentsRect().left() - _leftMargin,
+                                             -contentsRect().top() - _topMargin);
     QRect result;
-    result.setLeft(qMin(_usedColumns - 1, qMax(0, (widgetArea.left()) / _fontWidth )));
-    result.setTop(qMin(_usedLines   - 1, qMax(0, (widgetArea.top()) / _fontHeight)));
-    result.setRight(qMin(_usedColumns - 1, qMax(0, (widgetArea.right()) / _fontWidth )));
-    result.setBottom(qMin(_usedLines   - 1, qMax(0, (widgetArea.bottom()) / _fontHeight)));
+    result.setLeft(qMin(_usedColumns - 1, qMax(0, area.left() / _fontWidth )));
+    result.setTop(qMin(_usedLines   - 1, qMax(0, area.top() / _fontHeight)));
+    result.setRight(qMin(_usedColumns - 1, qMax(0, area.right() / _fontWidth )));
+    result.setBottom(qMin(_usedLines   - 1, qMax(0, area.bottom() / _fontHeight)));
     return result;
 }
 

@@ -484,6 +484,11 @@ void Vt102Emulation::processWindowAttributeChange()
   // ignored, only the second char in ST ("\e\\") is appended to tokenBuffer.
   QString newValue = QString::fromWCharArray(tokenBuffer + i + 1, tokenBufferPos-i-2);
 
+  if ((attributeToChange == 10 || attributeToChange == 11) && newValue == QLatin1String("?")) {
+      emit colorRequested(attributeToChange, tokenBuffer[tokenBufferPos - 1] == BEL);
+      return;
+  }
+
   _pendingTitleUpdates[attributeToChange] = newValue;
   _titleUpdateTimer->start(20);
 }

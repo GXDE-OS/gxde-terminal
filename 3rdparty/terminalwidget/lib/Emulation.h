@@ -311,6 +311,8 @@ public slots:
 
 signals:
 
+    void colorRequested(int role, bool useBel);
+
     /**
      * Emitted when a buffer of data is ready to send to the
      * standard input of the terminal.
