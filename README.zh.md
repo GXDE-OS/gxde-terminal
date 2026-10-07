@@ -33,36 +33,36 @@
     <img src="src/assets/logo/gxde-title.svg" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">GXDE Terminal</h3>
+  <h3 align="center">GXDE终端</h3>
 
   <p align="center">
-    A fork of Deepin terminal with the interface from the good old days.
+    派生自深度终端的又一款终端模拟器
     <br />
-    <a href="https://gxde.top/en/"><strong>Explore GXDE »</strong></a>
+    <a href="https://gxde.top"><strong>探索GXDE »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/GXDE-OS/gxde-terminal/actions/workflows/launcher-building.yml">View CI status</a>
+    <a href="https://github.com/GXDE-OS/gxde-terminal/actions/workflows/launcher-building.yml">查看CI状态</a>
     &middot;
-    <a href="https://gitee.com/GXDE-OS/gxde-terminal/issues">Report Bug</a>
+    <a href="https://gitee.com/GXDE-OS/gxde-terminal/issues">报告Bug</a>
     &middot;
-    <a href="https://gitee.com/GXDE-OS/gxde-terminal/issues">Request Feature</a>
+    <a href="https://gitee.com/GXDE-OS/gxde-terminal/issues">请求新功能</a>
   </p>
 </div>
 
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## 关于本项目
 
 ![Screenshot](./docs/img/screenshot.png)
 
-GXDE Terminal is a fork of Deepin terminal, which is "an advanced terminal emulator with workspace , multiple windows, remote management, quake mode and other features."
+GXDE终端派生自深度终端，「是一款高级终端仿真器，具有工作区、多窗口、远程管理、震动模式等功能」。
 
-GXDE Terminal is now built upon Deepin DTK6, yet it deliberately emulates the UI style and operational logic of `deepin-terminal-gtk`.
+GXDE Terminal现在基于Deepin DTK6构建，但是刻意模仿了`deepin-terminal-gtk`的UI样式与操作逻辑。
 
 
 
-### Built With
+### 工具链
 
 - qt6-5compat-dev
 - qt6-base-dev
@@ -90,19 +90,19 @@ GXDE Terminal is now built upon Deepin DTK6, yet it deliberately emulates the UI
 
 
 <!-- GETTING STARTED -->
-## Getting Started
-### Manually Build & Install w/ CMake
-#### Prerequisites
+## 开始上手
+### 手动使用CMake构建安装
+#### 前置条件
 
-Make sure you have installed all dependencies, you can use the following command：
+请确保您安装了所有依赖。您可以使用以下指令安装依赖：
 
 ```shell
 $ cd gxde-terminal
 $ sudo apt build-dep .
 ```
 
-#### Build
-You will need to have CMake ready, then:
+#### 构建
+您需要确保CMake可用，然后便可以执行：
 ```shell
 $ cd gxde-terminal
 $ mkdir build
@@ -111,61 +111,61 @@ $ cmake ..
 $ make
 ```
 
-#### Installation
+#### 安装
 ```shell
 $ sudo make install
 ```
 
-The executable binary file could be found at /usr/bin/gxde-terminal after the installation is finished.
+安装完成后，可在`/usr/bin/gxde-terminal`找到该ELF文件。
 
-### Packaging
+### 打包
 #### Debian
-We've provided you a script to automatically install the dependency, build the terminal, and pack the terminal for distributions using dpkg/apt as package manager.
+我们为您提供了一个脚本，用于自动安装依赖项、构建终端程序，并将其打包以便通过`dpkg`/`apt`包管理器进行分发。
 
 ```shell
-$ chmod a+x ./build-deb  # Make sure that the permission is correct.
-$ ./build-deb -d         # -d parameter will automatically trigger dependency discover and installation, and for second time building ./build-deb without -d is fine.
+$ chmod a+x ./build-deb  # 确保权限没问题
+$ ./build-deb -d         # -d参数用于第一次运行时解析安装依赖，以后单独跑./build-deb就行了
 ```
 
-You may find the artifact(s) on the parent folder.
+构建产物可以在根目录上一级目录找到。
 
-Once you're finished, you may wish run the following command to do the clean-ups:
+当您想要清理仓库时，可以执行：
 ```shell
 $ ./build-deb -c
 ```
 
-Note that this will also delete those artifact(s) so be sure to back up them if you need.
+注意这会给你的构建产物（那些`.deb`包）一并删了。
 
 
 <!-- USAGE EXAMPLES -->
-## Usage
-There is nothing special for GXDE terminal, you may use it in the same way as you use Deepin terminal, most features are straight forward, expect that we have following modifications:
-- Font
-  - We provide a fallback font option in the *Settings* section.
-  - You may also enable non-monospaced fonts, but that's for fallback font only.
-  - Font ligature is avaliable in the same section now.
-- **Graphics**: Now GXDE terminal support Kitty's graphics protocol.
+## 用法
+GXDE Terminal跟深度终端相比没什么特别的，除了我们多加了几个功能：
+- 字体
+  - 现在在设置窗口多了一个回退字体选项，如果你的Monospace字体不支持中文你就可以设置第二个回退字体。
+  - 回退字体支持非等宽字体，但是这个选项仅对回退字体开放。对于主字体，他们仍然必须是等宽的。
+  - 现在可以启用连笔字了。
+- **绘图**: GXDE Terminal现在支持Kitty的图形协议。
 
 
 <!-- ROADMAP -->
-## Roadmap
-- [x] Implement DTK2 styled UI.
-- [x] Add UI animation.
-- [x] Add fallback font system.
-- [x] Add support for font ligature.
-- [x] Add support for Kitty graphics protocol.
-- [ ] Packaging
+## 里程碑
+- [x] 将UI换回DTK2时代的样式。
+- [x] 新增UI动画。
+- [x] 新增回退字体系统。
+- [x] 新增连笔字支持。
+- [x] 增加对Kitty图形协议的支持。
+- [ ] 打包
     - [x] Debian.
     - [ ] Arch.
     - [ ] Nix.
 
-See the [open issues](https://gitee.com/GXDE-OS/gxde-terminal/issues) for a full list of proposed features (and known issues).
+对于所有的功能请求，您可能希望阅读「[打开的Issues](https://gitee.com/GXDE-OS/gxde-terminal/issues)」。
 
 
 
 <!-- CONTRIBUTING -->
-## Contributing
-### Top contributors:
+## 贡献
+### GXDE Terminal的贡献者们:
 
 <a href="https://github.com/GXDE-OS/gxde-terminal/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=GXDE-OS/gxde-terminal" alt="contrib.rocks image" />
@@ -174,20 +174,20 @@ See the [open issues](https://gitee.com/GXDE-OS/gxde-terminal/issues) for a full
 
 
 <!-- LICENSE -->
-## License
-- *GXDE Terminal* is licensed under *[GNU GENERAL PUBLIC LICENSE Version 3](./LICENSE)*.
-- You may also want to read our *[Third Party Notices](./THIRD_PARTY_NOTICES.md)*.
-- For REUSE information you may want to see the *[dep5](./.reuse/dep5)* file.
+## 许可证
+- *GXDE Terminal*以 *[GNU GENERAL PUBLIC LICENSE Version 3](./LICENSE)* 许可授权。
+- 您也可能想要读一下 *[Third Party Notices](./THIRD_PARTY_NOTICES.md)*.
+- 对于REUSE信息，请参阅 *[dep5](./.reuse/dep5)* 文件。
 
 
 <!-- CONTACT -->
-## Contact
-Please post an issue if you have any questions or concerns.
+## 联系我们
+如果有任何疑问，请打开一个新Issue
 
 
 
 <!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
+## 鸣谢
 - **deepin-terminal**: https://github.com/linuxdeepin/deepin-terminal
 - **deepin-terminal-gtk**: https://github.com/martyr-deepin/deepin-terminal-gtk
 - **qterminalwidget**: https://github.com/lxqt/qtermwidget
