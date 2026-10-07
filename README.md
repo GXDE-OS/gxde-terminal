@@ -136,6 +136,14 @@ $ ./build-deb -c
 
 Note that this will also delete those artifact(s) so be sure to back up them if you need.
 
+#### Nix
+We also have a Nix building script:
+```shell
+$ chmod a+x ./build-nix  # Handle permission issue
+$ ./build-nix            # Start building
+$ nix profile add .#gxde-terminal # Installation
+```
+
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -157,7 +165,7 @@ There is nothing special for GXDE terminal, you may use it in the same way as yo
 - [ ] Packaging
     - [x] Debian.
     - [ ] Arch.
-    - [ ] Nix.
+    - [x] Nix.
 
 See the [open issues](https://gitee.com/GXDE-OS/gxde-terminal/issues) for a full list of proposed features (and known issues).
 

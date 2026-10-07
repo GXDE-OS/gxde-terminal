@@ -36,7 +36,10 @@ set(TERMINALWIDGET_VERSION "${TERMINALWIDGET_VERSION_MAJOR}.${TERMINALWIDGET_VER
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(CMAKE_INSTALL_PREFIX "/usr")
+# Respect the prefix selected by the caller (including Nix store paths).
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Installation prefix" FORCE)
+endif()
 
 # Minimum Versions
 set(LXQTBT_MINIMUM_VERSION "0.6.0")

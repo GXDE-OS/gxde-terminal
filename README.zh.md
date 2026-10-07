@@ -136,6 +136,14 @@ $ ./build-deb -c
 
 注意这会给你的构建产物（那些`.deb`包）一并删了。
 
+#### Nix
+现在我们也提供Nix打包脚本:
+```shell
+$ chmod a+x ./build-nix  # 处理权限问题
+$ ./build-nix            # 开始构建
+$ nix profile add .#gxde-terminal # 安装
+```
+
 
 <!-- USAGE EXAMPLES -->
 ## 用法
@@ -157,7 +165,7 @@ GXDE Terminal跟深度终端相比没什么特别的，除了我们多加了几�
 - [ ] 打包
     - [x] Debian.
     - [ ] Arch.
-    - [ ] Nix.
+    - [x] Nix.
 
 对于所有的功能请求，您可能希望阅读「[打开的Issues](https://gitee.com/GXDE-OS/gxde-terminal/issues)」。
 

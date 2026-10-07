@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 CharOfString <root@charofstring.cc>
+# SPDX-License-Identifier: MIT OR GPL-1.0-or-later
+
+set -euo pipefail
+
+message() {
+  local color=$1 prefix=$2 text=$3
+
+  if [[ -t 1 && ${TERM:-dumb} != dumb && ! ${NO_COLOR+x} ]]; then
+    printf '\033[1;%sm%s\033[0m\033[1m %s\033[0m\n' "$color" "$prefix" "$text"
+  else
+    printf '%s %s\n' "$prefix" "$text"
+  fi
+}
+
+info() {
+  message 32 '==>' "$*";
+}
+
+step() {
+  message 34 ' ->' "$*";
+}
+
+section() {
+  printf '\n'; message 34 '::' "$*";
+}
+
+error() {
+  message 31 '==> ERROR:' "$*" >&2;
+}
+
+die() {
+  local status=$1
+  shift
+  error "$*"
+  exit "$status"
+}
+
+usage() {
+  cat <<'MANUAL'
+GXDE NIX Project // BUILD_NIX Script REL. 1.0.0. 
+Usage: build-nix [options] [target]
+
+Build a Nix package from the current directory.
+
+Options:
+  -L, --log       Show full build logs.
+      --rebuild   Rebuild to check reproducibility.
+      --cleanup   Cleanup results.
+  -h, --help      Show this screen.
+
+Target:
+  A .nix file or a flake installable, such as .#package.
+  Defaults to the target where this script is in.
+MANUAL
+}
+
+cleanup_results() {
+  local link removed=0
+
+  info 'Cleaning build links...'
+  for link in result result-*; do
+    [[ -L $link ]] || continue
+    unlink -- "$link" || die 1 "Failed to remove: $link"
+    step "Removed $link"
+    removed=$((removed + 1))
+  done
+
+  if (( removed )); then
+    info "Cleanup complete. Removed $removed link(s)."
+  else
+    info 'Nothing to clean.'
+  fi
+}
+
+detect_target() {
+  local file
+  local -a candidates=()
+
+  if [[ -f flake.nix ]]; then
+    printf '.\n'
+    return
+  fi
+  
+  if [[ -f default.nix ]]; then
+    printf './default.nix\n'
+    return
+  fi
+
+  shopt -s nullglob dotglob
+  for file in ./*.nix; do
+    if [[ -f $file ]]; then
+      candidates+=("$file")
+    fi
+  done
+
+  case ${#candidates[@]} in
+    0) die 1 "No Nix files found in $PWD" ;;
+    1) printf '%s\n' "${candidates[0]}" ;;
+    *)
+      error 'Multiple Nix files found. Specify a target:'
+      printf '  -> %s\n' "${candidates[@]}" >&2
+      return 2
+      ;;
+  esac
+}
+
+show_output() {
+  local title=$1 path=$2 entry
+
+  section "$title"
+  step "$path"
+  [[ -d $path ]] || return 0
+
+  while IFS= read -r -d '' entry; do
+    step "${entry#"$path/"}"
+  done < <(
+    find "$path" -mindepth 1 \
+      \( -type d \( -path "$path/include/*/*" -o -path "$path/lib/cmake/*" \) \) \
+      -print0 -prune -o \( -type f -o -type l \) -print0 | sort -z
+  )
+}
+
+show_results() {
+  local outputs=$1 path link resolved name group title
+  local -a links=()
+  local -A names=() built=()
+
+  while IFS= read -r path; do
+    [[ -z $path ]] || built["$path"]=1
+  done <<< "$outputs"
+
+  for link in result result-*; do
+    [[ -L $link ]] || continue
+    resolved=$(readlink -f -- "$link") || continue
+    [[ ${built[$resolved]:-} ]] || continue
+    links+=("$link")
+    name=${link#result-}
+    [[ $link != result ]] || name=out
+    names["$resolved"]=$name
+  done
+
+  for group in runtime development other; do
+    while IFS= read -r path; do
+      [[ -n $path ]] || continue
+      name=${names[$path]:-unknown}
+      case $name in
+        out|bin|lib) title='Runtime'; [[ $group == runtime ]] || continue ;;
+        dev|devdoc) title='Development files'; [[ $group == development ]] || continue ;;
+        *) title="Output: $name"; [[ $group == other ]] || continue ;;
+      esac
+      show_output "$title" "$path"
+    done <<< "$outputs"
+  done
+
+  if (( ${#links[@]} )); then
+    section 'Result'
+    for link in "${links[@]}"; do
+      step "$link -> $(readlink -f -- "$link")"
+    done
+  fi
+}
+
+main() {
+  # Arguments.
+  local target=''
+  local rebuild=0
+  local cleanup=0
+  local outputs path label
+
+  # Internal arrays (both indexed and normal).
+  local -a eval_args=()
+  local -a build_args=()
+  local -a logs_arg=()
+  local -a nix_cmd=(nix --extra-experimental-features 'nix-command flakes')
+
+  # Parse arguments.
+  while (( $# )); do
+    case $1 in
+      --rebuild|--check|-r) rebuild=1 ;;
+      --cleanup|-c) cleanup=1 ;;
+      --log|-L|-l) logs_arg=(-L) ;;
+      --help|-h) usage; return 0 ;;
+      -*) die 2 "Unknown argument: $1 (see --help)" ;;
+      *)
+        [[ -z $target ]] || die 2 'Expected a single target.'
+        [[ -n $1 ]] || die 2 'Target must NOT be empty.'
+        target=$1
+        ;;
+    esac
+    shift
+  done
+
+  # If cleanup...
+  if (( cleanup )); then
+    if [[ -n $target ]] || (( rebuild || ${#logs_arg[@]} )); then
+      die 2 'Invalid argument combination.'
+    fi
+
+    cleanup_results
+    echo 'Cleanup done. Bye~'
+    return 0
+  fi
+
+  # If target not specified, then auto detect targets.
+  if [[ -z $target ]]; then
+    target=$(detect_target)
+  fi
+
+  # Configure each target.
+  case $target in
+    *.nix)
+      [[ -f $target ]] || die 1 "Nix file not found: $target"
+        if [[ ${target##*/} == flake.nix ]]; then
+          path=$(dirname -- "$target")
+          [[ $path == /* || $path == .* ]] || path="./$path"
+          build_args=("$path")
+        else
+          build_args=(--file "$target")
+        fi
+        ;;
+    *) build_args=("$target") ;;
+  esac
+
+  # Test if Nix is installed.
+  command -v nix >/dev/null 2>&1 || die 1 'Nix is not installed on your system, aborted!'
+
+  # Handle build args.
+  eval_args=("${build_args[@]}")
+  if [[ ${build_args[0]} == --file ]]; then
+    build_args+=('^*')
+  elif [[ ${build_args[0]} != *'^'* && ${build_args[0]} != /nix/store/* ]]; then
+    build_args[0]+='^*'
+  fi
+
+  # Handle eval args.
+  if [[ ${eval_args[0]} != --file ]]; then
+    eval_args[0]=${eval_args[0]%%^*}
+  fi
+  label=$("${nix_cmd[@]}" eval "${eval_args[@]}" --raw --apply '
+    p: if p ? pname && p ? version then "${p.pname} ${p.version}"
+    else p.name or ""
+    ' 2>/dev/null) || label=''
+  label=${label:-$target}
+
+  # Start building.
+  info "Now building $label..."
+  if ! outputs=$("${nix_cmd[@]}" build "${build_args[@]}" "${logs_arg[@]}" --print-out-paths); then
+    die 1 'Target build failed.'
+  fi
+
+  if (( rebuild )); then
+    info 'Checking reproducibility...'
+      if ! "${nix_cmd[@]}" build "${build_args[@]}" "${logs_arg[@]}" --rebuild; then
+        die 1 'Reproducibility check failed. See the Nix log above.'
+      fi
+  fi
+
+  # Build result generated.
+  info "Finished making: $label"
+  show_results "$outputs"
+}
+
+main "$@"
