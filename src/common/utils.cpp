@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "utils.h"
+#include "termbasedialog.h"
 #include "termwidget.h"
 #include "dbusmanager.h"
 #include "qtcompat.h"
@@ -215,13 +216,8 @@ bool Utils::showExitConfirmDialog(CloseType type, int count)
         txt = QObject::tr("There are still processes running in this window. Closing the window will kill all of them.");
     }
 
-    DDialog dlg(title, txt);
-    dlg.setIcon(QIcon::fromTheme("deepin-terminal"));
-    dlg.addButton(QString(tr("Cancel", "button")), false, DDialog::ButtonNormal);
-    /******** Modify by nt001000 renfeixiang 2020-05-21:修改Exit成Close Begin***************/
-    dlg.addButton(QString(tr("Close", "button")), true, DDialog::ButtonWarning);
-    /******** Modify by nt001000 renfeixiang 2020-05-21:修改Exit成Close End***************/
-    bool result = (DDialog::Accepted == dlg.exec());
+    TermCloseDialog dlg(title, txt, tr("Cancel", "button"), tr("Close", "button"));
+    bool result = (QDialog::Accepted == dlg.exec());
     qCDebug(common) << "Dialog result:" << result;
     return result;
 }

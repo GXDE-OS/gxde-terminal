@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/">
+        <file>other/gxde-window/dialog_icon.svg</file>
+        <file>other/gxde-window/titlebar_close_normal.svg</file>
+        <file>other/gxde-window/titlebar_close_hover.svg</file>
+        <file>other/gxde-window/titlebar_close_press.svg</file>
+
+
         <file>other/default-config.json</file>
         <file>other/tab_close_normal.svg</file>
         <file>other/tab_close_hover.svg</file>

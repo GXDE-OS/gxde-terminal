@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "mainwindow.h"
+#include "termbasedialog.h"
 #include "themepanel.h"
 #include "palettetransition.h"
 #include "mainwindowplugininterface.h"
@@ -950,9 +951,9 @@ void MainWindow::closeAllTab()
 inline void MainWindow::slotDDialogFinished(int result)
 {
     qCDebug(mainprocess) << "Enter MainWindow::slotDDialogFinished with result:" << result;
-    OnHandleCloseType(result, Utils::CloseType(qobject_cast<DDialog *>(sender())->property("type").toInt()));
+    OnHandleCloseType(result, Utils::CloseType(qobject_cast<QDialog *>(sender())->property("type").toInt()));
     /******** Modify by ut000439 wangpeili 2020-07-27:  bug 39643  ****************/
-    if (result != 1 && qobject_cast<DDialog *>(sender())->property("focusCloseBtn").toBool())        {
+    if (result != 1 && qobject_cast<QDialog *>(sender())->property("focusCloseBtn").toBool())        {
         qCDebug(mainprocess) << "Branch: need to set focus on close button";
         DIconButton *closeBtn = titlebar()->findChild<DIconButton *>("DTitlebarDWindowCloseButton");
         if (closeBtn != nullptr) {
@@ -1004,12 +1005,8 @@ void MainWindow::showExitConfirmDialog(Utils::CloseType type, int count, QWidget
     // 有弹窗显示
     Service::instance()->setIsDialogShow(this, true);
 
-    DDialog *dlg = new DDialog(title, txt, parent);
-    dlg->setIcon(QIcon::fromTheme("deepin-terminal"));
-    dlg->addButton(QString(tr("Cancel", "button")), false, DDialog::ButtonNormal);
-    /******** Modify by nt001000 renfeixiang 2020-05-21:修改Exit成Close Begin***************/
-    dlg->addButton(QString(tr("Close", "button")), true, DDialog::ButtonWarning);
-    /******** Modify by nt001000 renfeixiang 2020-05-21:修改Exit成Close End***************/
+    auto *dlg = new TermCloseDialog(title, txt, tr("Cancel", "button"),
+                                    tr("Close", "button"), parent);
     dlg->setWindowModality(Qt::WindowModal);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -1026,7 +1023,7 @@ void MainWindow::showExitConfirmDialog(Utils::CloseType type, int count, QWidget
     /********************* Modify by n014361 wangpeili End ************************/
 
     /******** Modify by ut001000 renfeixiang 2020-06-03:修改 将dlg的槽函数修改为OnHandleCloseType，处理全部在OnHandleCloseType函数中 Begin***************/
-    connect(dlg, &DDialog::finished, this, &MainWindow::slotDDialogFinished);
+    connect(dlg, &QDialog::finished, this, &MainWindow::slotDDialogFinished);
 
     return ;
 }

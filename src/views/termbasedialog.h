@@ -6,4 +6,21 @@
 #ifndef TERMBASEDIALOG_H
 #define TERMBASEDIALOG_H
 
+#include <DAbstractDialog>
+
+// Qt port of master:widget/confirm_dialog.vala and master:style.css.
+class TermCloseDialog : public Dtk::Widget::DAbstractDialog
+{
+    Q_OBJECT
+public:
+    TermCloseDialog(const QString &title, const QString &message,
+                    const QString &cancelText, const QString &closeText,
+                    QWidget *parent = nullptr);
+protected:
+    void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+private:
+    void updateColors();
+};
+
 #endif // TERMBASEDIALOG_H
