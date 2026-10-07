@@ -15,9 +15,9 @@
 DWIDGET_USE_NAMESPACE
 
 #ifdef QT_DEBUG
-Q_LOGGING_CATEGORY(encodeplugin,"org.deepin.terminal.encodeplugin")
+Q_LOGGING_CATEGORY(encodeplugin,"org.gxde.terminal.encodeplugin")
 #else
-Q_LOGGING_CATEGORY(encodeplugin,"org.deepin.terminal.encodeplugin",QtInfoMsg)
+Q_LOGGING_CATEGORY(encodeplugin,"org.gxde.terminal.encodeplugin",QtInfoMsg)
 #endif
 
 EncodeListModel::EncodeListModel(QObject *parent) : QStandardItemModel(parent)

@@ -41,9 +41,9 @@
 #include <sys/utsname.h>
 
 #ifdef QT_DEBUG
-Q_LOGGING_CATEGORY(common,"org.deepin.terminal.common")
+Q_LOGGING_CATEGORY(common,"org.gxde.terminal.common")
 #else
-Q_LOGGING_CATEGORY(common,"org.deepin.terminal.common",QtInfoMsg)
+Q_LOGGING_CATEGORY(common,"org.gxde.terminal.common",QtInfoMsg)
 #endif
 
 QHash<QString, QPixmap> Utils::m_imgCacheHash;
@@ -256,7 +256,7 @@ bool Utils::showExitUninstallConfirmDialog()
 {
     qCDebug(common) << "Showing exit uninstall confirm dialog";
     DDialog dlg(QObject::tr("Programs are still running in terminal"), QObject::tr("Are you sure you want to uninstall it?"));
-    dlg.setIcon(QIcon::fromTheme("deepin-terminal"));
+    dlg.setIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
     dlg.addButton(QString(tr("Cancel", "button")), false, DDialog::ButtonNormal);
     dlg.addButton(QString(tr("OK", "button")), true, DDialog::ButtonWarning);
     bool result = (DDialog::Accepted == dlg.exec());
@@ -1079,7 +1079,7 @@ void LoggerRules::initLoggerRules()
     qCDebug(common) << "Current system env log rules:" << logRules;
 
     // set dconfig
-    m_config = DConfig::create("org.deepin.terminal", "org.deepin.terminal");
+    m_config = DConfig::create("org.gxde.terminal", "org.gxde.terminal");
     qCDebug(common) << "Current DConfig file is :" <<  m_config->name();
     logRules = m_config->value("log_rules").toByteArray();
     qCDebug(common) << "Current app log rules :" << logRules;

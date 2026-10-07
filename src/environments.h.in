@@ -1,6 +1,8 @@
 #ifndef __ENVIRONMENTS_H_
 #define __ENVIRONMENTS_H_
 
+#define TERMINAL_TRANSLATIONS_DIR "@CMAKE_INSTALL_PREFIX@/share/gxde-terminal/translations"
+
 #define VERSION        "@VERSION@"
 
 #endif // __ENVIRONMENTS_H_

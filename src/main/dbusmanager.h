@@ -14,7 +14,7 @@
 #include <QVariant>
 
 // deepin-terminal
-#define TERMINALSERVER "com.deepin.terminal.reborn"
+#define TERMINALSERVER "com.gxde.terminal.reborn"
 #define TERMINALINTERFACE "/window"
 
 // kwin dbus

@@ -19,14 +19,17 @@ TerminalApplication::TerminalApplication(int &argc, char *argv[]) : DApplication
 {
     qCDebug(mainprocess) << "TerminalApplication constructing with arguments:" << QCoreApplication::arguments();
     Utils::set_Object_Name(this);
-    setOrganizationName("deepin");
+    setOrganizationName("gxde");
     setApplicationVersion(VERSION);
-    setApplicationName("deepin-terminal");
+    setApplicationName("gxde-terminal");
+    setDesktopFileName(QStringLiteral("gxde-terminal"));
     qCDebug(mainprocess) << "Loading translations";
     loadTranslator();
     auto *translator = new QTranslator(this);
     if (translator->load(QLocale::system(), QStringLiteral("deepin-terminal"),
-                         QStringLiteral("_"), QCoreApplication::applicationDirPath())) {
+                         QStringLiteral("_"), QCoreApplication::applicationDirPath())
+        || translator->load(QLocale::system(), QStringLiteral("deepin-terminal"),
+                            QStringLiteral("_"), QStringLiteral(TERMINAL_TRANSLATIONS_DIR))) {
         installTranslator(translator);
     } else {
         delete translator;
@@ -35,7 +38,7 @@ TerminalApplication::TerminalApplication(int &argc, char *argv[]) : DApplication
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 #endif
-    setProductIcon(QIcon::fromTheme("deepin-terminal"));
+    setProductIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
     QString appDesc = QObject::tr("Terminal is an advanced terminal emulator with workspace"
                                   ", multiple windows, remote management, quake mode and other features.");
     setApplicationDescription(appDesc);

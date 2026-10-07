@@ -1032,7 +1032,7 @@ QMimeData *TabBar::createMimeDataFromTab(int index, const QStyleOptionTab &optio
 
     //保存工作区页面TermWidgetPage、标签页名称数据到QMimeData
     mimeData->setProperty("termpage", QVariant::fromValue(static_cast<void *>(termPage)));
-    mimeData->setData("deepin-terminal/tabbar", tabName.toUtf8());
+    mimeData->setData("gxde-terminal/tabbar", tabName.toUtf8());
 
     return mimeData;
 }
@@ -1045,7 +1045,7 @@ void TabBar::insertFromMimeDataOnDragEnter(int index, const QMimeData *source)
         return;
     }
 
-    const QString tabName = QString::fromUtf8(source->data("deepin-terminal/tabbar"));
+    const QString tabName = QString::fromUtf8(source->data("gxde-terminal/tabbar"));
 
     QVariant pVar = source->property("termpage");
     TermWidgetPage *termPage = static_cast<TermWidgetPage *>(pVar.value<void *>());
@@ -1070,7 +1070,7 @@ void TabBar::insertFromMimeData(int index, const QMimeData *source)
         return;
     }
 
-    const QString tabName = QString::fromUtf8(source->data("deepin-terminal/tabbar"));
+    const QString tabName = QString::fromUtf8(source->data("gxde-terminal/tabbar"));
 
     QVariant pVar = source->property("termpage");
     TermWidgetPage *termPage = static_cast<TermWidgetPage *>(pVar.value<void *>());
@@ -1092,7 +1092,7 @@ bool TabBar::canInsertFromMimeData(int index, const QMimeData *source) const
     // qCDebug(views) << "Enter TabBar::canInsertFromMimeData with index:" << index;
     Q_UNUSED(index)
     //根据标签的QMimeData的MIME类型(即format)判断是否可以将标签插入当前tab中
-    return source->hasFormat("deepin-terminal/tabbar");
+    return source->hasFormat("gxde-terminal/tabbar");
 }
 
 void TabBar::handleTabMoved(int fromIndex, int toIndex)

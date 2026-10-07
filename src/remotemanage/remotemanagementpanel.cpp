@@ -11,9 +11,9 @@
 #include <DHiDPIHelper>
 
 #ifdef QT_DEBUG
-Q_LOGGING_CATEGORY(remotemanage,"org.deepin.terminal.remotemanage")
+Q_LOGGING_CATEGORY(remotemanage,"org.gxde.terminal.remotemanage")
 #else
-Q_LOGGING_CATEGORY(remotemanage,"org.deepin.terminal.remotemanage",QtInfoMsg)
+Q_LOGGING_CATEGORY(remotemanage,"org.gxde.terminal.remotemanage",QtInfoMsg)
 #endif
 
 RemoteManagementPanel::RemoteManagementPanel(QWidget *parent) : CommonPanel(parent)

@@ -378,7 +378,7 @@ inline void ListView::onServerConfigOptDlgFinished(int result)
             deleteDialog->setAttribute(Qt::WA_DeleteOnClose);
             connect(deleteDialog, &DDialog::finished, this, &ListView::onDeleteServerDialogFinished);
             deleteDialog->setWindowModality(Qt::WindowModal);
-            deleteDialog->setIcon(QIcon::fromTheme("deepin-terminal"));
+            deleteDialog->setIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
             deleteDialog->addButton(QObject::tr("Cancel", "button"), false, DDialog::ButtonNormal);
             deleteDialog->addButton(QObject::tr("Delete", "button"), true, DDialog::ButtonWarning);
             deleteDialog->show();
@@ -618,7 +618,7 @@ inline void ListView::onCustomCommandOptDlgFinished(int result)
             dlgDelete->setWindowModality(Qt::WindowModal);
             m_pdlg->m_dlgDelete = dlgDelete;
 
-            dlgDelete->setIcon(QIcon::fromTheme("deepin-terminal"));
+            dlgDelete->setIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
             dlgDelete->setTitle(tr("Are you sure you want to delete %1?").arg(m_pdlg->m_currItemData->m_cmdName));
             dlgDelete->addButton(QObject::tr("Cancel", "button"), false, DDialog::ButtonNormal);
             dlgDelete->addButton(QObject::tr("Confirm", "button"), true, DDialog::ButtonWarning);
@@ -1077,7 +1077,7 @@ void ListView::deleteItem(const QString &key, ItemFuncType type)
             onDeleteDialogFinished(key, type);
     });
     deleteDialog->setWindowModality(Qt::WindowModal);
-    deleteDialog->setIcon(QIcon::fromTheme("deepin-terminal"));
+    deleteDialog->setIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
     deleteDialog->addButton(QObject::tr("Cancel", "button"), false, DDialog::ButtonNormal);
     deleteDialog->addButton(QObject::tr("Delete", "button"), true, DDialog::ButtonWarning);
     deleteDialog->show();

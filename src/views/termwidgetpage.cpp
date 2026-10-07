@@ -319,7 +319,7 @@ void TermWidgetPage::showExitConfirmDialog(Utils::CloseType type, int count, QWi
 //    Service::instance()->setIsDialogShow(window(), true);
 
 //    DDialog *dlg = new DDialog(title, txt, parent);
-//    dlg->setIcon(QIcon::fromTheme("deepin-terminal"));
+//    dlg->setIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
 //    dlg->addButton(QString(tr("Cancel")), false, DDialog::ButtonNormal);
 //    /******** Modify by nt001000 renfeixiang 2020-05-21:修改Exit成Close Begin***************/
 //    dlg->addButton(QString(tr("Close")), true, DDialog::ButtonWarning);

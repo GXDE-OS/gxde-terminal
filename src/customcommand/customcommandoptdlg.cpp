@@ -28,9 +28,9 @@
 #include <QClipboard>
 
 #ifdef QT_DEBUG
-Q_LOGGING_CATEGORY(customcommand,"org.deepin.terminal.customcommand")
+Q_LOGGING_CATEGORY(customcommand,"org.gxde.terminal.customcommand")
 #else
-Q_LOGGING_CATEGORY(customcommand,"org.deepin.terminal.customcommand",QtInfoMsg)
+Q_LOGGING_CATEGORY(customcommand,"org.gxde.terminal.customcommand",QtInfoMsg)
 #endif
 
 CustomCommandOptDlg::CustomCommandOptDlg(CustomCmdOptType type, CustomCommandData *currItemData, QWidget *parent)

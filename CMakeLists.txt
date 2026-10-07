@@ -283,7 +283,7 @@ target_include_directories(${EXE_NAME}
     ${XCB_EWMH_INCLUDE_DIRS}
 )
 
-target_link_libraries (deepin-terminal ${LINK_LIBS} terminalwidget${QT_DESIRED_VERSION})
+target_link_libraries (deepin-terminal ${LINK_LIBS} gxde-terminalwidget${QT_DESIRED_VERSION})
 if (QT_VERSION_MAJOR EQUAL 6)
     find_package(KF6WindowSystem QUIET)
     if (KF6WindowSystem_FOUND)
@@ -302,11 +302,12 @@ endif ()
 
 #install(TARGETS deepin-terminal DESTINATION ${CMAKE_INSTALL_PREFIX}/share/deepin-terminal)
 
-install(FILES src/deepin-terminal.desktop
+install(FILES src/gxde-terminal.desktop
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications/)
 
 install(FILES src/assets/logo/deepin-terminal.svg
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps/)
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps/
+        RENAME gxde-terminal.svg)
 
 install(TARGETS ${EXE_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
@@ -317,21 +318,21 @@ add_custom_target(${PROJECT_NAME}_qm_files DEPENDS ${QM_FILES})
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_qm_files)
 
 # Install translations
-install(FILES ${QM_FILES} DESTINATION share/${PROJECT_NAME}/translations)
+install(FILES ${QM_FILES} DESTINATION share/gxde-terminal/translations)
 
 if(INSTALL_USER_MANUAL)
-    install(DIRECTORY src/assets/deepin-terminal
-            DESTINATION share/deepin-manual/manual-assets/application/)
+    install(DIRECTORY src/assets/deepin-terminal/
+            DESTINATION share/deepin-manual/manual-assets/application/gxde-terminal)
 endif()
 message("CMAKE_INSTALL_PREFIX: " ${CMAKE_INSTALL_PREFIX})
 #安装日志调试模式配置文件
-install(FILES src/assets/config/debugconfig/org.deepin.terminal.json
+install(FILES src/assets/config/debugconfig/org.gxde.terminal.json
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/deepin-debug-config/deepin-debug-config.d/)
-#install(FILES src/assets/config/debugconfig/deepin-terminal_debug.sh
-#        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/deepin-debug-config/shell/)
+install(PROGRAMS src/assets/config/debugconfig/gxde-terminal_debug.sh
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/deepin-debug-config/shell/)
 #安装DConfig配置
-set(APPID org.deepin.terminal)
-set(configFile ${PROJECT_SOURCE_DIR}/src/assets/config/dconfig/org.deepin.terminal.json)
+set(APPID org.gxde.terminal)
+set(configFile ${PROJECT_SOURCE_DIR}/src/assets/config/dconfig/org.gxde.terminal.json)
 if (DEFINED DSG_DATA_DIR)
     message("-- DConfig is supported by DTK")
     if (DTK_VERSION_MAJOR EQUAL "6")
@@ -341,10 +342,10 @@ if (DEFINED DSG_DATA_DIR)
     endif()
 else()
     message("-- DConfig is not supported by DTK")
-    install(FILES ${configFile} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dsg/config/org.deepin.terminal/)
+    install(FILES ${configFile} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dsg/config/org.gxde.terminal/)
 endif()
 #安装日志收集工具配置文件
-install(FILES src/assets/config/logconfig/org.deepin.terminal.json
+install(FILES src/assets/config/logconfig/org.gxde.terminal.json
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/deepin-log-viewer/deepin-log.conf.d/)
 
 # Unit Test

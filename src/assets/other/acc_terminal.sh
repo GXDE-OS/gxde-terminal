@@ -15,7 +15,7 @@ fi
 
 version=`gxde-terminal -v`
 
-version=$(echo $version | sed -e 's/\(.*\)deepin-terminal\(.*\)/\2/g' -e 's/ //g')
+version=$(echo $version | sed -e 's/\(.*\)gxde-terminal\(.*\)/\2/g' -e 's/ //g')
 
 if [ ! "$version" ]; then
 #  version=5.2.19
@@ -57,7 +57,7 @@ if [ $pid ]; then
     exit 0
 fi
 
-dtl=~/.cache/deepin/deepin-terminal/deepin-terminal.log
+dtl=~/.cache/gxde/gxde-terminal/gxde-terminal.log
 if [ -f $dtl ] ; then
     rm -rf $dtl
     sleep 0.2

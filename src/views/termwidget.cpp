@@ -40,9 +40,9 @@ DWIDGET_USE_NAMESPACE
 using namespace Konsole;
 
 #ifdef QT_DEBUG
-Q_LOGGING_CATEGORY(views,"org.deepin.terminal.views")
+Q_LOGGING_CATEGORY(views,"org.gxde.terminal.views")
 #else
-Q_LOGGING_CATEGORY(views,"org.deepin.terminal.views",QtInfoMsg)
+Q_LOGGING_CATEGORY(views,"org.gxde.terminal.views",QtInfoMsg)
 #endif
 
 TermWidget::TermWidget(const TermProperties &properties, QWidget *parent) : QTermWidget(0, parent), m_properties(properties)

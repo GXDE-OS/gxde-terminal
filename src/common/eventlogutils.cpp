@@ -35,7 +35,7 @@ EventLogUtils::EventLogUtils()
         return;
     }
 
-    init("deepin-terminal", true);
+    init("gxde-terminal", true);
 }
 
 void EventLogUtils::writeLogs(QJsonObject &data)

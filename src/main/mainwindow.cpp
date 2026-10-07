@@ -90,9 +90,9 @@ static inline bool isProfessionalEdition()
 }
 
 #ifdef QT_DEBUG
-Q_LOGGING_CATEGORY(mainprocess,"org.deepin.terminal")
+Q_LOGGING_CATEGORY(mainprocess,"org.gxde.terminal")
 #else
-Q_LOGGING_CATEGORY(mainprocess,"org.deepin.terminal",QtInfoMsg)
+Q_LOGGING_CATEGORY(mainprocess,"org.gxde.terminal",QtInfoMsg)
 #endif
 
 SwitchThemeMenu::SwitchThemeMenu(const QString &title, QWidget *parent): QMenu(title, parent)
@@ -273,7 +273,7 @@ void MainWindow::initWindow()
     setAttribute(Qt::WA_TranslucentBackground);
     setMinimumSize(m_MinWidth, m_MinHeight);
     setEnableBlurWindow(Settings::instance()->backgroundBlur());
-    setWindowIcon(QIcon::fromTheme("deepin-terminal"));
+    setWindowIcon(QIcon::fromTheme("gxde-terminal", QIcon(":/logo/deepin-terminal.svg")));
 
 
     // Init layout

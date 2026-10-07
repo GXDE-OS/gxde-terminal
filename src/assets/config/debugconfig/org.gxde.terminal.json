@@ -1,0 +1,12 @@
+{
+  "name": "gxde-terminal",
+  "group": "",
+  "submodules": [
+    {
+      "name": "gxde-terminal",
+      "exec": "gxde-terminal_debug.sh"
+    }
+  ],
+  "reboot": 0,
+  "version": "V1.0"
+}

@@ -628,7 +628,7 @@ static void on_password_lookup(GObject *source, GAsyncResult *result, gpointer u
 void ServerConfigManager::remoteGetSecreats(const QString &userName, const QString &address, const QString &port, const QString &key)
 {
     qCInfo(remotemanage) << "Enter remoteGetSecreats";
-    QString strSchemaName = QString("com.deepin.terminal.password.%1.%2.%3").arg(userName).arg(address).arg(port);
+    QString strSchemaName = QString("com.gxde.terminal.password.%1.%2.%3").arg(userName).arg(address).arg(port);
     const SecretSchema *scheme =
         secret_schema_new(strSchemaName.toUtf8().data(), SECRET_SCHEMA_NONE, "number", SECRET_SCHEMA_ATTRIBUTE_INTEGER, "string", SECRET_SCHEMA_ATTRIBUTE_STRING, "even", SECRET_SCHEMA_ATTRIBUTE_BOOLEAN, NULL);
 
@@ -671,8 +671,8 @@ static void on_password_stored(GObject *source, GAsyncResult *result, gpointer u
 void ServerConfigManager::remoteStoreSecreats(ServerConfig *config)
 {
     qCInfo(remotemanage) << "Enter remoteStoreSecreats";
-    QString strLabel = QString("com.deepin.terminal.password.%1.%2").arg(config->m_userName).arg(config->m_address);
-    QString strSchemaName = QString("com.deepin.terminal.password.%1.%2.%3").arg(config->m_userName).arg(config->m_address).arg(config->m_port);
+    QString strLabel = QString("com.gxde.terminal.password.%1.%2").arg(config->m_userName).arg(config->m_address);
+    QString strSchemaName = QString("com.gxde.terminal.password.%1.%2.%3").arg(config->m_userName).arg(config->m_address).arg(config->m_port);
     const SecretSchema *scheme =
         secret_schema_new(strSchemaName.toUtf8().data(), SECRET_SCHEMA_NONE, "number", SECRET_SCHEMA_ATTRIBUTE_INTEGER, "string", SECRET_SCHEMA_ATTRIBUTE_STRING, "even", SECRET_SCHEMA_ATTRIBUTE_BOOLEAN, NULL);
     // 存储密码
@@ -713,7 +713,7 @@ static void on_password_cleared(GObject *source, GAsyncResult *result, gpointer 
 void ServerConfigManager::remoteClearSecreats(const QString &userName, const QString &address, const QString &port)
 {
     qCInfo(remotemanage) << "Enter remoteClearSecreats";
-    QString strSchemaName = QString("com.deepin.terminal.password.%1.%2.%3").arg(userName).arg(address).arg(port);
+    QString strSchemaName = QString("com.gxde.terminal.password.%1.%2.%3").arg(userName).arg(address).arg(port);
     const SecretSchema *scheme =
         secret_schema_new(strSchemaName.toUtf8().data(), SECRET_SCHEMA_NONE, "number", SECRET_SCHEMA_ATTRIBUTE_INTEGER, "string", SECRET_SCHEMA_ATTRIBUTE_STRING, "even", SECRET_SCHEMA_ATTRIBUTE_BOOLEAN, NULL);
     // 清除密码

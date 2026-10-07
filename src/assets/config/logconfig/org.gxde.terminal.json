@@ -1,0 +1,57 @@
+{
+  "name": "gxde-terminal",
+  "group": "",
+  "submodules": [
+    {
+      "name": "main",
+      "filter": "org.gxde.terminal",
+      "exec": "/usr/bin/gxde-terminal",
+      "logType": "journal",
+      "logPath": "~/.cache/gxde/gxde-terminal/gxde-terminal.log"
+    },
+    {
+      "name": "common",
+      "filter": "org.gxde.terminal.common",
+      "exec": "/usr/bin/gxde-terminal",
+      "logType": "journal",
+      "logPath": "~/.cache/gxde/gxde-terminal/gxde-terminal.log"
+    },
+    {
+      "name": "customcom",
+      "filter": "org.gxde.terminal.customcommand",
+      "exec": "/usr/bin/gxde-terminal",
+      "logType": "journal",
+      "logPath": "~/.cache/gxde/gxde-terminal/gxde-terminal.log"
+    },
+    {
+      "name": "remotemanage",
+      "filter": "org.gxde.terminal.remotemanage",
+      "exec": "/usr/bin/gxde-terminal",
+      "logType": "journal",
+      "logPath": "~/.cache/gxde/gxde-terminal/gxde-terminal.log"
+    },
+    {
+      "name": "tsettings",
+      "filter": "org.gxde.terminal.tsettings",
+      "exec": "/usr/bin/gxde-terminal",
+      "logType": "journal",
+      "logPath": "~/.cache/gxde/gxde-terminal/gxde-terminal.log"
+    },
+    {
+      "name": "views",
+      "filter": "org.gxde.terminal.views",
+      "exec": "/usr/bin/gxde-terminal",
+      "logType": "journal",
+      "logPath": "~/.cache/gxde/gxde-terminal/gxde-terminal.log"
+    },
+    {
+      "name": "encodeplugin",
+      "filter": "org.gxde.terminal.encodeplugin",
+      "exec": "/usr/bin/gxde-terminal",
+      "logType": "journal",
+      "logPath": "~/.cache/gxde/gxde-terminal/gxde-terminal.log"
+    }
+  ],
+  "visible": 1,
+  "version": "V1.0"
+}

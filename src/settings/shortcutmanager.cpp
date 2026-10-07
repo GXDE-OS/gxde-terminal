@@ -19,9 +19,9 @@
 #include <QLoggingCategory>
 
 #ifdef QT_DEBUG
-Q_LOGGING_CATEGORY(tsettings,"org.deepin.terminal.tsettings")
+Q_LOGGING_CATEGORY(tsettings,"org.gxde.terminal.tsettings")
 #else
-Q_LOGGING_CATEGORY(tsettings,"org.deepin.terminal.tsettings",QtInfoMsg)
+Q_LOGGING_CATEGORY(tsettings,"org.gxde.terminal.tsettings",QtInfoMsg)
 #endif
 
 /* del by ut001121 zhangmeng 20201221 修复BUG58747
