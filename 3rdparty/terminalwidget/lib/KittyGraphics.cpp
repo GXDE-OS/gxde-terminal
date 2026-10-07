@@ -204,8 +204,9 @@ KittyGraphics::Result KittyGraphics::command(const QByteArray &data, QPoint curs
                     std::stable_sort(_placements.begin(), _placements.end(), [](const Placement &a, const Placement &b) {
                         return a.z == b.z ? a.imageId < b.imageId : a.z < b.z;
                     });
+                    
                     if (!keys.value('C')) result.cursorAdvance = QSize(int(std::ceil(cols ? cols : (ox + width) / cellSize.width())),
-                                                                     qMax(0, int(std::ceil(rows ? rows : (oy + height) / cellSize.height())) - 1));
+                                                                     int(std::ceil(rows ? rows : (oy + height) / cellSize.height())));
                 }
             }
         }

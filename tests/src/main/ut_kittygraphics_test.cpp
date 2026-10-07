@@ -34,7 +34,7 @@ TEST(KittyGraphics, QueryDoesNotStoreAndChunkedUploadUsesFinalCursor) {
     EXPECT_EQ(r.response, QByteArray("\033_Gi=7;OK\033\\"));
     ASSERT_EQ(g.placements().size(), 1);
     EXPECT_EQ(g.placements()[0].cells.topLeft(), QPointF(3, 4));
-    EXPECT_EQ(r.cursorAdvance, QSize(1, 0));
+    EXPECT_EQ(r.cursorAdvance, QSize(1, 1));
 }
 TEST(KittyGraphics, FormatsCompressionAndBounds) {
     KittyGraphics g;
@@ -137,14 +137,14 @@ TEST(KittyGraphics, RepeatedImagesAtBottomRenderEveryRow) {
              + QByteArray::number(id) + ';' + pixels.toBase64() + "\033\\");
         const auto &graphics = window->screen()->graphics;
         const auto &placement = graphics.placements().last();
-        EXPECT_EQ(placement.cells, QRectF(0, 3, 1, 3));
+        EXPECT_EQ(placement.cells, QRectF(0, 2, 1, 3));
         EXPECT_EQ(placement.source, QRectF(0, 0, 1, 3));
         EXPECT_EQ(window->screen()->getCursorY(), 5);
         QImage output(20, 6, QImage::Format_RGB32); output.fill(Qt::black);
         { QPainter painter(&output); graphics.paint(painter, QPoint(), 0, 1, QSizeF(1, 1)); }
-        EXPECT_EQ(output.pixelColor(0, 3), QColor(Qt::red));
-        EXPECT_EQ(output.pixelColor(0, 4), QColor(Qt::green));
-        EXPECT_EQ(output.pixelColor(0, 5), QColor(Qt::blue));
+        EXPECT_EQ(output.pixelColor(0, 2), QColor(Qt::red));
+        EXPECT_EQ(output.pixelColor(0, 3), QColor(Qt::green));
+        EXPECT_EQ(output.pixelColor(0, 4), QColor(Qt::blue));
     }
 }
 TEST(KittyGraphics, ImageOnlyUpdatesRepaintAndDelete) {
@@ -254,19 +254,28 @@ TEST(KittyGraphics, FastfetchLayoutReturnsToImageTopRow) {
     emulation->setImageSize(30, 80);
     emulation->setImageCellSize(QSize(9, 20));
     ScreenWindow *window = emulation->createWindow();
-    // Fastfetch --kitty --logo-width 30 sends 270x270 pixels, then CSI 13 A
-    // to put its text alongside the first image row (ceil(270/20) - 1).
-    QByteArray raw(270 * 270 * 4, char(0xff));
+    // Captured with TERM_PROGRAM=gxde-terminal and --logo-width 25:
+    // 225x223 pixels followed by CSI 12 A (ceil(223/20)). Start below a
+    // command line: row zero would hide an extra cursor-up via clamping.
+    const QByteArray commandLine("$ fastfetch --kitty logo.png --logo-width 25");
+    feed(emulation, "\033[4;1H" + commandLine + "\r\n");
+    QByteArray raw(225 * 223 * 4, char(0xff));
     uLongf length = compressBound(raw.size());
     QByteArray compressed(int(length), '\0');
     ASSERT_EQ(compress(reinterpret_cast<Bytef *>(compressed.data()), &length,
                        reinterpret_cast<const Bytef *>(raw.data()), raw.size()), Z_OK);
     compressed.resize(int(length));
-    feed(emulation, "\033_Ga=T,f=32,s=270,v=270,o=z;" + compressed.toBase64() + "\033\\");
-    EXPECT_EQ(window->screen()->getCursorY(), 13);
-    feed(emulation, "\033[1G\033[13A\033[34C");
-    EXPECT_EQ(window->screen()->getCursorY(), 0);
-    EXPECT_EQ(window->screen()->getCursorX(), 34);
+    feed(emulation, "\033_Ga=T,f=32,s=225,v=223,o=z;" + compressed.toBase64() + "\033\\");
+    EXPECT_EQ(window->screen()->getCursorY(), 16);
+    feed(emulation, "\033[1G\033[12A\033[29C");
+    EXPECT_EQ(window->screen()->getCursorY(), 4);
+    EXPECT_EQ(window->screen()->getCursorX(), 29);
     ASSERT_EQ(window->screen()->graphics.placements().size(), 1);
-    EXPECT_EQ(window->screen()->graphics.placements()[0].cells, QRectF(0, 0, 30, 13.5));
+    EXPECT_EQ(window->screen()->graphics.placements()[0].cells, QRectF(0, 4, 25, 11.15));
+    feed(emulation, "char@host");
+    QVector<Character> cells(30 * 80);
+    window->screen()->getImage(cells.data(), cells.size(), 0, 29);
+    for (int i = 0; i < commandLine.size(); ++i)
+        EXPECT_EQ(cells[3 * 80 + i].character, uint(commandLine[i])) << i;
+    EXPECT_EQ(cells[4 * 80 + 29].character, uint('c'));
 }

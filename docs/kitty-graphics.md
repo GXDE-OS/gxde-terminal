@@ -42,6 +42,9 @@ printf '\033_Ga=d,d=A\033\\'
   response suppression (`q=1,2`).
 - Source rectangles, cell scaling with aspect ratio preservation, pixel offsets,
   cursor movement control, alpha blending and positive/negative z-order.
+  Default cursor movement follows the protocol's full placement row count;
+  `C=1` leaves the cursor unchanged. Kitty's terminal-specific one-row-short
+  cursor behavior is not used, matching fastfetch's GXDE terminal detection.
 - Static deletion modes `a/i/n/c/p/q/r/x/y/z`, including uppercase data release.
 - Screen scrolling, bounded scrollback and clipping at scrolling margins;
   independent normal/alternate buffers; clear-screen and reset integration.
