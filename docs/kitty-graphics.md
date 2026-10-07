@@ -59,9 +59,10 @@ memory transports (`t=f,t,s`), animation actions, Unicode placeholder placements
 (`U=1`), and relative placements (`P/Q`) return `ENOTSUP`. Clients requiring these
 features need a fallback; automatic fallback is client-dependent.
 
-Resizing the text grid clears placements because the terminal's existing text
-reflow does not preserve graphics anchors. Cached image data remains available
-for re-placement. Smooth text scrolling is disabled while graphics are displayed
+Resizing the text grid preserves placements, including when the scrollbar first
+appears. Images retain their cell geometry and follow rows transferred into or
+out of history; they do not reflow with wrapped text on width changes.
+Smooth text scrolling is disabled while graphics are displayed
 so image and text positions remain synchronized. Graphics do not enter copied
 text or text exports.
 

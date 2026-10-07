@@ -5,6 +5,9 @@
 #include "Emulation.h"
 #include "Screen.h"
 #include "ScreenWindow.h"
+#include "history/compact/CompactHistoryType.h"
+#include <QScrollBar>
+#include <QStyleFactory>
 #include <gtest/gtest.h>
 #include <QBuffer>
 #include <QTest>
@@ -105,6 +108,45 @@ TEST(KittyGraphics, ParserFragmentationCancellationAndScreenIsolation) {
     feed(session.emulation(), "\033[16t");
     EXPECT_EQ(replies.last(), QByteArray("\033[6;18;9t"));
 }
+TEST(KittyGraphics, FullScreenScrollPreservesPixelsBelowViewport) {
+    KittyGraphics g; g.cellSize = QSize(10, 10);
+    send(g, rawCommand("a=T,i=1,C=1,c=3,r=3"), QPoint(0, 23));
+    for (int step = 1; step <= 2; ++step) {
+        g.scroll(0, 23, -1, 0);
+        ASSERT_EQ(g.placements().size(), 1);
+        EXPECT_EQ(g.placements()[0].cells, QRectF(0, 23 - step, 3, 3));
+        EXPECT_EQ(g.placements()[0].source, QRectF(0, 0, 1, 1));
+    }
+    // History expiry still clips the top and eventually removes the placement.
+    g.scroll(0, 23, -22, 0);
+    ASSERT_EQ(g.placements().size(), 1);
+    EXPECT_EQ(g.placements()[0].cells, QRectF(0, 0, 3, 2));
+    EXPECT_DOUBLE_EQ(g.placements()[0].source.height(), 2.0 / 3);
+    g.scroll(0, 23, -2, 0);
+    EXPECT_FALSE(g.hasPlacements());
+}
+TEST(KittyGraphics, RepeatedImagesAtBottomRenderEveryRow) {
+    Session session;
+    auto *emulation = session.emulation();
+    emulation->setImageSize(6, 20);
+    emulation->setImageCellSize(QSize(10, 10));
+    ScreenWindow *window = emulation->createWindow();
+    const QByteArray pixels = QByteArray::fromHex("ff0000ff00ff00ff0000ffff");
+    for (int id = 1; id <= 2; ++id) {
+        feed(emulation, "\033[6;1H\033_Ga=T,f=32,s=1,v=3,c=1,r=3,i="
+             + QByteArray::number(id) + ';' + pixels.toBase64() + "\033\\");
+        const auto &graphics = window->screen()->graphics;
+        const auto &placement = graphics.placements().last();
+        EXPECT_EQ(placement.cells, QRectF(0, 3, 1, 3));
+        EXPECT_EQ(placement.source, QRectF(0, 0, 1, 3));
+        EXPECT_EQ(window->screen()->getCursorY(), 5);
+        QImage output(20, 6, QImage::Format_RGB32); output.fill(Qt::black);
+        { QPainter painter(&output); graphics.paint(painter, QPoint(), 0, 1, QSizeF(1, 1)); }
+        EXPECT_EQ(output.pixelColor(0, 3), QColor(Qt::red));
+        EXPECT_EQ(output.pixelColor(0, 4), QColor(Qt::green));
+        EXPECT_EQ(output.pixelColor(0, 5), QColor(Qt::blue));
+    }
+}
 TEST(KittyGraphics, ImageOnlyUpdatesRepaintAndDelete) {
     Session session; TerminalDisplay view; session.addView(&view);
     view.setVTFont(QFont(QStringLiteral("DejaVu Sans Mono"), 12));
@@ -120,6 +162,49 @@ TEST(KittyGraphics, ImageOnlyUpdatesRepaintAndDelete) {
     QTest::qWait(80); EXPECT_GT(countRed(), before + 100);
     feed(session.emulation(), "\033_Ga=d,d=A\033\\");
     QTest::qWait(80); EXPECT_EQ(countRed(), before);
+}
+TEST(KittyGraphics, FirstScrollbarAppearancePreservesImage) {
+    Session session; TerminalDisplay view;
+    view.setStyle(QStyleFactory::create("Fusion"));
+    session.setHistoryType(CompactHistoryType(100));
+    session.addView(&view);
+    view.setVTFont(QFont(QStringLiteral("DejaVu Sans Mono"), 12));
+    view.setScrollBarPosition(QTermWidget::NoScrollBar);
+    view.resize(480, 240); view.show(); QTest::qWait(50);
+    auto *screen = view.screenWindow()->screen();
+    const int columns = screen->getColumns();
+    const int lines = screen->getLines();
+    // First fastfetch output fills the screen and exposes the scrollbar.
+    feed(session.emulation(), "\033[2;1H\033_G" + rawCommand("a=T,i=1,C=1,c=3,r=3") + "\033\\");
+    ASSERT_EQ(screen->graphics.placements().size(), 1);
+    const QRectF expectedCells = screen->graphics.placements()[0].cells.translated(0, -1);
+    feed(session.emulation(), QByteArray("\r\n").repeated(lines - 1));
+    QTest::qWait(100);
+    EXPECT_LT(screen->getColumns(), columns);
+    ASSERT_TRUE(view.findChild<QScrollBar *>());
+    EXPECT_TRUE(view.findChild<QScrollBar *>()->isVisible());
+    ASSERT_EQ(screen->graphics.placements().size(), 1);
+    EXPECT_EQ(screen->graphics.placements()[0].cells, expectedCells);
+    QImage output = view.grab().toImage();
+    int redPixels = 0;
+    for (int y = 0; y < output.height(); ++y) for (int x = 0; x < output.width(); ++x)
+        if (output.pixelColor(x, y) == QColor(Qt::red)) ++redPixels;
+    EXPECT_GT(redPixels, 100);
+}
+TEST(KittyGraphics, ResizeMovesImageWithRowsEnteringAndLeavingHistory) {
+    Session session;
+    session.setHistoryType(CompactHistoryType(100));
+    auto *emulation = session.emulation();
+    emulation->setImageSize(6, 20);
+    emulation->setImageCellSize(QSize(10, 10));
+    auto *screen = emulation->createWindow()->screen();
+    feed(emulation, "\033[4;1H\033_G" + rawCommand("a=T,i=1,C=1,c=2,r=2") + "\033\\\033[6;1H");
+    emulation->setImageSize(4, 20);
+    ASSERT_EQ(screen->graphics.placements().size(), 1);
+    EXPECT_EQ(screen->graphics.placements()[0].cells, QRectF(0, 1, 2, 2));
+    emulation->setImageSize(6, 20);
+    ASSERT_EQ(screen->graphics.placements().size(), 1);
+    EXPECT_EQ(screen->graphics.placements()[0].cells, QRectF(0, 3, 2, 2));
 }
 TEST(KittyGraphics, RejectsInvalidCommandsAndRecoversAfterAbortedChunks) {
     KittyGraphics g;

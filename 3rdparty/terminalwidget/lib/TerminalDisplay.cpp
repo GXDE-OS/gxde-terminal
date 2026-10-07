@@ -1332,10 +1332,6 @@ void TerminalDisplay::updateImage()
      updateImageSize();
   }
 
-  Character* const newimg = _screenWindow->getImage();
-  int lines = _screenWindow->windowLines();
-  int columns = _screenWindow->windowColumns();
-
   setScroll( _screenWindow->currentLine() , _screenWindow->lineCount() );
   //--added by qinyaning(nyq) to slove the problem of scroll init show--/
   // Avoid frequent scrollbar show/hide toggling during fast output:
@@ -1347,6 +1343,12 @@ void TerminalDisplay::updateImage()
       setScrollBarPosition(QTermWidget::ScrollBarRight);
   }
   //--------------------------------------------------------------------/
+
+  // Showing the scrollbar can resize/reflow the screen and invalidate its image.
+  // Fetch the character buffer and dimensions only after that size change.
+  Character* const newimg = _screenWindow->getImage();
+  int lines = _screenWindow->windowLines();
+  int columns = _screenWindow->windowColumns();
 
   Q_ASSERT( this->_usedLines <= this->_lines );
   Q_ASSERT( this->_usedColumns <= this->_columns );

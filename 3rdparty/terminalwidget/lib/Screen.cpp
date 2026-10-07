@@ -352,7 +352,9 @@ void Screen::resizeImage(int new_lines, int new_columns)
         return;
     }
 
-    graphics.clearPlacements();
+    // Keep placements when the scrollbar first appears or the window resizes.
+    // Track rows transferred between the live screen and history below.
+    int graphicsRowShift = 0;
 
     // Adjust scroll position, and fix glitches
     _oldTotalLines = getLines() + getHistLines();
@@ -366,6 +368,7 @@ void Screen::resizeImage(int new_lines, int new_columns)
         // Join next line from _screenLine to _history
         while (_history->isWrappedLine(_history->getLines() - 1)) {
             fastAddHistLine();
+            --graphicsRowShift;
             cursorLine--;
         }
         auto removedLines = _history->reflowLines(new_columns);
@@ -427,6 +430,7 @@ void Screen::resizeImage(int new_lines, int new_columns)
     // Check if it need to move from _screenLine to _history
     while (cursorLine > new_lines - 1) {
         fastAddHistLine();
+        --graphicsRowShift;
         cursorLine--;
     }
 
@@ -443,9 +447,13 @@ void Screen::resizeImage(int new_lines, int new_columns)
             _screenLines.insert(0, histLine);
             _lineProperties.insert(_lineProperties.begin(), lineProperty);
             _history->removeCells();
+            ++graphicsRowShift;
             cursorLine++;
         }
     }
+
+    graphics.translateRows(graphicsRowShift);
+    graphics.trimHistory(getHistLines());
 
     _lineProperties.resize(new_lines + 1);
     if (_lineProperties.size() > _screenLines.size()) {

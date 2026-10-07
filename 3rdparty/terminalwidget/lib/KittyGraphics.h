@@ -36,6 +36,7 @@ public:
     void cancelUpload();
     void clearVisible(int lines);
     void trimHistory(int lines);
+    void translateRows(int delta);
     void scroll(int top, int bottom, int delta, int historyLines, bool fullScreen = true);
     void paint(QPainter &painter, QPoint origin, int historyOffset, int layer, QSizeF logicalCellSize = QSizeF()) const;
     bool hasPlacements() const { return !_placements.isEmpty(); }

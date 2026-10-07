@@ -255,6 +255,9 @@ void KittyGraphics::trimHistory(int lines) {
     _placements.erase(std::remove_if(_placements.begin(), _placements.end(),
         [lines](const Placement &p) { return p.cells.bottom() <= -lines; }), _placements.end());
 }
+void KittyGraphics::translateRows(int delta) {
+    for (auto &p : _placements) p.cells.translate(0, delta);
+}
 void KittyGraphics::clearVisible(int lines) {
     _placements.erase(std::remove_if(_placements.begin(), _placements.end(),
         [lines](const Placement &p) { return p.cells.bottom() > 0 && p.cells.top() < lines; }), _placements.end());
@@ -264,9 +267,12 @@ void KittyGraphics::scroll(int top, int bottom, int delta, int historyLines, boo
         const bool fullScroll = fullScreen && top == 0 && delta < 0;
         if (fullScroll || (p.cells.top() >= top && p.cells.bottom() <= bottom + 1)) {
             p.cells.translate(0, delta);
-            // Clip at partial scrolling margins, preserving the corresponding source pixels.
+            // Cursor advancement scrolls a newly placed image into view one row
+            // at a time. During full-screen upward scrolling, retain pixels below
+            // the viewport; painting clips them until they become visible.
+            // Partial scrolling margins and expired history still crop the source.
             const qreal lo = fullScroll ? -historyLines : top;
-            const qreal hi = bottom + 1;
+            const qreal hi = fullScroll ? qMax(qreal(bottom + 1), p.cells.bottom()) : bottom + 1;
             const QRectF clipped = p.cells.intersected(QRectF(p.cells.x(), lo, p.cells.width(), hi - lo));
             if (clipped.isEmpty()) { p.cells = QRectF(); continue; }
             const qreal factor = p.source.height() / p.cells.height();
