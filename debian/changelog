@@ -1,3 +1,13 @@
+gxde-terminal (7.0.5) unstable; urgency=medium
+
+  [ CharOfString ]
+  * Fixed then issue of output flushing to command row while using Kitty graphics protocol.
+  
+  [ gfdgd_xi ]
+  * Added support for reading existing GXDE terminal V5.x remote configuration.
+
+ -- CharOfString <root@charofstring.cc>  Wed, 07 Oct 2026 18:58:04 -0500
+
 gxde-terminal (7.0.4) unstable; urgency=medium
 
   * Added Nix/Arch packaging.
