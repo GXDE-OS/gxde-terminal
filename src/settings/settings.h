@@ -67,6 +67,7 @@ public:
      * @return
      */
     bool cursorBlink() const;
+    bool cursorTrail() const;
     bool enableSetCursorPosition() const;
     /**
      * @brief 设置界面获取背景模糊属性

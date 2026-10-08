@@ -343,6 +343,12 @@
                             "default": ":@-./_~"
                         },
                         {
+                            "key": "cursor_trail",
+                            "type": "checkbox",
+                            "text": "Cursor trail animation",
+                            "default": false
+                        },
+                        {
                             "key": "cursor_blink",
                             "type": "checkbox",
                             "text": "Cursor blink",

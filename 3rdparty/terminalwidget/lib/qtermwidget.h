@@ -246,6 +246,7 @@ public:
     void setKeyboardCursorShape(KeyboardCursorShape shape);
 
     void setBlinkingCursor(bool blink);
+    void setCursorTrailEnabled(bool enabled);
 
     /** Enables or disables bidi text in the terminal. */
     void setBidiEnabled(bool enabled);

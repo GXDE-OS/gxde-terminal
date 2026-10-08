@@ -421,6 +421,10 @@
     </message>
     <message>
         <location filename="../src/settings/settings_translation.cpp" line="22"/>
+        <source>Cursor trail animation</source>
+        <translation>光标拖尾动画</translation>
+    </message>
+    <message>
         <source>Cursor blink</source>
         <translation>光标闪烁</translation>
     </message>

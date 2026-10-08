@@ -188,6 +188,7 @@ public:
     bool blinkingCursor() { return _hasBlinkingCursor; }
     /** Specifies whether or not the cursor blinks. */
     void setBlinkingCursor(bool blink);
+    void setCursorTrailEnabled(bool enabled);
 
     /** Specifies whether or not text can blink. */
     void setBlinkingTextEnabled(bool blink);
@@ -867,6 +868,7 @@ private:
     QRect _outputScrollRegion;
     bool _drawingScrollContents = false;
     bool _primaryScreen = true;
+    bool _cursorTrailEnabled = false;
     CursorAnimation _cursorTrail;
     QTimer* _cursorTrailTimer;
     QElapsedTimer _cursorTrailClock;

@@ -606,6 +606,10 @@ int Settings::cursorShape() const
     return shape;
 }
 
+bool Settings::cursorTrail() const {
+    return settings->option("advanced.cursor.cursor_trail")->value().toBool();
+}
+
 bool Settings::cursorBlink() const
 {
     // qCDebug(tsettings) << "Getting cursor blink setting";

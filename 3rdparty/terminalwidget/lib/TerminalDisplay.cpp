@@ -2297,6 +2297,15 @@ void TerminalDisplay::resetCursorBlink()
     updateCursor();
 }
 
+void TerminalDisplay::setCursorTrailEnabled(bool enabled) {
+    if (_cursorTrailEnabled == enabled) {
+        return;
+    }
+    _cursorTrailEnabled = enabled;
+    resetCursorAnimation();
+    updateCursorAnimation();
+}
+
 void TerminalDisplay::resetCursorAnimation()
 {
     if (_cursorTrail.active)
@@ -2333,6 +2342,10 @@ void TerminalDisplay::updateCursorAnimation()
     const QRect previous = _cursorTrail.damage();
     if (target != _cursorTrail.target || (_hasBlinkingCursor && !_blinkCursorTimer->isActive()))
         resetCursorBlink();
+    if (!_cursorTrailEnabled) {
+        _cursorTrail.reset(target);
+        return;
+    }
     _cursorTrailColor = _cursorColor.isValid() ? _cursorColor : cell.foregroundColor.color(_colorTable);
     // Preserve the current animated position when a second move/CRLF arrives.
     if (_cursorTrailTimer->isActive()) {

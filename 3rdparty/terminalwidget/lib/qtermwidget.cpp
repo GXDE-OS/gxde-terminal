@@ -1001,6 +1001,10 @@ void QTermWidget::setKeyboardCursorShape(KeyboardCursorShape shape)
     m_impl->m_terminalDisplay->setKeyboardCursorShape(shape);
 }
 
+void QTermWidget::setCursorTrailEnabled(bool enabled) {
+    m_impl->m_terminalDisplay->setCursorTrailEnabled(enabled);
+}
+
 void QTermWidget::setBlinkingCursor(bool blink)
 {
     m_impl->m_terminalDisplay->setBlinkingCursor(blink);

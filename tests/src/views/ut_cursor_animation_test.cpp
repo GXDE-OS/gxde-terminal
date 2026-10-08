@@ -13,6 +13,41 @@
 
 using namespace Konsole;
 
+TEST(CursorAnimation, TrailDefaultsOffAndCanBeToggledDuringMovement)
+{
+    Screen screen(100, 200);
+    ScreenWindow window;
+    window.setScreen(&screen);
+    TerminalDisplay display;
+    display.setVTFont(QFont(QStringLiteral("monospace"), 12));
+    display.resize(600, 300);
+    display.setScreenWindow(&window);
+    display.show();
+    display.setFocus();
+    QApplication::processEvents();
+    display.setBlinkingCursor(true);
+    EXPECT_FALSE(display._cursorTrailEnabled);
+    screen.setCursorYX(3, 20);
+    window.notifyOutputChanged();
+    EXPECT_FALSE(display._cursorTrail.active);
+    EXPECT_FALSE(display._cursorTrailTimer->isActive());
+    EXPECT_TRUE(display._blinkCursorTimer->isActive());
+
+    display.setCursorTrailEnabled(true);
+    screen.setCursorYX(5, 5);
+    window.notifyOutputChanged();
+    ASSERT_TRUE(display._cursorTrail.active);
+    ASSERT_TRUE(display._cursorTrailTimer->isActive());
+    display.setCursorTrailEnabled(false);
+    EXPECT_FALSE(display._cursorTrail.active);
+    EXPECT_FALSE(display._cursorTrailTimer->isActive());
+    screen.setCursorYX(7, 30);
+    window.notifyOutputChanged();
+    EXPECT_FALSE(display._cursorTrail.active);
+    EXPECT_EQ(display._cursorTrail.corners.boundingRect(), display._cursorTrail.target);
+    EXPECT_TRUE(display._blinkCursorTimer->isActive());
+}
+
 TEST(CursorAnimation, FirstPositionSnapsButWideGlyphChangesKeepMoving)
 {
     CursorAnimation animation;
@@ -68,6 +103,7 @@ TEST(CursorAnimation, DisplayStopsOnHiddenCursorFocusLossAndHide)
     ScreenWindow window;
     window.setScreen(&screen);
     TerminalDisplay display;
+    display.setCursorTrailEnabled(true);
     display.setVTFont(QFont(QStringLiteral("monospace"), 12));
     display.resize(600, 300);
     display.setScreenWindow(&window);
@@ -133,6 +169,7 @@ TEST(CursorAnimation, DisplayStopsOnHiddenCursorFocusLossAndHide)
 TEST(CursorAnimation, CursorPaintingPreservesOpacityAndAllShapesFade)
 {
     TerminalDisplay display;
+    display.setCursorTrailEnabled(true);
     display.setVTFont(QFont(QStringLiteral("monospace"), 12));
     display.show();
     display.setFocus();
@@ -172,6 +209,7 @@ TEST(CursorAnimation, TerminalInputMovesWrapsAndReturnsContinuously)
     emulation.setImageSize(100, 60);
     ScreenWindow *window = emulation.createWindow();
     TerminalDisplay display;
+    display.setCursorTrailEnabled(true);
     display.setVTFont(QFont(QStringLiteral("monospace"), 12));
     display.resize(720, 400);
     display.setScreenWindow(window);
@@ -204,7 +242,7 @@ TEST(CursorAnimation, TerminalInputMovesWrapsAndReturnsContinuously)
     const QRectF lineEnd = display._cursorTrail.target;
     feed("\r\n\x1b[2 q"); // A shell can reassert its cursor style at every prompt.
     ASSERT_TRUE(display._cursorTrail.active);
-    EXPECT_EQ(display._cursorTrail.target.left(), 0);
+    EXPECT_EQ(display._cursorTrail.target.left(), display.contentsRect().left() + display._leftMargin);
     EXPECT_EQ(display._cursorTrail.target.top(), lineEnd.top() + display._fontHeight);
     EXPECT_EQ(display._cursorTrail.corners.boundingRect(), lineEnd);
     display._cursorTrail.advance(0.016);
@@ -228,7 +266,7 @@ TEST(CursorAnimation, TerminalInputMovesWrapsAndReturnsContinuously)
     feed("ab");
     ASSERT_TRUE(display._cursorTrail.active);
     EXPECT_EQ(display._cursorTrail.target.top(), beforeWrap.top() + display._fontHeight);
-    EXPECT_EQ(display._cursorTrail.target.left(), display._fontWidth);
+    EXPECT_EQ(display._cursorTrail.target.left(), display.contentsRect().left() + display._leftMargin + display._fontWidth);
     EXPECT_EQ(display._cursorTrail.corners.boundingRect(), beforeWrap);
 }
 
@@ -253,6 +291,7 @@ TEST(CursorAnimation, BottomNewlineScrollsPixelsAndAlternateScreenDoesNot)
     emulation.setImageSize(100, 80);
     ScreenWindow *window = emulation.createWindow();
     TerminalDisplay display;
+    display.setCursorTrailEnabled(true);
     display.setVTFont(QFont(QStringLiteral("monospace"), 12));
     display.resize(640, 300);
     display.setScreenWindow(window);

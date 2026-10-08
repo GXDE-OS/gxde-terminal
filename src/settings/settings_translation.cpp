@@ -19,6 +19,8 @@ void GenerateSettingTranslate()
     qDebug() << "GenerateSettingTranslate start";
     auto advanced_cursor_auto_copy_selectionText = QObject::tr("Copy on select");
     Q_UNUSED(advanced_cursor_auto_copy_selectionText);
+    auto advanced_cursor_cursor_trailText = QObject::tr("Cursor trail animation");
+    Q_UNUSED(advanced_cursor_cursor_trailText);
     auto advanced_cursor_cursor_blinkText = QObject::tr("Cursor blink");
     Q_UNUSED(advanced_cursor_cursor_blinkText);
     auto advanced_cursor_cursor_shapeName = QObject::tr("Cursor style");
