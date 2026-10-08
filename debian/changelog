@@ -1,3 +1,9 @@
+gxde-terminal (7.0.6) unstable; urgency=medium
+
+  * users may now toggle cursor trail animation. Defaulting to OFF.
+
+ -- CharOfString <root@charofstring.cc>  Thu, 08 Oct 2026 00:34:56 -0500
+
 gxde-terminal (7.0.5) unstable; urgency=medium
 
   [ CharOfString ]
