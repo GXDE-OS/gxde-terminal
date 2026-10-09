@@ -1,3 +1,9 @@
+gxde-terminal (7.0.7) unstable; urgency=medium
+
+  * Fixed issue of terminal not launching for terminal=true
+
+ -- CharOfString <root@charofstring.cc>  Fri, 09 Oct 2026 15:43:11 -0500
+
 gxde-terminal (7.0.6) unstable; urgency=medium
 
   * users may now toggle cursor trail animation. Defaulting to OFF.
