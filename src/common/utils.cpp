@@ -388,7 +388,8 @@ void Utils::parseCommandLine(QStringList arguments, TermProperties &Properties, 
     QCommandLineOption optWindowState({ "m", "window-mode" },
                                       QString(QObject::tr("Set the window mode on starting") + " (normal, maximum, fullscreen, splitscreen)"),
                                       "state-mode");
-    QCommandLineOption optExecute({ "e", "execute" },
+    // -x 兼容 gnome-terminal 风格：GXDE 启动 Terminal=true 的应用时使用 `gxde-terminal -x <cmd>`
+    QCommandLineOption optExecute({ "e", "x", "execute" },
                                   QObject::tr("Execute a command in the terminal"),
                                   "command");
     QCommandLineOption optScript({ "C", "run-script" },
@@ -479,6 +480,7 @@ QStringList Utils::parseExecutePara(QStringList &arguments)
 
     QVector<QString> keys;
     keys << "-e"
+         << "-x"
          << "--execute";
     keys << "-h"
          << "--help";
@@ -495,6 +497,11 @@ QStringList Utils::parseExecutePara(QStringList &arguments)
          << "--run-script";
     QString opt = "-e";
     int index = arguments.indexOf(opt);
+    if (-1 == index) {
+        qCDebug(common) << "Trying -x option";
+        opt = "-x";
+        index = arguments.indexOf(opt);
+    }
     if (-1 == index) {
         qCDebug(common) << "Trying --execute option";
         opt = "--execute";
@@ -570,6 +577,7 @@ QStringList Utils::parseExecutePara(QStringList &arguments)
             arguments.removeAt(startIndex);
         }
         arguments.removeOne("-e");
+        arguments.removeOne("-x");
         arguments.removeOne("--execute");
         qCInfo(common) << "Remove the arguments after '-e',the arguments :" << arguments;
     }

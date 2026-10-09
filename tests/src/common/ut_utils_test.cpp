@@ -367,6 +367,13 @@ TEST_F(UT_Utils_Test, parseExecutePara)
     appArguments << "deepin-terminal" << "-e" << "bash -c 'ping 127.0.0.1 -c 5'";
     paraList = Utils::parseExecutePara(appArguments);
     EXPECT_EQ(paraList.size(), 3);
+
+    // Terminal=true 的应用由桌面以 `gxde-terminal -x <cmd> <args...>` 启动
+    appArguments.clear();
+    appArguments << "deepin-terminal" << "-x" << "htop" << "-d" << "10";
+    paraList = Utils::parseExecutePara(appArguments);
+    EXPECT_EQ(paraList, QStringList({"htop", "-d", "10"}));
+    EXPECT_EQ(appArguments, QStringList({"deepin-terminal"}));
 }
 
 TEST_F(UT_Utils_Test, parseNestedQString)
