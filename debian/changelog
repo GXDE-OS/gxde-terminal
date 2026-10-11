@@ -1,4 +1,4 @@
-gxde-terminal (7.0.8) unstable; urgency=medium
+gxde-terminal (7.0.7.1) unstable; urgency=medium
 
   [ shenmo ]
   * Fixed V5 remote connections not showing up on the first launch after
@@ -17,8 +17,9 @@ gxde-terminal (7.0.8) unstable; urgency=medium
   * With translucency enabled the titlebar, tab bar and window buttons are now
     slightly deeper than the terminal area, matching V5. At full opacity the
     header is left untouched so that no seam appears.
-  * Theme cards now mock the prompt up as gxde@linux instead of the leftover
-    dde@linux from Deepin Terminal.
+  * Theme previews now use GXDE branding instead of the leftover Deepin Terminal
+    strings: dde@linux and hyde@hyde-PC both became gxde@linux, and the sample
+    command installs gxde-terminal instead of deepin-terminal.
   * debuginfod is off by default and no longer exposed in the settings menu, so
     fresh installs stop exporting DEBUGINFOD_URLS to every shell.
 
