@@ -78,6 +78,10 @@ DWIDGET_USE_NAMESPACE
 // 定义雷神窗口边缘,接近边缘光标变化图标
 #define QUAKE_EDGE 5
 
+// 半透明模式（不透明度 < 100%）下标题栏背景色的压暗比例。
+// QColor::darker() 的入参：100 为不变，数值越大越暗，110 约为 9% 的压暗。
+#define HEADER_DARKEN_FACTOR 110
+
 // Edition helpers
 static inline bool isCommunityEdition()
 {
@@ -217,7 +221,21 @@ void MainWindow::initUI()
             DGuiApplicationHelper::instance()->setPaletteType(themeType);
         }
 
-        background.setAlphaF(settings->opacity());
+        // 标题栏（含标签栏和窗口按钮）用主题背景色，半透明时比终端区域“略微深一些”
+        // （参考 GXDE Terminal v5 的观感）。旧版把标题栏背景画在窗口背景之上，等于同一
+        // 层背景色叠了一次：
+        //   a' = 1 - (1 - a)^2
+        // 所以标题栏实际更实、更深。这里沿用同样的思路，并把颜色本身也压暗一点点，
+        // 免得纯黑主题（如内置 Dark）因为叠加看不出变化。
+        // 不透明度为 100%（即没开半透明）时不作处理，否则标题栏和终端之间会有色差。
+        const qreal opacity = settings->opacity();
+        QColor headerBackground = background;
+        if (opacity < 1.0) {
+            headerBackground = headerBackground.darker(HEADER_DARKEN_FACTOR);
+            headerBackground.setAlphaF(1.0 - (1.0 - opacity) * (1.0 - opacity));
+        } else {
+            headerBackground.setAlphaF(1.0);
+        }
 
         QStringList tabRgb = scheme.value("Tab/Color", scheme.value("Foreground/Color")).toStringList();
         const QColor accent = tabRgb.size() == 3
@@ -225,25 +243,25 @@ void MainWindow::initUI()
             : QColor("#2ca7f8");
 
         QPalette tabPalette = m_tabbar->palette();
-        tabPalette.setColor(QPalette::Window, background);
+        tabPalette.setColor(QPalette::Window, headerBackground);
         tabPalette.setColor(QPalette::Highlight, accent);
         transitionPalette(m_tabbar, tabPalette);
         m_tabbar->update();
 
         for (auto button : m_tabbar->findChildren<DIconButton *>()) {
-            button->setProperty("gxdeWindowButtonTheme", background.lightnessF() > 0.5 ? "light" : "dark");
+            button->setProperty("gxdeWindowButtonTheme", headerBackground.lightnessF() > 0.5 ? "light" : "dark");
             button->update();
         }
         for (QWidget *header : {static_cast<QWidget *>(titlebar()), static_cast<QWidget *>(m_titleBar)}) {
             if (!header)
                 continue;
             QPalette colors = header->palette();
-            colors.setColor(QPalette::Window, background);
-            colors.setColor(QPalette::Base, background);
-            colors.setColor(QPalette::Button, background);
+            colors.setColor(QPalette::Window, headerBackground);
+            colors.setColor(QPalette::Base, headerBackground);
+            colors.setColor(QPalette::Button, headerBackground);
             transitionPalette(header, colors);
             for (auto button : header->findChildren<DIconButton *>()) {
-                button->setProperty("gxdeWindowButtonTheme", background.lightnessF() > 0.5 ? "light" : "dark");
+                button->setProperty("gxdeWindowButtonTheme", headerBackground.lightnessF() > 0.5 ? "light" : "dark");
                 button->update();
             }
             header->update();
