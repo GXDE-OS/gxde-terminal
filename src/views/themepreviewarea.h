@@ -76,13 +76,13 @@ private:
     //主题风格区域
     QRectF  m_titleRect;
     //预览字符串 ps1
-    QString m_ps1String = "hyde@hyde-PC";
+    QString m_ps1String = "gxde@linux";
     //预览字符串 ps2
     QString m_ps2String = "~/Desktop ";
     //预览字符串 前景色字符
     QString m_foregroundLeftString = ":";
     //预览字符串 前景色字符串
-    QString m_foregroundRightString = "$  sudo  apt  install  deepin-terminal";
+    QString m_foregroundRightString = "$  sudo  apt  install  gxde-terminal";
 
     //背景色
     QColor m_backgroundColor = QColor(248, 248, 248);
