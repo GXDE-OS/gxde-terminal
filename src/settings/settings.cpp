@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2019 ~ 2026 Uniontech Software Technology Co.,Ltd
+// Copyright (C) 2019 ~ 2026 Uniontech Software Technology Co.,Ltd
 // SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -782,12 +782,16 @@ bool Settings::disableControlFlow(void)
 
 bool Settings::enableDebuginfod()
 {
-    return settings->option("advanced.debuginfod.enable_debuginfod")->value().toBool();
+    // debuginfod 已从设置界面移除，并改为默认关闭；
+    // default-config.json 里不再有这一项，option() 会返回空，这里做兜底返回 false。
+    QPointer<DSettingsOption> option = settings->option("advanced.debuginfod.enable_debuginfod");
+    return option ? option->value().toBool() : false;
 }
 
 QString Settings::debuginfodUrls()
 {
-    return settings->option("advanced.debuginfod.debuginfod_urls")->value().toString();
+    QPointer<DSettingsOption> option = settings->option("advanced.debuginfod.debuginfod_urls");
+    return option ? option->value().toString() : QString();
 }
 
 bool Settings::allowOSC52() const

@@ -457,24 +457,6 @@
                             "default": "false"
                         }
                     ]
-                },
-                {
-                    "key": "debuginfod",
-                    "name": "Debuginfod",
-                    "options": [
-                        {
-                            "key": "enable_debuginfod",
-                            "text": "The HTTP file server used for transmitting debugging information resources",
-                            "type": "checkbox",
-                            "default": "true"
-                        },
-                        {
-                            "key": "debuginfod_urls",
-                            "name": "debuginfod URLs",
-                            "type": "lineedit",
-                            "default": "https://debuginfod.deepin.com"
-                        }
-                    ]
                 }
             ]
         }
