@@ -55,7 +55,7 @@ protected:
             painter.drawText(x, 21, text);
             x += metrics.horizontalAdvance(text);
         };
-        part("dde@linux", colors.value("host"));
+        part("gxde@linux", colors.value("host"));
         part(":", colors.value("foreground"));
         part("~/Theme", colors.value("path"));
         part("$ _", colors.value("foreground"));
