@@ -665,3 +665,19 @@ QStringList USettings::childGroups()
     }
     return childGroups;
 }
+
+QStringList USettings::childKeys()
+{
+    // qDebug() << "Enter USettings::childKeys";
+    QStringList childKeys = QSettings::childKeys();
+    for (QString &key : childKeys) {
+        key.replace(SLASH_REPLACE_CHAR, '/');
+    }
+    return childKeys;
+}
+
+void USettings::sync()
+{
+    // qDebug() << "Enter USettings::sync";
+    QSettings::sync();
+}

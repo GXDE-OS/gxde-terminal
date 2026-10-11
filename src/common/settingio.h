@@ -143,6 +143,15 @@ public:
      * @return
      */
     QStringList childGroups();
+    /**
+     * @brief Returns a list of all keys directly under the current group.
+     * @return 当前分组下的键名列表
+     */
+    QStringList childKeys();
+    /**
+     * @brief Writes any unsaved changes to permanent storage.
+     */
+    void sync();
 
 private:
     //自定义规则

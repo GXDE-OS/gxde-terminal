@@ -9,8 +9,12 @@
 #include "utils.h"
 
 #include <QDebug>
-#include <QTextCodec>
+#include <QDateTime>
+#include <QFile>
+#include <QFileInfo>
 #include <QLoggingCategory>
+#include <QSet>
+#include <QTextCodec>
 
 #undef signals
 #include <libsecret/secret.h>
@@ -24,10 +28,145 @@ struct PasswordReBack {
     QString userName;
     QString address;
     QString port;
-    // 是否已尝试过旧版（com.deepin.terminal.password）的密码 schema
-    bool triedOld = false;
+    // 已经尝试过的旧版密码 schema 个数（0：新版 1：旧版带端口 2：旧版不带端口）
+    int triedLegacy = 0;
 };
 
+namespace {
+
+//! 旧版 GXDE Terminal（master 分支，Vala 实现）的远程管理配置目录，
+//! 相对于 XDG 配置目录，即 ~/.config/deepin/gxde-terminal。
+const char *const LEGACY_SERVER_CONFIG_SUBDIR = "deepin/gxde-terminal";
+
+//! 旧版数据导入完成的标记文件。导入是一次性动作：导入完成后再写入这个标记，
+//! 之后即使用户在新版里删除了某个从旧版导入的连接，它也不会被再次带回来。
+const char *const LEGACY_IMPORT_FLAG_FILE = "server-config.conf.legacy-imported";
+
+//! 返回旧版 server-config.conf 的候选路径（存在才返回）
+QStringList legacyServerConfigFiles()
+{
+    QStringList result;
+    const QString configHome = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+    if (configHome.isEmpty())
+        return result;
+
+    const QString path = QDir(configHome).filePath(
+                             QString::fromLatin1(LEGACY_SERVER_CONFIG_SUBDIR)
+                             + QDir::separator() + QStringLiteral("server-config.conf"));
+    if (QFileInfo::exists(path))
+        result << path;
+    return result;
+}
+
+//! 分组名的唯一标识：user@host@port。新版分组名是四段式
+//! （user@host@port@name），旧版是三段式，用前三段判断是否同一个连接。
+QString serverIdentity(const QString &groupName)
+{
+    const QStringList parts = groupName.split(QLatin1Char('@'));
+    if (parts.count() >= OLD_VERTIONCOUNT)
+        return parts.mid(0, OLD_VERTIONCOUNT).join(QLatin1Char('@'));
+    return groupName;
+}
+
+//! 一个待导入的旧版分组
+struct LegacyGroup {
+    QString name;
+    QMap<QString, QVariant> values;
+};
+
+/*!
+ * \brief 导入旧版 GXDE Terminal（5.x/Vala 版）的远程管理数据
+ *
+ * 旧版把远程连接保存在 ~/.config/deepin/gxde-terminal/server-config.conf，
+ * 而本版（dtk6）读取的是 AppConfigLocation 下的 server-config.conf
+ * （~/.config/gxde/gxde-terminal/server-config.conf）。两者路径不同，
+ * 旧数据因此完全无法被识别。
+ *
+ * 这里把旧文件中「本版还没有」的连接合并进目标文件：
+ *  - 按 user@host@port 判断是否已经存在，已存在的不动（不覆盖用户在新版中的修改）；
+ *  - 解析逻辑本身兼容旧版三段式分组名，合并后会自动转换成新版格式；
+ *  - 用标记文件保证只导入一次，用户在新版里删掉的连接不会复活。
+ */
+void importLegacyServerConfig(const QString &targetPath)
+{
+    const QString targetDirPath = QFileInfo(targetPath).absolutePath();
+    const QString flagPath = QDir(targetDirPath).filePath(QString::fromLatin1(LEGACY_IMPORT_FLAG_FILE));
+
+    const QStringList legacyFiles = legacyServerConfigFiles();
+    if (legacyFiles.isEmpty()) {
+        qCDebug(remotemanage) << "no legacy server config found";
+        return;
+    }
+
+    if (QFileInfo::exists(flagPath)) {
+        qCDebug(remotemanage) << "legacy server config already imported, flag:" << flagPath;
+        return;
+    }
+
+    // 先只读地收集需要导入的分组,不要在没有任何旧数据时创建空的 server-config.conf
+    QList<LegacyGroup> pending;
+    {
+        USettings target(targetPath);
+        QSet<QString> knownIdentities;
+        for (const QString &group : target.childGroups())
+            knownIdentities.insert(serverIdentity(group));
+
+        for (const QString &legacyPath : legacyFiles) {
+            USettings legacy(legacyPath);
+            for (const QString &group : legacy.childGroups()) {
+                const QString identity = serverIdentity(group);
+                if (knownIdentities.contains(identity)) {
+                    qCDebug(remotemanage) << "legacy server already present, skip:" << group;
+                    continue;
+                }
+
+                LegacyGroup item;
+                item.name = group;
+                legacy.beginGroup(group);
+                const QStringList keys = legacy.childKeys();
+                for (const QString &key : keys)
+                    item.values.insert(key, legacy.value(key));
+                legacy.endGroup();
+
+                knownIdentities.insert(identity);
+                pending.append(item);
+            }
+        }
+    }
+
+    if (pending.isEmpty()) {
+        qCDebug(remotemanage) << "no legacy server needs to be imported";
+    } else {
+        qCInfo(remotemanage) << "importing" << pending.count() << "legacy server(s) to" << targetPath;
+        USettings target(targetPath);
+        for (const LegacyGroup &item : pending) {
+            target.beginGroup(item.name);
+            for (auto it = item.values.cbegin(); it != item.values.cend(); ++it)
+                target.setValue(it.key(), it.value());
+            target.endGroup();
+            qCInfo(remotemanage) << "imported legacy server:" << item.name;
+        }
+        target.sync();
+    }
+
+    // 写入失败时不落标记，下次启动还会再试一次。
+    if (!QFileInfo::exists(targetPath)) {
+        qCWarning(remotemanage) << "target server config was not written:" << targetPath;
+        return;
+    }
+
+    QFile flagFile(flagPath);
+    if (flagFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        flagFile.write(QDateTime::currentDateTime().toString(Qt::ISODate).toUtf8());
+        flagFile.close();
+    } else {
+        qCWarning(remotemanage) << "failed to write legacy import flag:" << flagPath;
+    }
+
+    qCInfo(remotemanage) << "legacy server config import finished, imported groups:" << pending.count();
+}
+
+}   // namespace
 
 ServerConfigManager *ServerConfigManager::m_instance = nullptr;
 
@@ -197,35 +336,23 @@ void ServerConfigManager::initServerConfig()
     //---------------------------------------------------------------------------//
     qDebug() << "Getting server config base path";
     QDir serverConfigBasePath(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    // 注意：这里不能因为目录不存在就直接 return。从旧版 GXDE Terminal（5.x）升级上来时，
+    // 首次启动本版时该目录还不存在（它由 Settings::init() 稍后才创建），而旧版数据
+    // 恰恰需要在这时导入；提前返回会让下面的兼容逻辑变成死代码，用户需要启动两次才能
+    // 看到自己的远程连接。这里直接把目录建出来，继续走导入与解析流程。
     if (!serverConfigBasePath.exists()) {
-        qCDebug(remotemanage) << "server config base path does not exist";
-        return;
+        qCDebug(remotemanage) << "server config base path does not exist, creating it";
+        serverConfigBasePath.mkpath(serverConfigBasePath.absolutePath());
     }
 
     QString serverConfigFilePath(serverConfigBasePath.filePath("server-config.conf"));
     qCInfo(remotemanage) << "load Server Config: " << serverConfigFilePath;
 
-    // 兼容旧版 GXDE Terminal（master 分支，Vala 实现）的远程管理数据。
-    // 旧版配置文件位于 ~/.config/deepin/gxde-terminal/server-config.conf，
-    // 而本版（dtk6）读取路径为 AppConfigLocation 下的 server-config.conf，
-    // 两者路径不同，导致旧数据无法被识别。这里在新文件不存在时，将旧文件迁移过来，
-    // 后续的解析逻辑已兼容旧版的 3 段式分组名（user@host@port）。
-    if (!QFile::exists(serverConfigFilePath)) {
-        QString oldConfigDirPath = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-                                   + QDir::separator() + "deepin" + QDir::separator() + "gxde-terminal";
-        QString oldConfigFilePath = oldConfigDirPath + QDir::separator() + "server-config.conf";
-        if (QFile::exists(oldConfigFilePath)) {
-            qCInfo(remotemanage) << "old server config found at" << oldConfigFilePath << ", migrating...";
-            if (!serverConfigBasePath.exists()) {
-                serverConfigBasePath.mkpath(serverConfigBasePath.absolutePath());
-            }
-            if (QFile::copy(oldConfigFilePath, serverConfigFilePath)) {
-                qCInfo(remotemanage) << "old server config migrated to" << serverConfigFilePath;
-            } else {
-                qCWarning(remotemanage) << "failed to migrate old server config";
-            }
-        }
-    }
+    // 兼容旧版 GXDE Terminal（master 分支，Vala 实现）的远程管理数据：
+    // 旧版配置在 ~/.config/deepin/gxde-terminal/server-config.conf，本版读取
+    // AppConfigLocation 下的同名文件，路径不同导致旧数据无法被识别。
+    // 导入后的解析逻辑本身就兼容旧版的三段式分组名（user@host@port）。
+    importLegacyServerConfig(serverConfigFilePath);
 
     if (!QFile::exists(serverConfigFilePath)) {
         qCDebug(remotemanage) << "server config file does not exist";
@@ -640,19 +767,27 @@ static void on_password_lookup(GObject *source, GAsyncResult *result, gpointer u
         /* password will be null, if no matching password found */
         // 密码回调
         qCInfo(remotemanage) << "password is Null server name : " << reback->key;
-        // 兼容旧版 GXDE Terminal（master 分支）的密码：旧版使用
+        // 兼容旧版 GXDE Terminal（master 分支，Vala 实现）保存的密码：旧版使用
         // com.deepin.terminal.password 前缀，本版使用 com.gxde.terminal.password。
-        // 新前缀查不到时，回退到旧前缀再查一次。
-        if (!reback->triedOld) {
-            reback->triedOld = true;
-            QString oldSchemaName = QString("com.deepin.terminal.password.%1.%2.%3")
-                                        .arg(reback->userName).arg(reback->address).arg(reback->port);
-            const SecretSchema *oldScheme =
-                secret_schema_new(oldSchemaName.toUtf8().data(), SECRET_SCHEMA_NONE,
+        // 新前缀查不到时，依次回退到旧前缀的两种形式：
+        //   1) com.deepin.terminal.password.<user>.<address>.<port>（store_password 写入的形式）
+        //   2) com.deepin.terminal.password.<user>.<address>（无端口时的形式）
+        if (reback->triedLegacy < 2) {
+            const QString legacySchemaName = (0 == reback->triedLegacy)
+                ? QStringLiteral("com.deepin.terminal.password.%1.%2.%3")
+                      .arg(reback->userName, reback->address, reback->port)
+                : QStringLiteral("com.deepin.terminal.password.%1.%2")
+                      .arg(reback->userName, reback->address);
+            ++reback->triedLegacy;
+
+            qCInfo(remotemanage) << "try legacy password schema:" << legacySchemaName;
+            const QByteArray legacySchemaBytes = legacySchemaName.toUtf8();
+            const SecretSchema *legacyScheme =
+                secret_schema_new(legacySchemaBytes.constData(), SECRET_SCHEMA_NONE,
                                    "number", SECRET_SCHEMA_ATTRIBUTE_INTEGER,
                                    "string", SECRET_SCHEMA_ATTRIBUTE_STRING,
                                    "even", SECRET_SCHEMA_ATTRIBUTE_BOOLEAN, NULL);
-            secret_password_lookup(oldScheme, NULL, on_password_lookup, reback,
+            secret_password_lookup(legacyScheme, NULL, on_password_lookup, reback,
                                    "number", 8,
                                    "string", "eight",
                                    "even", TRUE,
