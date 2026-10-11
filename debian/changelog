@@ -1,3 +1,29 @@
+gxde-terminal (7.0.8) unstable; urgency=medium
+
+  [ shenmo ]
+  * Fixed V5 remote connections not showing up on the first launch after
+    upgrading. The legacy import sat behind an early return that fired whenever
+    the new config directory did not exist yet, so it never ran on a fresh 7.x
+    start and users had to launch the terminal twice. Legacy entries are now
+    merged by user@host@port, so configs that were already partly migrated also
+    get their missing connections back, and a one-shot flag keeps connections
+    deleted in 7.x from reappearing.
+  * Fall back to both legacy libsecret password schemas
+    (com.deepin.terminal.password.<user>.<host>.<port> and
+    com.deepin.terminal.password.<user>.<host>).
+  * Restored the GXDE Terminal 5.x built-in colour schemes that were lost in the
+    dtk6 rewrite: argonaut, dracula, gruvbox dark/light, one dark/light, the
+    tomorrow night family and more, 46 in total.
+  * With translucency enabled the titlebar, tab bar and window buttons are now
+    slightly deeper than the terminal area, matching V5. At full opacity the
+    header is left untouched so that no seam appears.
+  * Theme cards now mock the prompt up as gxde@linux instead of the leftover
+    dde@linux from Deepin Terminal.
+  * debuginfod is off by default and no longer exposed in the settings menu, so
+    fresh installs stop exporting DEBUGINFOD_URLS to every shell.
+
+ -- shenmo <shenmo@spark-app.store>  Sun, 11 Oct 2026 12:20:01 +0800
+
 gxde-terminal (7.0.7) unstable; urgency=medium
 
   * Fixed issue of terminal not launching for terminal=true
