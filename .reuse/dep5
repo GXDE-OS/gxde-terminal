@@ -97,3 +97,54 @@ Copyright: 2026 GXDE Terminal contributors
 License: GPL-3.0-or-later
 Comment: Kitty protocol and reference implementation by Kovid Goyal and contributors.
  See THIRD_PARTY_NOTICES.md for upstream attribution and source revision.
+
+
+# GXDE Terminal 5.x (Vala) 内置主题配色，随 dtk6 版本恢复（原样移植，仅转换为 Konsole 配色格式）
+Files: 3rdparty/terminalwidget/lib/color-schemes/aci.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/aco.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/argonaut.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/azu.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/bim.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/breeze.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/cai.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/chalk.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/dracula.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/elementary.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/elic.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/elio.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/empathy.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/flat.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/freya.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/gruvbox dark.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/gruvbox light.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/hemisu dark.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/hemisu light.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/hybrid.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/jup.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/mar.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/material.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/miu.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/monokai dark.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/nep.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/ocean dark.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/one dark.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/one light.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/pali.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/peppermint.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/sat.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/shel.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/smyck.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/solarized dark.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/solarized light.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/tango.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/tin.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/tomorrow night blue.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/tomorrow night bright.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/tomorrow night eighties.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/tomorrow night.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/tomorrow.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/ura.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/vag.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/white wind.colorscheme
+Copyright: 2011-2022 GXDE Terminal contributors
+License: GPL-3.0-or-later
