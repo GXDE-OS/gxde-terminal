@@ -174,8 +174,8 @@ TermWidget::TermWidget(const TermProperties &properties, QWidget *parent) : QTer
     // 按键滚动
     setPressingScroll(Settings::instance()->PressingScroll());
 
-    // 使用固定的最小尺寸，支持无限分屏
-    setMinimumSize(MIN_WIDTH, MIN_HEIGHT);
+    // 不再限制终端最小尺寸，以支持无限分屏
+    setMinimumSize(0, 0);
 
     QString currentEnvLanguage = Utils::getCurrentEnvLanguage();
     // 判断是维吾尔语或者藏语时
@@ -903,32 +903,8 @@ void TermWidget::setDeleteMode(const EraseMode &deleteMode)
 bool TermWidget::canSplit(Qt::Orientation ori)
 {
     qCDebug(views) << "CanSplit:" << ori;
-    QSplitter *splitter = qobject_cast<QSplitter *>(this->parentWidget());
-    int minimumSize = ori == Qt::Horizontal ? TermWidget::MIN_WIDTH : TermWidget::MIN_HEIGHT;
-    if (splitter) {
-        if (splitter->orientation() == ori) {
-            QList<int> sizes = splitter->sizes();
-            // new term has same size portion as the current one.
-            sizes.append(sizes.at(splitter->indexOf(this)));
-
-            double sum = 0;
-            for (int i = 0; i < sizes.count(); i++) {
-                sum += sizes.at(i);
-            }
-
-            for (int i = 0; i < sizes.count(); i++) {
-                int totalSize = ori == Qt::Horizontal ? splitter->width() : splitter->height();
-                int actualSize = (totalSize) * (sizes.at(i) / sum);
-                if (actualSize < minimumSize)
-                    return false;
-            }
-        } else {
-            int splitterSize = ori == Qt::Horizontal ? splitter->width() : splitter->height();
-            if (splitterSize / 2.0 < minimumSize)
-                return false;
-        }
-    }
-
+    // 分屏次数不再受限，始终允许分屏
+    Q_UNUSED(ori)
     return true;
 }
 

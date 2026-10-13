@@ -191,6 +191,7 @@ public:
 
     /**
      * @brief 判断当前是否可以分屏
+     * @note 分屏次数不再受限，始终允许分屏，参数仅为兼容旧调用保留
      * @param ori 分屏方向
      * @return true 可以分屏 / false 不可以分屏
      */
@@ -462,10 +463,6 @@ private:
     QString m_remotePassword;
     //是否准备远程
     bool m_remotePasswordIsReady = false;
-
-    // 9:6 ratio for minimum terminal size
-    static const int MIN_WIDTH = 180;
-    static const int MIN_HEIGHT = 120;
 };
 
 #endif  // TERMWIDGET_H
