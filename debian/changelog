@@ -1,3 +1,10 @@
+gxde-terminal (7.0.8) UNRELEASED; urgency=medium
+
+  * feat: 支持横/纵分屏超过2个
+  * feat: 支持设置终端壁纸
+
+ -- gfdgd_xi <3025613752@qq.com>  Wed, 14 Oct 2026 18:22:45 +0800
+
 gxde-terminal (7.0.7.1) unstable; urgency=medium
 
   [ shenmo ]
