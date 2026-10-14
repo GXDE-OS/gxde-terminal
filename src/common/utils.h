@@ -218,6 +218,13 @@ public:
      * @return
      */
     static QStringList showFilesSelectDialog(QWidget *widget);
+    /**
+     * @brief 显示图片文件选择对话框，用于设置终端背景图片
+     * @author gxde
+     * @param widget 父窗口
+     * @return 选择的图片路径，取消选择时返回空字符串
+     */
+    static QString showImageFileDialog(QWidget *widget);
 
     /**
      * @brief 显示退出确认对话框

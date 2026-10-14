@@ -23,6 +23,7 @@
 #include <QStandardPaths>
 #include <QStringList>
 #include <QFontDatabase>
+#include <QFileInfo>
 #include <QLoggingCategory>
 #include <QCollator>
 #include <QProcessEnvironment>
@@ -374,7 +375,7 @@ void Settings::initConnection()
     qCDebug(tsettings) << "Initializing connections";
     connect(settings, &Dtk::Core::DSettings::valueChanged, this, [ = ](const QString & key, const QVariant & value) {
         Q_UNUSED(value)
-        if (key.contains("basic.interface.") || key.contains("advanced.cursor.") || key.contains("advanced.scroll.") || key.contains("advanced.shell.")) {
+        if (key.contains("basic.interface.") || key.contains("advanced.cursor.") || key.contains("advanced.scroll.") || key.contains("advanced.shell.") || key.contains("advanced.window.background_image")) {
             qCDebug(tsettings) << "Terminal setting changed:" << key;
             emit terminalSettingChanged(key);
         } else if (key.contains("shortcuts.")) {
@@ -481,6 +482,28 @@ int Settings::QuakeDuration() const
 {
     const int step = settings->option("advanced.window.quake_window_animation_duration")->data("step").toInt();
     return settings->option("advanced.window.quake_window_animation_duration")->value().toInt() * step;
+}
+
+QString Settings::backgroundImage() const
+{
+    qCDebug(tsettings) << "Getting background image path";
+    if (DSettingsOption *opt = settings->option("advanced.window.background_image"))
+        return opt->value().toString();
+    return QString();
+}
+
+bool Settings::hasBackgroundImage() const
+{
+    // 已设置背景图片且图片文件存在
+    const QString imagePath = backgroundImage();
+    return !imagePath.isEmpty() && QFileInfo::exists(imagePath);
+}
+
+void Settings::setBackgroundImage(const QString &path)
+{
+    qCDebug(tsettings) << "Setting background image path:" << path;
+    if (DSettingsOption *opt = settings->option("advanced.window.background_image"))
+        opt->setValue(path);
 }
 QString Settings::encoding() const
 {

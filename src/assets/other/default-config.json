@@ -437,6 +437,12 @@
                             "max": 450,
                             "min": 100,
                             "default": 9
+                        },
+                        {
+                            "key": "background_image",
+                            "hide": true,
+                            "reset": false,
+                            "default": ""
                         }
                     ]
                 },

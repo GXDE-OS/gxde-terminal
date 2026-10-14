@@ -584,6 +584,11 @@ void QTermWidget::setTerminalBackgroundImage(QString backgroundImage)
     m_impl->m_terminalDisplay->setBackgroundImage(backgroundImage);
 }
 
+void QTermWidget::setTerminalBackgroundArea(QWidget *areaWidget)
+{
+    m_impl->m_terminalDisplay->setBackgroundAreaWidget(areaWidget);
+}
+
 void QTermWidget::setShellProgram(const QString &progname)
 {
     if (!m_impl->m_session)

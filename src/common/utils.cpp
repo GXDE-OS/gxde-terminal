@@ -8,6 +8,7 @@
 #include "termwidget.h"
 #include "dbusmanager.h"
 #include "qtcompat.h"
+#include "settings.h"
 
 #include <DLog>
 #include <DMessageBox>
@@ -183,6 +184,39 @@ QStringList Utils::showFilesSelectDialog(QWidget *widget)
 
     qCDebug(common) << "File selection canceled";
     return QStringList();
+}
+
+QString Utils::showImageFileDialog(QWidget *widget)
+{
+    qCDebug(common) << "Showing image file selection dialog";
+    // 默认打开当前背景图片所在目录，未设置时打开用户主目录
+    QString curPath = QDir::homePath();
+    const QString currentImage = Settings::instance()->backgroundImage();
+    if (!currentImage.isEmpty() && QFileInfo::exists(currentImage))
+        curPath = QFileInfo(currentImage).absolutePath();
+
+    QString dlgTitle = QObject::tr("Select background image");
+
+    DFileDialog dialog(widget, dlgTitle, curPath);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setNameFilter(QObject::tr("Image files (*.png *.jpg *.jpeg *.bmp *.gif *.webp *.svg);;All files (*)"));
+    dialog.setLabelText(QFileDialog::Accept, QObject::tr("Select"));
+
+    int code = dialog.exec();
+    if (QDialog::Accepted != code) {
+        qCDebug(common) << "Image file selection canceled";
+        return QString();
+    }
+
+    const QStringList selectedFiles = dialog.selectedFiles();
+    if (selectedFiles.isEmpty() || !QFileInfo::exists(selectedFiles.first())) {
+        qCDebug(common) << "No valid image file selected";
+        return QString();
+    }
+
+    qCDebug(common) << "Selected image file:" << selectedFiles.first();
+    return selectedFiles.first();
 }
 
 bool Utils::showExitConfirmDialog(CloseType type, int count)

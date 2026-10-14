@@ -163,6 +163,13 @@ public:
     void setEncode(const QString &encode);
 
     /**
+     * @brief 更新壁纸铺满的区域(所在页)，分屏后整页共用一张壁纸，
+     *        各终端只绘制区域中属于自己的部分
+     * @author gxde
+     */
+    void updateBackgroundArea();
+
+    /**
      * @brief 获取远程管理的编码
      * @author ut000610 daizhengwen
      * @return

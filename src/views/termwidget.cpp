@@ -93,6 +93,11 @@ TermWidget::TermWidget(const TermProperties &properties, QWidget *parent) : QTer
         setTerminalOpacity(Settings::instance()->opacity());
     }
     /********************* Modify by ut000610 daizhengwen End ************************/
+    // 设置终端背景图片
+    if (Settings::instance()->hasBackgroundImage())
+        setTerminalBackgroundImage(Settings::instance()->backgroundImage());
+    // 壁纸按所在页(整窗)铺满：分屏后依旧是一个大壁纸在窗口底部，各分屏只绘制自己的部分
+    updateBackgroundArea();
     //setScrollBarPosition(QTermWidget::ScrollBarRight);//commend byq nyq
 
     /******** Modify by n014361 wangpeili 2020-01-13:              ****************/
@@ -446,6 +451,13 @@ TermWidgetPage *TermWidget::parentPage()
 {
     // qCDebug(views) << "Enter TermWidget::parentPage";
     return  m_page;
+}
+
+void TermWidget::updateBackgroundArea()
+{
+    // qCDebug(views) << "Enter TermWidget::updateBackgroundArea";
+    // 壁纸铺满所在页(整窗)，分屏后各终端只绘制区域中属于自己的部分
+    setTerminalBackgroundArea(parentPage());
 }
 
 void TermWidget::onTitleArgsChange(QString key, QString value)
@@ -1209,6 +1221,13 @@ void TermWidget::onSettingValueChanged(const QString &keyName)
     if ("basic.interface.opacity" == keyName) {
         qCDebug(views) << "Enter TermWidget::onSettingValueChanged: basic.interface.opacity";
         setTermOpacity(Settings::instance()->opacity());
+        return;
+    }
+
+    if ("advanced.window.background_image" == keyName) {
+        qCDebug(views) << "Enter TermWidget::onSettingValueChanged: advanced.window.background_image";
+        // 背景图片路径为空时清除背景图
+        setTerminalBackgroundImage(Settings::instance()->backgroundImage());
         return;
     }
 

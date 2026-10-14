@@ -823,14 +823,94 @@ void TerminalDisplay::setBackgroundImage(QString backgroundImage)
 {
     if (!backgroundImage.isEmpty())
     {
-        _backgroundImage.load(backgroundImage);
-        setAttribute(Qt::WA_OpaquePaintEvent, false);
+        _backgroundImageSource.load(backgroundImage);
+        if (_backgroundImageSource.isNull()) {
+            // 图片加载失败时，恢复为无背景图状态
+            _backgroundImageSource = QPixmap();
+            _backgroundImage = QPixmap();
+            setAttribute(Qt::WA_OpaquePaintEvent, true);
+        } else {
+            updateBackgroundImage();
+            setAttribute(Qt::WA_OpaquePaintEvent, false);
+        }
     }
     else
     {
+        _backgroundImageSource = QPixmap();
         _backgroundImage = QPixmap();
         setAttribute(Qt::WA_OpaquePaintEvent, true);
     }
+
+    // 背景图变化后必须整体重绘：
+    // paintEvent 中绘制背景图时会被裁剪到更新区域，若不主动触发整部件重绘，
+    // 只有光标闪烁等局部刷新的一小块区域会更新（表现为主区域不刷新，调整窗口大小才刷新）
+    update();
+}
+
+void TerminalDisplay::setBackgroundAreaWidget(QWidget *areaWidget)
+{
+    if (_backgroundAreaWidget.data() == areaWidget)
+        return;
+
+    _backgroundAreaWidget = areaWidget;
+    // 区域变化后重新计算本终端对应的壁纸部分并重绘
+    _bgCacheValid = false;
+    if (!_backgroundImageSource.isNull())
+        update();
+}
+
+void TerminalDisplay::updateBackgroundImage()
+{
+    if (_backgroundImageSource.isNull()) {
+        _backgroundImage = QPixmap();
+        _bgCacheValid = false;
+        return;
+    }
+
+    const QSize widgetSize = size();
+    if (widgetSize.width() <= 0 || widgetSize.height() <= 0) {
+        // 终端尚未完成布局，先使用原始尺寸
+        _backgroundImage = _backgroundImageSource;
+        _bgCacheValid = false;
+        return;
+    }
+
+    // 壁纸铺满的区域：分屏后整个页面(窗口)共用一张壁纸，各终端只绘制属于自己的部分，
+    // 实现"分屏后依旧是一个大壁纸在窗口底部"。几何信息实时获取，布局变化后自动同步。
+    QSize areaSize = widgetSize;
+    QPoint areaOffset;
+    if (_backgroundAreaWidget) {
+        areaSize = _backgroundAreaWidget->size();
+        // 本终端在区域中的偏移
+        areaOffset = mapTo(_backgroundAreaWidget.data(), QPoint(0, 0));
+    }
+
+    // 几何信息未变化时沿用已计算的图片，避免每次重绘都重新缩放
+    if (_bgCacheValid && _bgCacheAreaSize == areaSize && _bgCacheAreaOffset == areaOffset
+            && _bgCacheSelfSize == widgetSize)
+        return;
+
+    // 保持宽高比缩放至覆盖整个区域，居中裁剪
+    QPixmap areaImage = _backgroundImageSource.scaled(areaSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    if (areaImage.size() != areaSize)
+        areaImage = areaImage.copy(qMax(0, (areaImage.width() - areaSize.width()) / 2),
+                                   qMax(0, (areaImage.height() - areaSize.height()) / 2),
+                                   areaSize.width(), areaSize.height());
+
+    if (areaOffset.isNull() && areaSize == widgetSize) {
+        // 未分屏：区域即自身，整幅即所需
+        _backgroundImage = areaImage;
+    } else {
+        // 分屏：截取本终端对应的部分(越界时裁剪，容忍布局过渡期)
+        QRect srcRect(areaOffset, widgetSize);
+        srcRect = srcRect.intersected(areaImage.rect());
+        _backgroundImage = srcRect.isEmpty() ? QPixmap() : areaImage.copy(srcRect);
+    }
+
+    _bgCacheValid = true;
+    _bgCacheAreaSize = areaSize;
+    _bgCacheAreaOffset = areaOffset;
+    _bgCacheSelfSize = widgetSize;
 }
 
 void TerminalDisplay::drawBackground(QPainter& painter, const QRect& rect, const QColor& backgroundColor, bool useOpacitySetting )
@@ -838,7 +918,12 @@ void TerminalDisplay::drawBackground(QPainter& painter, const QRect& rect, const
         // The whole widget rectangle is filled by the background color from
         // the color scheme set in setColorTable(), while the scrollbar is
         // left to the widget style for a consistent look.
-        if ( HAVE_TRANSPARENCY && qAlpha(_blendColor) < 0xff && useOpacitySetting )
+        if ( HAVE_TRANSPARENCY && useOpacitySetting && !_backgroundImage.isNull() )
+        {
+            // 设置了背景图片时，背景图已在 paintEvent 中绘制，此处不再填充背景色，
+            // 避免不透明背景色覆盖背景图
+        }
+        else if ( HAVE_TRANSPARENCY && qAlpha(_blendColor) < 0xff && useOpacitySetting )
         {
             if (_backgroundImage.isNull()) {
                 QColor color(backgroundColor);
@@ -1631,11 +1716,16 @@ void TerminalDisplay::paintEvent( QPaintEvent* pe )
 {
   QPainter paint(this);
 
-  if ( !_backgroundImage.isNull() && qAlpha(_blendColor) < 0xff )
+  // 背景图：分屏时按所在页整幅绘制，各终端只取属于自己的部分（几何信息变化时才重新计算）
+  if (!_backgroundImageSource.isNull())
+      updateBackgroundImage();
+
+  if ( !_backgroundImage.isNull() )
   {
     paint.drawPixmap(0, 0, _backgroundImage);
+    // 叠加一层终端背景色，保证背景图上的文字可读性（不透明度不超过70%，背景图仍可见）
     QColor background = _colorTable[DEFAULT_BACK_COLOR].color;
-    background.setAlpha(qAlpha(_blendColor));
+    background.setAlpha(qMin(qAlpha(_blendColor), 0xB3));
     paint.fillRect(contentsRect(), background);
   }
 

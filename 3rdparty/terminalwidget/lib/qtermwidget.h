@@ -104,6 +104,12 @@ public:
     QFont getTerminalFont();
     void setTerminalOpacity(qreal level);
     void setTerminalBackgroundImage(QString backgroundImage);
+    /**
+     * @brief 设置壁纸铺满的区域部件(通常是终端所在页)。
+     *        分屏后整页共用一张壁纸：壁纸按该区域大小缩放，各终端只绘制属于自己的部分。
+     *        传入 nullptr 时退化为按终端自身大小缩放。
+     */
+    void setTerminalBackgroundArea(QWidget *areaWidget);
 
     // environment
     void setEnvironment(const QStringList &environment);

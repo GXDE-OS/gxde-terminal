@@ -440,6 +440,31 @@ inline void MainWindow::slotOptionButtonPressed()
     //选中当前的主题项
     qCDebug(mainprocess) << "Checking current theme item";
     checkThemeItem();
+
+    //刷新背景图片菜单项的勾选状态
+    if (backgroundImageAction)
+        backgroundImageAction->setChecked(Settings::instance()->hasBackgroundImage());
+}
+
+void MainWindow::slotSetBackgroundImage(bool checked)
+{
+    qCDebug(mainprocess) << "Enter MainWindow::slotSetBackgroundImage, checked:" << checked;
+    if (!checked) {
+        // 取消勾选，清除背景图片
+        Settings::instance()->setBackgroundImage(QString());
+        return;
+    }
+
+    // 勾选，弹出图片选择框
+    const QString imagePath = Utils::showImageFileDialog(this);
+    if (imagePath.isEmpty()) {
+        // 取消选择，恢复未勾选状态
+        backgroundImageAction->setChecked(false);
+        return;
+    }
+
+    // 保存配置，通过设置变化通知所有终端生效
+    Settings::instance()->setBackgroundImage(imagePath);
 }
 
 inline void MainWindow::slotClickNewWindowTimeout()
@@ -515,6 +540,15 @@ void MainWindow::initOptionMenu()
             m_menu->addAction(pluginMenu);
         }
     }
+
+    qCDebug(mainprocess) << "Creating background image action";
+    // 设置终端背景图片，与旧版终端一致放在右上角菜单中，勾选状态表示当前是否设置了背景图片
+    m_menu->addSeparator();
+    backgroundImageAction = new QAction(tr("Set background image"), this);
+    backgroundImageAction->setCheckable(true);
+    backgroundImageAction->setChecked(Settings::instance()->hasBackgroundImage());
+    connect(backgroundImageAction, &QAction::triggered, this, &MainWindow::slotSetBackgroundImage);
+    m_menu->addAction(backgroundImageAction);
 
     qCDebug(mainprocess) << "Creating settings action";
     QAction *settingAction(new QAction(tr("Settings"), this));

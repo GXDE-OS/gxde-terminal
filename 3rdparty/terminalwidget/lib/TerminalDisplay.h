@@ -131,6 +131,15 @@ public:
     void setBackgroundImage(QString backgroundImage);
 
     /**
+     * Sets the widget that the background image is laid out to fill.
+     * When the terminal is split, all terminals of the page share one background
+     * image: the image is scaled to the area widget and each terminal only draws
+     * the portion that belongs to it.
+     * If null, the background image is scaled to the display itself.
+     */
+    void setBackgroundAreaWidget(QWidget *areaWidget);
+
+    /**
      * Specifies whether the terminal display has a vertical scroll bar, and if so whether it
      * is shown on the left or right side of the display.
      */
@@ -714,6 +723,8 @@ private:
     // will be drawn fully opaque
     void drawBackground(QPainter& painter, const QRect& rect, const QColor& color,
                         bool useOpacitySetting);
+    // 将原始背景图按当前终端大小缩放(保持比例居中裁剪，覆盖整个终端区域)
+    void updateBackgroundImage();
     // draws the cursor character
     void drawCursor(QPainter& painter, const QRect& rect , const QColor& foregroundColor,
                                        const QColor& backgroundColor , bool& invertColors);
@@ -905,6 +916,15 @@ private:
     QRgb _blendColor;
 
     QPixmap _backgroundImage;
+    // 背景图的原始尺寸，窗口大小变化时据此重新缩放
+    QPixmap _backgroundImageSource;
+    // 壁纸铺满的区域部件(通常是所在页)，分屏时整页共用一张壁纸
+    QPointer<QWidget> _backgroundAreaWidget;
+    // 上次计算壁纸部分时的几何信息缓存，避免每次重绘都重新缩放
+    QSize _bgCacheAreaSize;
+    QPoint _bgCacheAreaOffset;
+    QSize _bgCacheSelfSize;
+    bool _bgCacheValid = false;
 
     // list of filters currently applied to the display.  used for links and
     // search highlight

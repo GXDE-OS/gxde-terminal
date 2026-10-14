@@ -292,6 +292,11 @@
         <translation>设置</translation>
     </message>
     <message>
+        <location filename="../src/main/mainwindow.cpp" line="547"/>
+        <source>Set background image</source>
+        <translation>设置窗口背景</translation>
+    </message>
+    <message>
         <location filename="../src/main/mainwindow.cpp" line="931"/>
         <source>Cancel</source>
         <comment>button</comment>
@@ -1475,6 +1480,21 @@
         <source>OK</source>
         <comment>button</comment>
         <translation>确 定</translation>
+    </message>
+    <message>
+        <location filename="../src/common/utils.cpp" line="198"/>
+        <source>Select background image</source>
+        <translation>选择背景图片</translation>
+    </message>
+    <message>
+        <location filename="../src/common/utils.cpp" line="203"/>
+        <source>Image files (*.png *.jpg *.jpeg *.bmp *.gif *.webp *.svg);;All files (*)</source>
+        <translation>图片文件 (*.png *.jpg *.jpeg *.bmp *.gif *.webp *.svg);;所有文件 (*)</translation>
+    </message>
+    <message>
+        <location filename="../src/common/utils.cpp" line="204"/>
+        <source>Select</source>
+        <translation>选择</translation>
     </message>
 </context>
 </TS>

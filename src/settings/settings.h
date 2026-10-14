@@ -62,6 +62,24 @@ public:
      */
     int cursorShape() const;
     /**
+     * @brief 获取设置的终端背景图片路径，为空表示未设置
+     * @author gxde
+     * @return
+     */
+    QString backgroundImage() const;
+    /**
+     * @brief 当前是否设置了有效的终端背景图片（已设置且文件存在）
+     * @author gxde
+     * @return true 已设置 / false 未设置
+     */
+    bool hasBackgroundImage() const;
+    /**
+     * @brief 设置终端背景图片路径，为空表示清除背景图片
+     * @author gxde
+     * @param path 图片路径
+     */
+    void setBackgroundImage(const QString &path);
+    /**
      * @brief 设置界面获取光标闪烁属性
      * @author ut001121 zhangmeng
      * @return

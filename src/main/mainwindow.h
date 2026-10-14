@@ -611,6 +611,12 @@ protected slots:
     void slotNewWindowActionTriggered();
     void slotClickNewWindowTimeout();
     void slotOptionButtonPressed();
+    /**
+     * @brief 右上角菜单设置/清除终端背景图片
+     * @author gxde
+     * @param checked 勾选为设置背景图片，取消勾选为清除背景图片
+     */
+    void slotSetBackgroundImage(bool checked);
 
     void slotFileChanged();
     void slotLastTermClosed(const QString &identifier);
@@ -930,6 +936,9 @@ public:
 
     //当前勾选的菜单主题快捷键
     QAction         *currCheckThemeAction   = nullptr;
+
+    //右上角菜单中的终端背景图片设置项，勾选表示已设置背景图片
+    QAction         *backgroundImageAction  = nullptr;
 
     //用于保存identifier/TermWidgetPage键值对的map
     QMap<QString, TermWidgetPage *> m_termWidgetPageMap;
