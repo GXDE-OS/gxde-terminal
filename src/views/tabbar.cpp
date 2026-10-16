@@ -325,16 +325,19 @@ void TermTabStyle::drawControl(ControlElement element, const QStyleOption *optio
         return;
     }
     painter->save();
-    const bool light = tab->palette.color(QPalette::Window).lightnessF() > 0.5;
     const bool selected = tab->state & State_Selected;
     const bool hover = tab->state & State_MouseOver;
     auto bar = qobject_cast<const TabBar *>(tab->styleObject);
     if (!bar && widget)
         bar = qobject_cast<const TabBar *>(widget->parentWidget());
+    //颜色取自标签栏自身的调色板（随终端配色更新，与下划线一致），
+    //option中的调色板来自DTabBar内部标签栏，带的是系统强调色
+    const QPalette &palette = bar ? bar->palette() : tab->palette;
+    const bool light = palette.color(QPalette::Window).lightnessF() > 0.5;
     const auto closeButton = bar
         ? dynamic_cast<GxdeTabCloseButton *>(bar->tabButton(tab->row, QTabBar::RightSide)) : nullptr;
     const qreal hoverProgress = closeButton ? closeButton->hoverProgress() : (hover ? 1.0 : 0.0);
-    const QColor accent = tab->palette.color(QPalette::Highlight);
+    const QColor accent = palette.color(QPalette::Highlight);
     const QColor separator = light ? QColor(0, 0, 0, 13) : QColor(255, 255, 255, 13);
     if (element != CE_TabBarTabLabel) {
         if (hoverProgress > 0.0 && !selected) {
@@ -350,10 +353,14 @@ void TermTabStyle::drawControl(ControlElement element, const QStyleOption *optio
         const QString id = tab->styleObject
             ? tab->styleObject->property(QByteArray::number(tab->row)).toString() : QString();
         QColor text = light ? QColor(0, 0, 0, 204) : QColor(255, 255, 255, 204);
+        //配色指定了未选中标签页的文字颜色时直接使用
+        const QColor inactiveText = bar ? bar->property("gxdeInactiveTabTextColor").value<QColor>() : QColor();
         if (selected)
             text = accent;
         else if (m_tabStatusMap.value(id) == TabTextColorStatus_Changed)
             text = QColor("#ff9600");
+        else if (inactiveText.isValid())
+            text = inactiveText;
         else
             text.setAlphaF(0.8 + 0.2 * hoverProgress);
         const QFont font = widget ? widget->font() : QApplication::font();
@@ -1286,7 +1293,8 @@ void TabBar::removeNeedChangeTextColor(const QString &tabIdentifier)
     TermTabStyle *style = qobject_cast<TermTabStyle *>(this->style());
     if (style) {
         style->setTabStatusMap(m_tabStatusMap);
-        style->polish(this);
+        //只需重绘，不要polish：polish会让系统样式重置调色板，冲掉按终端配色设置的标签栏颜色
+        update();
     }
 }
 
@@ -1301,7 +1309,8 @@ void TabBar::setChangeTextColor(const QString &tabIdentifier)
         qCDebug(views) << "Branch: Style is not null";
         style->setTabTextColor(color);
         style->setTabStatusMap(m_tabStatusMap);
-        style->polish(this);
+        //只需重绘，不要polish：polish会让系统样式重置调色板，冲掉按终端配色设置的标签栏颜色
+        update();
     }
     //fix bug 53782程序运行完后，标签页字体颜色未变色
     this->update();
@@ -1322,7 +1331,8 @@ void TabBar::setClearTabColor(const QString &tabIdentifier)
     if (style) {
         qCDebug(views) << "Branch: Style is not null";
         style->setTabStatusMap(m_tabStatusMap);
-        style->polish(this);
+        //只需重绘，不要polish：polish会让系统样式重置调色板，冲掉按终端配色设置的标签栏颜色
+        update();
     }
 }
 

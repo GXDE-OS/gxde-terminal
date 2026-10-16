@@ -83,4 +83,5 @@ Description=Catppuccin Latte
 Opacity=1
 
 [Tab]
-Color=114,135,253
+Color=220,138,120
+InactiveColor=76,79,105

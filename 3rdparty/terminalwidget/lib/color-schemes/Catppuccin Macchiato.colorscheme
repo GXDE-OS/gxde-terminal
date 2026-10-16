@@ -83,4 +83,5 @@ Description=Catppuccin Macchiato
 Opacity=1
 
 [Tab]
-Color=183,189,248
+Color=244,219,214
+InactiveColor=202,211,245

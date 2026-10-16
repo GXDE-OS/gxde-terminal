@@ -83,4 +83,5 @@ Description=Catppuccin Mocha
 Opacity=1
 
 [Tab]
-Color=180,190,254
+Color=245,224,220
+InactiveColor=205,214,244

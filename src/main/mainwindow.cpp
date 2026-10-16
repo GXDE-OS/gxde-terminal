@@ -241,6 +241,12 @@ void MainWindow::initUI()
         const QColor accent = tabRgb.size() == 3
             ? QColor(tabRgb.at(0).toInt(), tabRgb.at(1).toInt(), tabRgb.at(2).toInt())
             : QColor("#2ca7f8");
+        // 未选中标签页的文字颜色，配色未指定时由标签栏按深浅色使用默认颜色
+        const QStringList inactiveTabRgb = scheme.value("Tab/InactiveColor").toStringList();
+        const QColor inactiveTabText = inactiveTabRgb.size() == 3
+            ? QColor(inactiveTabRgb.at(0).toInt(), inactiveTabRgb.at(1).toInt(), inactiveTabRgb.at(2).toInt())
+            : QColor();
+        m_tabbar->setProperty("gxdeInactiveTabTextColor", inactiveTabText);
 
         QPalette tabPalette = m_tabbar->palette();
         tabPalette.setColor(QPalette::Window, headerBackground);

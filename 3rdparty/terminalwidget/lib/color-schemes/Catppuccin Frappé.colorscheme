@@ -83,4 +83,5 @@ Description=Catppuccin Frappé
 Opacity=1
 
 [Tab]
-Color=186,187,241
+Color=242,213,207
+InactiveColor=198,208,245
