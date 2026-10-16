@@ -158,3 +158,9 @@ Files: 3rdparty/terminalwidget/lib/color-schemes/Catppuccin Frappé.colorscheme
 Copyright: 2021 Catppuccin
 License: MIT
 Comment: Colours from catppuccin/palette v1.8.0. See THIRD_PARTY_NOTICES.md for upstream attribution.
+
+# Nord 配色，按 Nord 官方 Konsole 移植（nordtheme/konsole）的终端配色映射
+Files: 3rdparty/terminalwidget/lib/color-schemes/Nord.colorscheme
+Copyright: 2016-present Sven Greb <development@svengreb.de>
+License: MIT
+Comment: Colours from nordtheme/konsole. See THIRD_PARTY_NOTICES.md for upstream attribution.

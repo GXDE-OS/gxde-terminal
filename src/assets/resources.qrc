@@ -21,6 +21,7 @@
         <file alias="gxde-colors/GreenOnBlack.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/GreenOnBlack.colorscheme</file>
         <file alias="gxde-colors/Light.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Light.colorscheme</file>
         <file alias="gxde-colors/Linux.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Linux.colorscheme</file>
+        <file alias="gxde-colors/Nord.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Nord.colorscheme</file>
         <file alias="gxde-colors/Solarized.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Solarized.colorscheme</file>
         <file alias="gxde-colors/SolarizedLight.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/SolarizedLight.colorscheme</file>
         <file alias="gxde-colors/Tango.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Tango.colorscheme</file>
