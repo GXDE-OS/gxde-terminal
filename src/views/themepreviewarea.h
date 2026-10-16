@@ -11,6 +11,7 @@
 
 #include <QWidget>
 #include <QPen>
+#include <QVector>
 
 
 DWIDGET_USE_NAMESPACE
@@ -64,6 +65,13 @@ public:
      * @param ps2ColorParameter ps2颜色
      */
     void setAllColorParameter(const QColor &foregroundColorParameter, const QColor &backgroundColorParameter, const QColor &ps1ColorParameter, const QColor &ps2ColorParameter);
+    /**
+     * @brief 设置ANSI颜色
+     * @author gxde
+     * @param index 颜色序号，0~7为普通色(Color0~Color7)，8~15为高亮色(Color0Intense~Color7Intense)
+     * @param color 颜色
+     */
+    void setAnsiColor(int index, const QColor &color);
 
 protected:
     /**
@@ -94,6 +102,8 @@ private:
     QColor m_ps2Color = QColor(52, 101, 164);
     //预览主题风格图片
     QPixmap m_titlePixmap = QPixmap(":/logo/headbar-light.svg");
+    //16种ANSI颜色，0~7为普通色，8~15为高亮色
+    QVector<QColor> m_ansiColors = QVector<QColor>(16);
 
 };
 

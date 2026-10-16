@@ -258,6 +258,12 @@ private:
     DLabel *m_ps2ColorLabel = nullptr;
     //提示符PS2按钮
     ColorPushButton *m_ps2Button = nullptr;
+    //普通色标签
+    DLabel *m_normalColorLabel = nullptr;
+    //高亮色标签
+    DLabel *m_intenseColorLabel = nullptr;
+    //16种ANSI颜色按钮，0~7为普通色(Color0~Color7)，8~15为高亮色(Color0Intense~Color7Intense)
+    QList<ColorPushButton *> m_ansiColorButtons;
 
 };
 

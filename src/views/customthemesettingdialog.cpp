@@ -30,6 +30,36 @@
 
 Q_DECLARE_LOGGING_CATEGORY(views)
 
+//提示符PS1、PS2实际修改的是高亮绿(Color2Intense)、高亮蓝(Color4Intense)对应的ANSI颜色序号
+static const int PS1_ANSI_INDEX = 10;
+static const int PS2_ANSI_INDEX = 12;
+
+/**
+ * @brief ANSI颜色序号对应的主题配置项
+ * @param index 0~7为普通色(Color0~Color7)，8~15为高亮色(Color0Intense~Color7Intense)
+ */
+static QString ansiColorKey(int index)
+{
+    if (index < 8)
+        return QString("Color%1/Color").arg(index);
+    return QString("Color%1Intense/Color").arg(index - 8);
+}
+
+/**
+ * @brief 读取自定义主题配置中的颜色
+ * @param key 配置项
+ * @param defaultColor 配置不存在或格式错误时使用的颜色
+ */
+static QColor readThemeColor(const QString &key, const QColor &defaultColor)
+{
+    const QStringList strList = Settings::instance()->themeSetting->value(key).toStringList();
+    qCInfo(views) << key << "color list number: " << strList.size();
+    if (strList.size() != 3)
+        return defaultColor;
+
+    return QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt());
+}
+
 TitleStyleRadioButton::TitleStyleRadioButton(const QString &text, QWidget *parent): DRadioButton(text, parent)
 {
     // qDebug() << "Enter TitleStyleRadioButton::TitleStyleRadioButton";
@@ -204,7 +234,7 @@ CustomThemeSettingDialog::CustomThemeSettingDialog(QWidget *parent) : DAbstractD
         }
     });
 #else
-    setFixedSize(459, 378);
+    setFixedSize(459, 468);
 #endif
     qCDebug(views) << "CustomThemeSettingDialog constructor finished";
 }
@@ -398,6 +428,45 @@ void CustomThemeSettingDialog::initUI()
     ps1AndPs2Layout->addWidget(m_ps2Button);
     ps1AndPs2Layout->addStretch();
 
+    m_normalColorLabel = new DLabel(tr("Normal colors:"));
+    m_intenseColorLabel = new DLabel(tr("Bright colors:"));
+    const QStringList colorNames = {
+        tr("Black"),
+        tr("Red"),
+        tr("Green"),
+        tr("Yellow"),
+        tr("Blue"),
+        tr("Magenta"),
+        tr("Cyan"),
+        tr("White")
+    };
+
+    DLabel *ansiColorLabels[2] = {m_normalColorLabel, m_intenseColorLabel};
+    QWidget *ansiColorFrames[2] = {new QWidget, new QWidget};
+    for (int row = 0; row < 2; ++row) {
+        QHBoxLayout *ansiColorLayout = new QHBoxLayout;
+        ansiColorLayout->setContentsMargins(0, 0, 0, 0);
+        ansiColorFrames[row]->setLayout(ansiColorLayout);
+
+        DFontSizeManager::instance()->bind(ansiColorLabels[row], DFontSizeManager::T6, QFont::Normal);
+        ansiColorLabels[row]->setFixedWidth(114);
+
+        QHBoxLayout *ansiButtonsLayout = new QHBoxLayout;
+        ansiButtonsLayout->setSpacing(4);
+        ansiButtonsLayout->setContentsMargins(0, 0, 0, 0);
+        for (int column = 0; column < 8; ++column) {
+            ColorPushButton *colorButton = new ColorPushButton(this);
+            colorButton->setFixedSize(34, 34);
+            colorButton->setToolTip(0 == row ? colorNames[column] : tr("Bright %1").arg(colorNames[column]));
+            ansiButtonsLayout->addWidget(colorButton);
+            m_ansiColorButtons.append(colorButton);
+        }
+
+        ansiColorLayout->addWidget(ansiColorLabels[row]);
+        ansiColorLayout->addLayout(ansiButtonsLayout);
+        ansiColorLayout->addStretch();
+    }
+
     contentLayout->addSpacing(14);
     contentLayout->addWidget(m_themePreviewArea);
     contentLayout->addSpacing(28);
@@ -406,6 +475,10 @@ void CustomThemeSettingDialog::initUI()
     contentLayout->addWidget(foregroundAndBackgroundFrame);
     contentLayout->addSpacing(14);
     contentLayout->addWidget(ps1AndPs2Frame);
+    contentLayout->addSpacing(14);
+    contentLayout->addWidget(ansiColorFrames[0]);
+    contentLayout->addSpacing(8);
+    contentLayout->addWidget(ansiColorFrames[1]);
     contentLayout->addSpacing(18);
 
     contentFrame->setLayout(contentLayout);
@@ -421,6 +494,14 @@ void CustomThemeSettingDialog::initUI()
     connect(m_backgroundButton, &ColorPushButton::clearFocussSignal, this, &CustomThemeSettingDialog::clearFocussSlot);
     connect(m_ps1Button, &ColorPushButton::clearFocussSignal, this, &CustomThemeSettingDialog::clearFocussSlot);
     connect(m_ps2Button, &ColorPushButton::clearFocussSignal, this, &CustomThemeSettingDialog::clearFocussSlot);
+
+    QWidget *prevWidget = m_ps2Button;
+    for (ColorPushButton *colorButton : m_ansiColorButtons) {
+        connect(colorButton, &DPushButton::clicked, this, &CustomThemeSettingDialog::onSelectColor);
+        connect(colorButton, &ColorPushButton::clearFocussSignal, this, &CustomThemeSettingDialog::clearFocussSlot);
+        setTabOrder(prevWidget, colorButton);
+        prevWidget = colorButton;
+    }
 
     loadConfiguration();
     qCDebug(views) << "CustomThemeSettingDialog::initUI() finished";
@@ -514,11 +595,9 @@ void CustomThemeSettingDialog::addCancelConfirmButtons()
 
         Settings::instance()->themeSetting->setValue("Foreground/Color", Settings::instance()->color2str(m_foregroundButton->getBackGroundColor()));
         Settings::instance()->themeSetting->setValue("Background/Color", Settings::instance()->color2str(m_backgroundButton->getBackGroundColor()));
-        //仅仅修改参数 "Color2Intense/Color"与"Color4Intense/Color"为了保证python脚本取色RGB正常显示使用的固定不变，跟终端的所有主题都保持一致。此处代码暂时保留
-        //Settings::instance()->themeSetting->setValue("Color2/Color", Settings::instance()->color2str(m_ps1Button->getBackGroundColor()));
-        Settings::instance()->themeSetting->setValue("Color2Intense/Color", Settings::instance()->color2str(m_ps1Button->getBackGroundColor()));
-        //Settings::instance()->themeSetting->setValue("Color4/Color", Settings::instance()->color2str(m_ps2Button->getBackGroundColor()));
-        Settings::instance()->themeSetting->setValue("Color4Intense/Color", Settings::instance()->color2str(m_ps2Button->getBackGroundColor()));
+        //保存16种ANSI颜色，提示符PS1、PS2即其中的Color2Intense、Color4Intense，选色时已与对应按钮保持同步
+        for (int i = 0; i < m_ansiColorButtons.size(); ++i)
+            Settings::instance()->themeSetting->setValue(ansiColorKey(i), Settings::instance()->color2str(m_ansiColorButtons[i]->getBackGroundColor()));
 
         Settings::instance()->m_customThemeModify = true;
         accept();
@@ -544,11 +623,27 @@ void CustomThemeSettingDialog::onSelectColor()
             if (pushButton == m_backgroundButton)
                 m_themePreviewArea->setBackgroundColor(newColor);
 
+            int ansiIndex = m_ansiColorButtons.indexOf(pushButton);
             if (pushButton == m_ps1Button)
-                m_themePreviewArea->setPs1Color(newColor);
+                ansiIndex = PS1_ANSI_INDEX;
 
             if (pushButton == m_ps2Button)
+                ansiIndex = PS2_ANSI_INDEX;
+
+            if (PS1_ANSI_INDEX == ansiIndex) {
+                m_ps1Button->setBackGroundColor(newColor);
+                m_themePreviewArea->setPs1Color(newColor);
+            }
+
+            if (PS2_ANSI_INDEX == ansiIndex) {
+                m_ps2Button->setBackGroundColor(newColor);
                 m_themePreviewArea->setPs2Color(newColor);
+            }
+
+            if (ansiIndex >= 0) {
+                m_ansiColorButtons[ansiIndex]->setBackGroundColor(newColor);
+                m_themePreviewArea->setAnsiColor(ansiIndex, newColor);
+            }
         }
     }
 }
@@ -570,6 +665,10 @@ void CustomThemeSettingDialog::clearFocussSlot()
     m_backgroundButton->m_isFocus = false;
     m_ps1Button->m_isFocus = false;
     m_ps2Button->m_isFocus = false;
+    for (ColorPushButton *colorButton : m_ansiColorButtons) {
+        colorButton->clearFocus();
+        colorButton->m_isFocus = false;
+    }
 
     m_logoIcon->setFocus();
 }
@@ -621,59 +720,31 @@ void CustomThemeSettingDialog::loadConfiguration()
         m_darkRadioButton->setChecked(true);
     }
 
-    QColor foregroundColorParameter;
-    QSettings themeSetting(Settings::instance()->m_configCustomThemePath, QSettings::IniFormat);
-    QPalette palette;
-    QStringList strList = Settings::instance()->themeSetting->value("Foreground/Color").toStringList();
-
-    qCInfo(views) << "Foreground color list number: " << strList.size();
-    if (strList.size() != 3) {
-        palette.setColor(DPalette::Window, QColor(0, 255, 0));
-        foregroundColorParameter = QColor(0, 255, 0);
-    } else {
-        palette.setColor(DPalette::Window, QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt()));
-        foregroundColorParameter = QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt());
-    }
+    const QColor foregroundColorParameter = readThemeColor("Foreground/Color", QColor(0, 255, 0));
     m_foregroundButton->setBackGroundColor(foregroundColorParameter);
 
-    QColor backgroundColorParameter;
-    strList.clear();
-    strList = Settings::instance()->themeSetting->value("Background/Color").toStringList();
-    qCInfo(views) << "Background color list number: " << strList.size();
-    if (strList.size() != 3) {
-        palette.setColor(DPalette::Window, QColor(37, 37, 37));
-        backgroundColorParameter = QColor(37, 37, 37);
-    } else {
-        palette.setColor(DPalette::Window, QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt()));
-        backgroundColorParameter = QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt());
-    }
+    const QColor backgroundColorParameter = readThemeColor("Background/Color", QColor(37, 37, 37));
     m_backgroundButton->setBackGroundColor(backgroundColorParameter);
 
-    QColor ps1ColorParameter;
-    strList.clear();
-    strList = Settings::instance()->themeSetting->value("Color2Intense/Color").toStringList();
-    qCInfo(views) << "Color2Intense color list number: " << strList.size();
-    if (strList.size() != 3) {
-        palette.setColor(DPalette::Window, QColor(133, 153, 0));
-        ps1ColorParameter = QColor(133, 153, 0);
-    } else {
-        palette.setColor(DPalette::Window, QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt()));
-        ps1ColorParameter = QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt());
-    }
+    const QColor ps1ColorParameter = readThemeColor(ansiColorKey(PS1_ANSI_INDEX), QColor(133, 153, 0));
     m_ps1Button->setBackGroundColor(ps1ColorParameter);
 
-    QColor ps2ColorParameter;
-    strList.clear();
-    strList = Settings::instance()->themeSetting->value("Color4Intense/Color").toStringList();
-    qCInfo(views) << "Color4Intense color list number: " << strList.size();
-    if (strList.size() != 3) {
-        palette.setColor(DPalette::Window, QColor(52, 101, 164));
-        ps2ColorParameter = QColor(52, 101, 164);
-    } else {
-        palette.setColor(DPalette::Window, QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt()));
-        ps2ColorParameter = QColor(strList[0].toInt(), strList[1].toInt(), strList[2].toInt());
-    }
+    const QColor ps2ColorParameter = readThemeColor(ansiColorKey(PS2_ANSI_INDEX), QColor(52, 101, 164));
     m_ps2Button->setBackGroundColor(ps2ColorParameter);
+
+    for (int i = 0; i < m_ansiColorButtons.size(); ++i) {
+        QColor ansiColor;
+        if (PS1_ANSI_INDEX == i) {
+            ansiColor = ps1ColorParameter;
+        } else if (PS2_ANSI_INDEX == i) {
+            ansiColor = ps2ColorParameter;
+        } else {
+            ansiColor = readThemeColor(ansiColorKey(i), QColor(0, 0, 0));
+        }
+
+        m_ansiColorButtons[i]->setBackGroundColor(ansiColor);
+        m_themePreviewArea->setAnsiColor(i, ansiColor);
+    }
 
     m_themePreviewArea->setAllColorParameter(foregroundColorParameter, backgroundColorParameter, ps1ColorParameter, ps2ColorParameter);
 }

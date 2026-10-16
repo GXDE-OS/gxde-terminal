@@ -158,6 +158,61 @@
         <translation>提示符PS2：</translation>
     </message>
     <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="432"/>
+        <source>Normal colors:</source>
+        <translation>一般顏色：</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="433"/>
+        <source>Bright colors:</source>
+        <translation>高亮顏色：</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="434"/>
+        <source>Black</source>
+        <translation>黑色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="434"/>
+        <source>Red</source>
+        <translation>紅色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="434"/>
+        <source>Green</source>
+        <translation>綠色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="434"/>
+        <source>Yellow</source>
+        <translation>黃色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="435"/>
+        <source>Blue</source>
+        <translation>藍色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="435"/>
+        <source>Magenta</source>
+        <translation>洋紅色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="435"/>
+        <source>Cyan</source>
+        <translation>青色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="435"/>
+        <source>White</source>
+        <translation>白色</translation>
+    </message>
+    <message>
+        <location filename="../src/views/customthemesettingdialog.cpp" line="454"/>
+        <source>Bright %1</source>
+        <translation>高亮%1</translation>
+    </message>
+    <message>
         <location filename="../src/views/customthemesettingdialog.cpp" line="465"/>
         <source>Cancel</source>
         <comment>button</comment>

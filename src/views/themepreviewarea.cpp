@@ -76,6 +76,16 @@ void ThemePreviewArea::paintEvent(QPaintEvent *event)
     painter.drawText(
         QRect(rect.x() + 10 + 90 + 5 + 65, rect.y() + 35 + 10, 230, lineHeight), Qt::AlignLeft | Qt::AlignTop, m_foregroundRightString);
 
+    //绘制16种ANSI颜色色块：上排为普通色，下排为高亮色
+    const int blockWidth = 24;
+    const int blockHeight = 12;
+    for (int i = 0; i < m_ansiColors.size(); ++i) {
+        const QRect blockRect(rect.x() + 10 + (i % 8) * blockWidth,
+            rect.y() + 35 + 10 + lineHeight + 6 + (i / 8) * blockHeight,
+            blockWidth, blockHeight);
+        painter.fillRect(blockRect, m_ansiColors[i]);
+    }
+
     // 边框描线，主要深色主题下标题与窗口分界不明显
     QPainterPath FramePath;
     FramePath.addRoundedRect(QRectF(rect.x(), rect.y(), rect.width(), rect.height()), 8, 8);
@@ -148,3 +158,11 @@ void ThemePreviewArea::setAllColorParameter(const QColor &foregroundColorParamet
     update();
 }
 
+void ThemePreviewArea::setAnsiColor(int index, const QColor &color) {
+    if (index < 0 || index >= m_ansiColors.size()) {
+        return;
+    }
+
+    m_ansiColors[index] = color;
+    update();
+}
