@@ -1,3 +1,11 @@
+gxde-terminal (7.0.9) UNRELEASED; urgency=medium
+
+  * Fixed font config not detecting all monospaced font.
+  * Added a theme setup.
+  * Add following preset: Catppuccin, Nord
+
+ -- CharOfString <root@charofstring.cc>  Fri, 16 Oct 2026 12:04:22 -0500
+
 gxde-terminal (7.0.8) UNRELEASED; urgency=medium
 
   * feat: 支持横/纵分屏超过2个
