@@ -27,7 +27,9 @@ int main(int argc, char *argv[])
     qputenv("QT_QPA_PLATFORM", "offscreen");
     TerminalApplication app(argc, argv);
 
+#ifdef QTEST_DISABLE_KEYPAD_NAVIGATION
     QTEST_DISABLE_KEYPAD_NAVIGATION
+#endif
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QTEST_ADD_GPU_BLACKLIST_SUPPORT
 #endif
