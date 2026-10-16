@@ -110,6 +110,10 @@ public:
      *        传入 nullptr 时退化为按终端自身大小缩放。
      */
     void setTerminalBackgroundArea(QWidget *areaWidget);
+    /**
+     * @brief 是否忽略程序通过 OSC 11 修改默认背景色的请求（如 pywal），查询请求仍会回复
+     */
+    void setIgnoreBackgroundColorRequests(bool ignore);
 
     // environment
     void setEnvironment(const QStringList &environment);

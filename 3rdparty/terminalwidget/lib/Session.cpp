@@ -174,6 +174,9 @@ bool Session::hasDarkBackground() const
 {
     return _hasDarkBackground;
 }
+void Session::setIgnoreBackgroundColorRequests(bool ignore) {
+    _ignoreBackgroundColorRequests = ignore;
+}
 bool Session::isRunning() const
 {
     return _shellProcess->state() == QProcess::Running;
@@ -482,7 +485,7 @@ void Session::setUserTitle( int what, const QString & caption )
         }
     }
 
-    if (what == 11) {
+    if (what == 11 && !_ignoreBackgroundColorRequests) {
         const QString colorString = caption.section(QLatin1Char(';'), 0, 0);
         QColor backColor;
         if (colorString.startsWith(QLatin1String("rgb:"))) {

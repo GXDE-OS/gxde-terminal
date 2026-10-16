@@ -1043,6 +1043,10 @@
         <source>Enable ligatures</source>
         <translation>啟用連字</translation>
     </message>
+    <message>
+        <source>Allow OSC 11 to override the theme background</source>
+        <translation>允許 OSC 11 覆蓋使用者主題背景</translation>
+    </message>
 </context>
 <context>
     <name>QTermWidget</name>

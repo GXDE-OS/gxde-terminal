@@ -589,6 +589,12 @@ void QTermWidget::setTerminalBackgroundArea(QWidget *areaWidget)
     m_impl->m_terminalDisplay->setBackgroundAreaWidget(areaWidget);
 }
 
+void QTermWidget::setIgnoreBackgroundColorRequests(bool ignore) {
+    if (m_impl->m_session) {
+        m_impl->m_session->setIgnoreBackgroundColorRequests(ignore);
+    }
+}
+
 void QTermWidget::setShellProgram(const QString &progname)
 {
     if (!m_impl->m_session)

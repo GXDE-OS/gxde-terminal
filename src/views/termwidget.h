@@ -170,6 +170,15 @@ public:
     void updateBackgroundArea();
 
     /**
+     * @brief 按当前主题和设置决定是否忽略程序（如 pywal）通过 OSC 11 修改背景色：
+     *        选了具体主题且未开启“允许 OSC 11 覆盖用户主题背景”时以主题背景为准，
+     *        跟随系统或开启该设置时保持标准行为
+     * @author gxde
+     * @return true 忽略 / false 接受
+     */
+    bool updateBackgroundColorRequestPolicy();
+
+    /**
      * @brief 获取远程管理的编码
      * @author ut000610 daizhengwen
      * @return

@@ -388,6 +388,13 @@ public:
     bool hasDarkBackground() const;
 
     /**
+     * Sets whether requests from programs to change the default background
+     * colour (OSC 11, e.g. pywal) are ignored. Queries (OSC 11;?) are still
+     * answered with the current background colour.
+     */
+    void setIgnoreBackgroundColorRequests(bool ignore);
+
+    /**
      * Attempts to get the shell program to redraw the current display area.
      * This can be used after clearing the screen, for example, to get the
      * shell to redraw the prompt line.
@@ -644,6 +651,7 @@ private:
     // Color/Font Changes by ESC Sequences
 
     QColor         _modifiedBackground; // as set by: echo -en '\033]11;Color\007
+    bool           _ignoreBackgroundColorRequests = false;
 
     QString        _profileKey;
 

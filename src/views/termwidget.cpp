@@ -127,6 +127,7 @@ TermWidget::TermWidget(const TermProperties &properties, QWidget *parent) : QTer
             Settings::instance()->setColorScheme(theme);
         }
     }
+    updateBackgroundColorRequestPolicy();
 
     // 这个参数启动为默认值UTF-8
     setTextCodec(QTextCodec::codecForName("UTF-8"));
@@ -386,6 +387,7 @@ inline void TermWidget::onThemeTypeChanged(DGuiApplicationHelper::ColorType buil
     // 跟随系统主题时，仅信任 themeTypeChanged 的参数，不再依赖 paletteType 的即时值，
     // 避免两者不同步时内容区与标题栏浅/深不一致。
     const QString expandThemeStr = Settings::instance()->extendColorScheme();
+    updateBackgroundColorRequestPolicy();
 
     // 没有扩展主题：根据当前内建主题 Light/Dark 切换终端配色，并同步保存到设置
     if (expandThemeStr.isEmpty()) {
@@ -458,6 +460,15 @@ void TermWidget::updateBackgroundArea()
     // qCDebug(views) << "Enter TermWidget::updateBackgroundArea";
     // 壁纸铺满所在页(整窗)，分屏后各终端只绘制区域中属于自己的部分
     setTerminalBackgroundArea(parentPage());
+}
+
+bool TermWidget::updateBackgroundColorRequestPolicy() {
+    const bool allowOverride = Settings::instance()->settings->option("basic.interface.osc11_override_theme")->value().toBool();
+    const bool followSystem = Settings::instance()->extendColorScheme().isEmpty()
+        && DGuiApplicationHelper::UnknownType == DGuiApplicationHelper::instance()->paletteType();
+    const bool ignore = !allowOverride && !followSystem;
+    setIgnoreBackgroundColorRequests(ignore);
+    return ignore;
 }
 
 void TermWidget::onTitleArgsChange(QString key, QString value)
@@ -1228,6 +1239,13 @@ void TermWidget::onSettingValueChanged(const QString &keyName)
         qCDebug(views) << "Enter TermWidget::onSettingValueChanged: advanced.window.background_image";
         // 背景图片路径为空时清除背景图
         setTerminalBackgroundImage(Settings::instance()->backgroundImage());
+        return;
+    }
+
+    if ("basic.interface.osc11_override_theme" == keyName) {
+        // 关闭后立即恢复主题背景，去掉之前程序设置的背景色
+        if (updateBackgroundColorRequestPolicy())
+            onThemeTypeChanged(DGuiApplicationHelper::instance()->themeType());
         return;
     }
 

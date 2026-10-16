@@ -51,6 +51,8 @@ void GenerateSettingTranslate()
     Q_UNUSED(basic_interface_enable_ligaturesText);
     auto basic_interface_font_sizeName = QObject::tr("Font size");
     Q_UNUSED(basic_interface_font_sizeName);
+    auto basic_interface_osc11_override_themeText = QObject::tr("Allow OSC 11 to override the theme background");
+    Q_UNUSED(basic_interface_osc11_override_themeText);
     auto basic_interface_opacityName = QObject::tr("Opacity");
     Q_UNUSED(basic_interface_opacityName);
     auto group_advancedName = QObject::tr("Advanced");

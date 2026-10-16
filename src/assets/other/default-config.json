@@ -56,6 +56,12 @@
                             "step": 1
                         },
                         {
+                            "key": "osc11_override_theme",
+                            "text": "Allow OSC 11 to override the theme background",
+                            "type": "checkbox",
+                            "default": false
+                        },
+                        {
                             "key": "theme",
                             "hide": true,
                             "reset": false,
