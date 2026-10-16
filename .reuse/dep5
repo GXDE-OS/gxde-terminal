@@ -148,3 +148,13 @@ Files: 3rdparty/terminalwidget/lib/color-schemes/aci.colorscheme
        3rdparty/terminalwidget/lib/color-schemes/white wind.colorscheme
 Copyright: 2011-2022 GXDE Terminal contributors
 License: GPL-3.0-or-later
+
+
+# Catppuccin Theme
+Files: 3rdparty/terminalwidget/lib/color-schemes/Catppuccin Frappé.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/Catppuccin Latte.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/Catppuccin Macchiato.colorscheme
+       3rdparty/terminalwidget/lib/color-schemes/Catppuccin Mocha.colorscheme
+Copyright: 2021 Catppuccin
+License: MIT
+Comment: Colours from catppuccin/palette v1.8.0. See THIRD_PARTY_NOTICES.md for upstream attribution.

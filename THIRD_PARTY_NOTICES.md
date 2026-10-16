@@ -27,3 +27,38 @@ GXDE Terminal also includes the GNU GPL version 3 text in its root `LICENSE`.
 implementation, licensed GPL-3.0-or-later. No Kitty source files are vendored or
 linked into it. This acknowledgement credits the upstream protocol and reference
 implementation; it does not attribute authorship of the new Qt code to upstream.
+
+## Catppuccin colour schemes
+
+The `Catppuccin Latte`, `Catppuccin Frappé`, `Catppuccin Macchiato` and
+`Catppuccin Mocha` colour schemes in `3rdparty/terminalwidget/lib/color-schemes/`
+use the [Catppuccin](https://github.com/catppuccin/catppuccin) palette, by the
+**Catppuccin organisation and contributors**.
+
+Colours are mapped as described in the Terminals section of the Catppuccin
+[style guide](https://github.com/catppuccin/catppuccin/blob/d09787dd98ca6fba08af5ef2ae94a7e09f17daca/docs/style-guide.md)
+(reference revision `d09787dd98ca6fba08af5ef2ae94a7e09f17daca`); the hex values,
+including the generated bright ANSI colours, come from
+[catppuccin/palette](https://github.com/catppuccin/palette) v1.8.0.
+
+The upstream project carries this notice:
+
+> Copyright (c) 2021 Catppuccin
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.

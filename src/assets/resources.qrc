@@ -12,6 +12,10 @@
         <file>other/tab_close_press.svg</file>
         <file alias="gxde-colors/BlackOnRandomLight.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/BlackOnRandomLight.colorscheme</file>
         <file alias="gxde-colors/BreezeModified.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/BreezeModified.colorscheme</file>
+        <file alias="gxde-colors/Catppuccin Frappé.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Catppuccin Frappé.colorscheme</file>
+        <file alias="gxde-colors/Catppuccin Latte.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Catppuccin Latte.colorscheme</file>
+        <file alias="gxde-colors/Catppuccin Macchiato.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Catppuccin Macchiato.colorscheme</file>
+        <file alias="gxde-colors/Catppuccin Mocha.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Catppuccin Mocha.colorscheme</file>
         <file alias="gxde-colors/Dark.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/Dark.colorscheme</file>
         <file alias="gxde-colors/DarkPastels.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/DarkPastels.colorscheme</file>
         <file alias="gxde-colors/GreenOnBlack.colorscheme">../../3rdparty/terminalwidget/lib/color-schemes/GreenOnBlack.colorscheme</file>
