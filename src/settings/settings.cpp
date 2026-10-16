@@ -23,6 +23,7 @@
 #include <QStandardPaths>
 #include <QStringList>
 #include <QFontDatabase>
+#include <QFontMetricsF>
 #include <QFileInfo>
 #include <QLoggingCategory>
 #include <QCollator>
@@ -43,6 +44,30 @@ const QString DEFAULT_SHELL = "$SHELL";
 Q_DECLARE_LOGGING_CATEGORY(tsettings)
 
 namespace {
+/**
+ * @brief 判断字体能否作为终端等宽字体
+ * @note Qt 只把 fontconfig 中 spacing=mono 的字体视为等宽，含中日韩字形的等宽字体
+ *       (如 Maple Mono NF CN、Noto Sans Mono CJK) 会被漏掉
+ */
+bool isTerminalMonospace(const QFontDatabase &database, const QString &family) {
+    if (database.isFixedPitch(family)) {
+        return true;
+    }
+
+    const QFontMetricsF metrics{QFont(family)};
+    const qreal width = metrics.horizontalAdvance(QLatin1Char('M'));
+    if (width <= 0) {
+        return false;
+    }
+
+    for (const QChar c : QStringLiteral("iW0. ")) {
+        if (!qFuzzyCompare(metrics.horizontalAdvance(c), width)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 FontDataList availableTerminalFonts()
 {
     FontDataList fonts = DBusManager::callAppearanceFont("monospacefont");
@@ -50,7 +75,7 @@ FontDataList availableTerminalFonts()
         QFontDatabase database;
         QStringList families;
         for (const QString &family : database.families()) {
-            if (database.isFixedPitch(family))
+            if (isTerminalMonospace(database, family))
                 families.append(family);
         }
         const QString fallback = QFontDatabase::systemFont(QFontDatabase::FixedFont).family();
@@ -526,7 +551,7 @@ QStringList Settings::terminalFontFamilies(const QString &primary)
     const bool allowVariable = settings->option("basic.interface.allow_non_monospaced_fallback_fonts")->value().toBool();
     QFontDatabase database;
     if (!fallback.isEmpty() && fallback != primary && database.families().contains(fallback)
-            && (allowVariable || database.isFixedPitch(fallback)))
+            && (allowVariable || isTerminalMonospace(database, fallback)))
         families.append(fallback);
     return families;
 }
@@ -890,8 +915,9 @@ QPair<QWidget *, QWidget *> Settings::createFallbackFontComboBoxHandle(QObject *
         combo->addItem(tr("System default"), QString());
         QFontDatabase database;
         for (const auto &family : database.families()) {
-            if (allowVariable->value().toBool() || database.isFixedPitch(family))
+            if (allowVariable->value().toBool() || isTerminalMonospace(database, family)) {
                 combo->addItem(family, family);
+            }
         }
         const int index = combo->findData(option->value().toString());
         combo->setCurrentIndex(index < 0 ? 0 : index);

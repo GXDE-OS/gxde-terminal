@@ -12,6 +12,8 @@
 #include <QObject>
 #include <QList>
 #include <QVariant>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
 
 // deepin-terminal
 #define TERMINALSERVER "com.gxde.terminal.reborn"
@@ -21,22 +23,73 @@
 #define KWINDBUSSERVICE "org.kde.KWin"
 #define KWINDBUSPATH "/KWin"
 
-// deepin Appearance
-inline const char *getAppearanceService() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "org.deepin.dde.Appearance1" : "com.deepin.daemon.Appearance"; }
-inline const char *getAppearancePath() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "/org/deepin/dde/Appearance1" : "/com/deepin/daemon/Appearance"; }
+inline bool useV23DBusName(const QDBusConnection &bus, const QString &v23Name, const QString &legacyName) {
+    if (QDBusConnectionInterface *iface = bus.interface()) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        const QStringList activatable = iface->activatableServiceNames().value();
+#else
+        const QStringList activatable;
+#endif
+        const auto available = [&](const QString &name) {
+            return iface->isServiceRegistered(name).value() || activatable.contains(name);
+        };
+        if (available(v23Name))
+            return true;
+        if (available(legacyName))
+            return false;
+    }
+    return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23;
+}
+
+inline bool appearanceUsesV23Name() {
+    static const bool v23 = useV23DBusName(QDBusConnection::sessionBus(),
+        QStringLiteral("org.deepin.dde.Appearance1"),
+        QStringLiteral("com.deepin.daemon.Appearance"));
+    return v23;
+}
+inline const char *getAppearanceService() {
+    return appearanceUsesV23Name() ? "org.deepin.dde.Appearance1" : "com.deepin.daemon.Appearance";
+}
+
+inline const char *getAppearancePath() {
+    return appearanceUsesV23Name() ? "/org/deepin/dde/Appearance1" : "/com/deepin/daemon/Appearance";
+}
+
 #define APPEARANCESERVICE getAppearanceService()
 #define APPEARANCEPATH getAppearancePath()
 
 // sound effect 音效服务
-inline const char *getSoundEffectService() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "org.deepin.dde.SoundEffect1" : "com.deepin.daemon.SoundEffect"; }
-inline const char *getSoundEffectPath() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "/org/deepin/dde/SoundEffect1" : "/com/deepin/daemon/SoundEffect"; }
-inline const char *getSoundEffectInterface() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "org.deepin.dde.SoundEffect1" : "com.deepin.daemon.SoundEffect"; }
+inline bool soundEffectUsesV23Name() {
+    static const bool v23 = useV23DBusName(QDBusConnection::sessionBus(),
+        QStringLiteral("org.deepin.dde.SoundEffect1"),
+        QStringLiteral("com.deepin.daemon.SoundEffect"));
+    return v23;
+}
+inline const char *getSoundEffectService() { return soundEffectUsesV23Name() ? "org.deepin.dde.SoundEffect1" : "com.deepin.daemon.SoundEffect"; }
+inline const char *getSoundEffectPath() { return soundEffectUsesV23Name() ? "/org/deepin/dde/SoundEffect1" : "/com/deepin/daemon/SoundEffect"; }
+inline const char *getSoundEffectInterface() { return soundEffectUsesV23Name() ? "org.deepin.dde.SoundEffect1" : "com.deepin.daemon.SoundEffect"; }
 #define SOUND_EFFECT_METHOD(method) QDBusMessage::createMethodCall(getSoundEffectService(), getSoundEffectPath(), getSoundEffectInterface(), (method))
 
 // gesture 触控板手势
-inline const char *getGestureService() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "org.deepin.dde.Gesture1" : "com.deepin.daemon.Gesture"; }
-inline const char *getGesturePath() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "/org/deepin/dde/Gesture1" : "/com/deepin/daemon/Gesture"; }
-inline const char *getGestureInterface() { return Dtk::Core::DSysInfo::majorVersion().toInt() >= 23 ? "org.deepin.dde.Gesture1" : "com.deepin.daemon.Gesture"; }
+inline bool gestureUsesV23Name() {
+    static const bool v23 = useV23DBusName(QDBusConnection::systemBus(),
+        QStringLiteral("org.deepin.dde.Gesture1"),
+        QStringLiteral("com.deepin.daemon.Gesture"));
+    return v23;
+}
+
+inline const char *getGestureService() {
+    return gestureUsesV23Name() ? "org.deepin.dde.Gesture1" : "com.deepin.daemon.Gesture";
+}
+
+inline const char *getGesturePath() {
+    return gestureUsesV23Name() ? "/org/deepin/dde/Gesture1" : "/com/deepin/daemon/Gesture";
+}
+
+inline const char *getGestureInterface() {
+    return gestureUsesV23Name() ? "org.deepin.dde.Gesture1" : "com.deepin.daemon.Gesture";
+}
+
 #define GESTURE_SERVICE          getGestureService()
 #define GESTURE_PATH             getGesturePath()
 #define GESTURE_INTERFACE        getGestureInterface()
