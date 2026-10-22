@@ -35,6 +35,7 @@
 // #include <DImageButton>
 #include <DLog>
 #include <DWindowManagerHelper>
+#include <DPlatformTheme>
 #include <DSysInfo>
 
 #include <QApplication>
@@ -3181,7 +3182,14 @@ void NormalWindow::initTitleBar()
         if (auto button = titlebar()->findChild<DIconButton *>(entry.first))
             applyGxdeWindowButtonStyle(button, entry.second);
     }
-    setWindowRadius(8);
+
+    // Follow system settings for rounded corner.
+    DPlatformTheme *systemTheme = DGuiApplicationHelper::instance()->systemTheme();
+    setWindowRadius(systemTheme->windowRadius(8));
+    connect(systemTheme, &DPlatformTheme::windowRadiusChanged, this, [this](int radius) {
+        setWindowRadius(radius);
+    });
+
     titlebar()->setAutoHideOnFullscreen(true);
 
     //设置titlebar焦点策略为不抢占焦点策略，防止点击titlebar后终端失去输入焦点
