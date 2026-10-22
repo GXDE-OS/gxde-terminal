@@ -1,14 +1,12 @@
 # Maintainer: CharOfString <root@charofstring.cc>
 pkgname=gxde-terminal-git
-pkgver=7.0.9
+pkgver=7.0.10
 pkgrel=1
 pkgdesc='GXDE terminal emulator with tabs, split panes and Kitty graphics'
 arch=('x86_64' 'aarch64')
 url="https://github.com/GXDE-OS/gxde-terminal"
 license=('GPL-3.0-or-later' 'GPL-2.0-or-later' 'LGPL-3.0-or-later' 'BSD-3-Clause' 'CC-BY-4.0' 'CC0-1.0')
-# 依赖与 CMake 选项取自同目录的 PKGBUILD.in（./build-arch 使用的本地快照模板）
-# Depends and CMake options follow PKGBUILD.in next to this file (the local
-# snapshot template used by ./build-arch).
+
 depends=('dtk6core-git' 'dtk6gui-git' 'dtk6widget-git' 'qt6-base' 'qt6-5compat'
          'glib2' 'libsecret' 'libx11' 'libxcb' 'xcb-util-wm' 'libchardet' 'uchardet' 'icu' 'zlib'
          'kwindowsystem' 'hicolor-icon-theme' 'expect' 'zssh' 'openssh' 'libgcc' 'libstdc++' 'glibc')
@@ -19,7 +17,6 @@ conflicts=('gxde-terminal')
 source=()
 sha512sums=()
 
-# 直接使用 PKGBUILD 所在的 git 仓库作为源码 ・ Build from the git checkout this PKGBUILD lives in.
 _srcroot() {
   git -C "$startdir" rev-parse --show-toplevel
 }
@@ -39,9 +36,7 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" ninja -C build install
-  # 与 debian/manpages 相同 ・ Same as debian/manpages.
   install -Dm644 "$(_srcroot)/debian/gxde-terminal.1" "$pkgdir/usr/share/man/man1/gxde-terminal.1"
-  # 非通用许可证与第三方声明需随包附带 ・ Ship the license and third-party notices.
   install -Dm644 "$(_srcroot)/LICENSE" "$(_srcroot)/THIRD_PARTY_NOTICES.md" \
     -t "$pkgdir/usr/share/licenses/$pkgname/"
 }
