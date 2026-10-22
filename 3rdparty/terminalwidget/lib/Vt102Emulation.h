@@ -180,32 +180,19 @@ private:
   bool isOSC52Start() const;
 
   /**
-   * @brief Extract target clipboard character from tokenBuffer
-   * @return target character (c/p/s/0)
-   */
-  char extractOSC52Target() const;
-
-  /**
-   * @brief Extract base64 data from tokenBuffer
-   * @return base64 encoded data
-   */
-  QString extractOSC52Data() const;
-
-  /**
    * @brief Start OSC52 clipboard sequence processing
    */
   void startOSC52();
 
   /**
-   * @brief Handle OSC52 end (BEL character received)
-   * @param cc The BEL character (should be 7)
+   * @brief Handle OSC52 end (BEL or ST received)
    */
-  void handleOSC52End(wchar_t cc);
+  void finishOSC52();
 
   /**
-   * @brief Handle OSC52 chunk when tokenBuffer is full
+   * @brief Abort the OSC52 sequence without touching the clipboard
    */
-  void handleOSC52Chunk();
+  void cancelOSC52();
   // ===============================================
 
   // clears the screen and resizes it to the specified
@@ -253,14 +240,24 @@ private:
     QString _osc52DataBuffer;
 
     /**
-      * @brief Target clipboard for OSC52 (c=CLIPBOARD, p=PRIMARY, s=SECONDARY, 0=ALL)
+      * @brief Target clipboard list for OSC52 (c=CLIPBOARD, p=PRIMARY, s=SECONDARY, 0=ALL)
       */
-    char _osc52Target = 'c';
+    QByteArray _osc52Targets;
 
     /**
-      * @brief Flag indicating if current OSC52 chunk is the first chunk
+      * @brief Still reading the target list, i.e. before the second ';'
       */
-    bool _osc52IsFirstChunk = false;
+    bool _osc52ParsingTarget = false;
+
+    /**
+      * @brief ESC seen inside OSC52; '\\' completes ST, anything else cancels
+      */
+    bool _osc52Escape = false;
+
+    /**
+      * @brief Payload exceeded MAX_OSC52_BUFFER or was not base64; consume it but do not emit
+      */
+    bool _osc52Invalid = false;
     // ==============================================
 };
 

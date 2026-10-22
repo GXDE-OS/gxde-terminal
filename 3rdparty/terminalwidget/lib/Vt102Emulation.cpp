@@ -84,6 +84,9 @@ void Vt102Emulation::reset()
 {
   _apcActive = _apcEscape = _apcOverflow = false;
   _apcData.clear();
+  _osc52InProgress = _osc52ParsingTarget = _osc52Escape = _osc52Invalid = false;
+  _osc52Targets.clear();
+  _osc52DataBuffer.clear();
   resetTokenizer();
   resetModes();
   resetCharset(0);
@@ -209,12 +212,6 @@ void Vt102Emulation::addToCurrentToken(wchar_t cc)
 {
   tokenBuffer[tokenBufferPos] = cc;
   tokenBufferPos = qMin(tokenBufferPos+1,MAX_TOKEN_LENGTH-1);
-
-  // ========== OSC52: Check accumulated buffer size ==========
-  if (_osc52InProgress && tokenBufferPos >= MAX_TOKEN_LENGTH - 100) {
-      handleOSC52Chunk();
-  }
-  // ==========================================================
 }
 
 // Character Class flags used while decoding
@@ -348,18 +345,59 @@ void Vt102Emulation::receiveChar(wchar_t cc)
   if (cc == DEL)
     return; //VT100: ignore.
 
-  // ==========  OSC52: Direct path for subsequent chunks ==========
-  // If OSC52 is in progress and past first chunk, directly accumulate
-  if (_osc52InProgress && cc != BEL) {
-      addToCurrentToken(cc);
-      // Chunk boundary check is handled inside addToCurrentToken()
-      return;
-  }
-  // ========== OSC52: Check for BEL end ==========
-  // CRITICAL: Remove Xpe check - BEL alone should end OSC52 sequence
-  if (cc == BEL && _osc52InProgress) {
-      handleOSC52End(cc);
-      resetTokenizer();
+  // ========== OSC52: payload is collected outside tokenBuffer ==========
+  // DTerm originally only supports ESC\ as ending from OSC52.
+  // I know open code use BEL so we need to fix this.
+  if (_osc52InProgress) {
+      if (_osc52Escape) {
+          _osc52Escape = false;
+          if (cc == '\\') {
+              finishOSC52();
+              return;
+          }
+          
+          cancelOSC52();
+          receiveChar(ESC);
+          receiveChar(cc);
+          return;
+      }
+      if (cc == BEL || cc == 0x9c) {
+          finishOSC52();
+          return;
+      }
+
+      if (cc == ESC) {
+          _osc52Escape = true;
+          return;
+      }
+
+      if (cc == CNTL('X') || cc == CNTL('Z')) {
+          cancelOSC52();
+          return;
+      }
+
+      // IGNORE OTHER CHARS
+      if (cc < 0x20) {
+          return;
+      }
+
+      if (_osc52ParsingTarget) {
+          if (cc == ';') {
+              _osc52ParsingTarget = false;
+          } else if (_osc52Targets.size() < 16) {
+              _osc52Targets.append(char(cc));
+          }
+          return;
+      }
+
+      if (cc > 0x7e || static_cast<size_t>(_osc52DataBuffer.size()) >= MAX_OSC52_BUFFER) {
+          _osc52Invalid = true;
+      }
+
+      if (!_osc52Invalid) {
+          _osc52DataBuffer.append(QLatin1Char(char(cc)));
+      }
+
       return;
   }
   // =======================================================
@@ -401,7 +439,7 @@ void Vt102Emulation::receiveChar(wchar_t cc)
         // Check 1: OSC52 start detection
         if (isOSC52Start()) {
             startOSC52();
-            // Don't return - continue to accumulate
+            return;
         }
         // Check 2: OSC end (BEL or ST)
         else if (cc == BEL || (prevCC == ESC && cc == 0x5C)) {
@@ -1108,110 +1146,37 @@ bool Vt102Emulation::isOSC52Start() const
             tokenBuffer[4] == L';');
 }
 
-char Vt102Emulation::extractOSC52Target() const
-{
-    // tokenBuffer layout: ESC ] 5 2 ; target ; base64...
-    //                                     ↑
-    //                                  position 5
-    if (tokenBufferPos > 5) {
-        return static_cast<char>(tokenBuffer[5]);
-    }
-    return 'c'; // Default to CLIPBOARD
-}
-
-QString Vt102Emulation::extractOSC52Data() const
-{
-    // tokenBuffer layout: ESC ] 5 2 ; target ; base64...
-    //                                       ↑
-    //                                    position 7 (data start for first chunk)
-    // For subsequent chunks, data starts at position 0
-    int dataStart = _osc52IsFirstChunk ? 7 : 0;
-    if (tokenBufferPos > dataStart) {
-        return QString::fromWCharArray(tokenBuffer + dataStart, tokenBufferPos - dataStart);
-    }
-    return QString();
-}
-
 void Vt102Emulation::startOSC52()
 {
+    // tokenBuffer holds "ESC ] 5 2 ;"; the targets and payload that follow
+    // are handled by the OSC52 path at the top of receiveChar().
+    resetTokenizer();
     _osc52InProgress = true;
-    _osc52Target = extractOSC52Target();
+    _osc52ParsingTarget = true;
+    _osc52Escape = false;
+    _osc52Invalid = false;
+    _osc52Targets.clear();
     _osc52DataBuffer.clear();
-    _osc52IsFirstChunk = true;  // Mark as first chunk
-
-    qInfo() << "OSC52: Start, target=" << _osc52Target;
 }
 
-void Vt102Emulation::handleOSC52End(wchar_t cc)
+void Vt102Emulation::finishOSC52()
 {
-    // cc should be BEL (7)
-    Q_ASSERT(cc == BEL);
-    Q_UNUSED(cc);
-
-    // Extract base64 data from current tokenBuffer
-    QString base64Data;
-    if (_osc52IsFirstChunk) {
-        // Single chunk OSC52: skip header (7 chars), BEL was not added to buffer
-        if (tokenBufferPos > 7) {
-            base64Data = QString::fromWCharArray(tokenBuffer + 7, tokenBufferPos - 7);
-        }
-    } else {
-        // Multi-chunk OSC52 final chunk: tokenBuffer contains ONLY base64 data
-        // BEL was not added to buffer, no need to subtract
-        if (tokenBufferPos > 0) {
-            base64Data = QString::fromWCharArray(tokenBuffer, tokenBufferPos);
-        }
+    if (_osc52Invalid) {
+        qWarning() << "OSC52: Payload too large or not base64, rejecting";
+    } else if (!_osc52ParsingTarget) {
+        // An empty target list means the default, CLIPBOARD.
+        const char target = _osc52Targets.isEmpty() ? 'c' : _osc52Targets.at(0);
+        emit osc52ClipboardRequest(target, _osc52DataBuffer);
     }
-
-    // Accumulate to buffer
-    _osc52DataBuffer += base64Data;
-
-    // ========== OSC52: Check final buffer size ==========
-    if (_osc52DataBuffer.size() >= MAX_OSC52_BUFFER) {
-        qWarning() << "OSC52: Buffer overflow (>=" << MAX_OSC52_BUFFER
-                   << "bytes), rejecting";
-        _osc52DataBuffer.clear();
-        _osc52InProgress = false;
-        _osc52IsFirstChunk = false;
-        return;
-    }
-    // ====================================================
-
-    // Emit signal with complete data
-    emit osc52ClipboardRequest(_osc52Target, _osc52DataBuffer);
-
-    qInfo() << "OSC52: Complete, sent" << _osc52DataBuffer.size() << "bytes";
-
-    // Clear state
-    _osc52DataBuffer.clear();
-    _osc52InProgress = false;
-    _osc52IsFirstChunk = false;
+    cancelOSC52();
 }
 
-void Vt102Emulation::handleOSC52Chunk()
+void Vt102Emulation::cancelOSC52()
 {
-    // ========== OSC52: Check buffer size limit ==========
-    if (_osc52DataBuffer.size() >= MAX_OSC52_BUFFER) {
-        qWarning() << "OSC52: Buffer overflow (>=" << MAX_OSC52_BUFFER
-                   << "bytes), rejecting";
-        _osc52DataBuffer.clear();
-        _osc52InProgress = false;
-        _osc52IsFirstChunk = false;
-        return;
-    }
-    // ====================================================
-
-    // Extract current chunk from tokenBuffer
-    QString base64Data = extractOSC52Data();
-    _osc52DataBuffer += base64Data;
-
-    // Mark as not first chunk for subsequent chunks
-    _osc52IsFirstChunk = false;
-
-    // ========== Add resetTokenizer ==========
-    resetTokenizer();  // 清空 tokenBuffer，准备接收新数据
-    // ========================================
-    // Don't clear state, continue receiving
+    _osc52InProgress = _osc52ParsingTarget = _osc52Escape = _osc52Invalid = false;
+    _osc52Targets.clear();
+    _osc52DataBuffer.clear();
+    resetTokenizer();
 }
 
 // ====================================================
