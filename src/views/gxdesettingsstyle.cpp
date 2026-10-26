@@ -4,6 +4,7 @@
 #include "titlebar.h"
 #include "headertransition.h"
 #include <DBackgroundGroup>
+#include <DButtonBox>
 #include <DBlurEffectWidget>
 #include <DWindowManagerHelper>
 #include <DGuiApplicationHelper>
@@ -488,6 +489,35 @@ public:
         return false;
     }
 };
+
+// Fix control button still having dark background while setting DLight2.
+class ButtonBoxPalette : public QObject
+{
+public:
+    using QObject::QObject;
+    void apply(QWidget *widget, const QPalette &palette)
+    {
+        m_palette = palette;
+        widget->installEventFilter(this);
+        restore(widget);
+    }
+    bool eventFilter(QObject *object, QEvent *event) override
+    {
+        if (event->type() == QEvent::PaletteChange)
+            restore(static_cast<QWidget *>(object));
+        return false;
+    }
+private:
+    void restore(QWidget *widget)
+    {
+        if (m_restoring || widget->palette() == m_palette) return;
+        m_restoring = true;
+        widget->setPalette(m_palette);
+        m_restoring = false;
+    }
+    QPalette m_palette;
+    bool m_restoring = false;
+};
 }
 
 namespace {
@@ -550,6 +580,12 @@ void updateSettingsTheme(QWidget *dialog) {
     }
 
     palette.setColor(QPalette::Highlight, QColor("#2ca7f8"));
+    auto buttonBoxPalette = static_cast<ButtonBoxPalette *>(dialog->findChild<QObject *>(
+        "GXDESettingsButtonBoxPalette", Qt::FindDirectChildrenOnly));
+    if (!buttonBoxPalette) {
+        buttonBoxPalette = new ButtonBoxPalette(dialog);
+        buttonBoxPalette->setObjectName("GXDESettingsButtonBoxPalette");
+    }
     auto widgets = dialog->findChildren<QWidget *>();
     widgets.prepend(dialog);
     for (auto widget : widgets) {
@@ -559,7 +595,15 @@ void updateSettingsTheme(QWidget *dialog) {
     }
 
         widget->setStyle(style);
-        widget->setPalette(palette);
+
+        // Keep the patch above (the DButtonbox) on our palette after every repolish
+        if (qobject_cast<DButtonBox *>(widget) || qobject_cast<DButtonBoxButton *>(widget)) {
+            // DTK falls back to an 8px radius for non-DStyle styles; match DLight2/DDark2's frame
+            widget->setProperty("_d_dtk_frameRadius", 4);
+            buttonBoxPalette->apply(widget, palette);
+        } else {
+            widget->setPalette(palette);
+        }
     }
 
     auto blur = dialog->findChild<DBlurEffectWidget *>("GXDESettingsBlur");
@@ -575,7 +619,10 @@ void updateSettingsTheme(QWidget *dialog) {
         "QScrollArea, QWidget#SettingsContent, QWidget#RightFrame { background: transparent; border: none; }"
         "QWidget#LeftFrame { background: transparent; border-right: 1px solid %3; }"
         "QListView#NavigationBar { background: transparent; border: none; border-right: 1px solid %3; padding: 0; }"
-        "QComboBox, QSpinBox, QLineEdit { min-height: 22px; }")
+        "QComboBox, QSpinBox, QLineEdit { min-height: 22px; }"
+        // DLight2/DDark2 draw this label in their link color, unreadable on the checked fill.
+        "Dtk--Widget--DButtonBoxButton { color: %2; }"
+        "Dtk--Widget--DButtonBoxButton:checked { color: #ffffff; }")
         .arg(blur ? QStringLiteral("transparent") : background, text, border));
 
     for (auto label : dialog->findChildren<QLabel *>("ContentTitleText")) {
@@ -642,6 +689,10 @@ void applyGxdeSettingsStyle(QWidget *dialog) {
         if (!content->graphicsEffect())
             new SettingsContentReveal(dialog, content, dialog->findChild<DListView *>("NavigationBar"));
     }
+    // DTK caps button groups at 60px per button. The row layout then centers
+    // both the capped box and the fixed label column, so fill the column instead.
+    for (auto box : dialog->findChildren<DButtonBox *>())
+        box->setMaximumWidth(QWIDGETSIZE_MAX);
     auto flat = new FlatGroupBackground(dialog);
     for (auto group : dialog->findChildren<DBackgroundGroup *>()) {
         static_cast<QWidget *>(group)->setAutoFillBackground(false);
