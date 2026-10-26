@@ -1,6 +1,6 @@
 # Maintainer: CharOfString <root@charofstring.cc>
 pkgname=gxde-terminal-git
-pkgver=7.0.10
+pkgver=7.0.11
 pkgrel=1
 pkgdesc='GXDE terminal emulator with tabs, split panes and Kitty graphics'
 arch=('x86_64' 'aarch64')

@@ -1,3 +1,9 @@
+gxde-terminal (7.0.11) UNRELEASED; urgency=medium
+
+  * Fixed buttons in dark background even if in DLight2
+
+ -- CharOfString <root@charofstring.cc>  Sun, 25 Oct 2026 22:38:11 -0500
+
 gxde-terminal (7.0.10) UNRELEASED; urgency=medium
 
   * Fixed the issue of window corner radius not following system config.
