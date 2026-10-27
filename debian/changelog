@@ -1,8 +1,12 @@
-gxde-terminal (7.0.11) UNRELEASED; urgency=medium
+gxde-terminal (7.0.12) UNRELEASED; urgency=medium
 
+  [ CharOfString ]
   * Fixed buttons in dark background even if in DLight2
 
- -- CharOfString <root@charofstring.cc>  Sun, 25 Oct 2026 22:38:11 -0500
+  [ gfdgd_xi ]
+  * fix: 修复终端session因为dlight2插件引入QT_STYLE_OVERRIDE环境变量导致启动dtk5应用异常的问题
+
+ -- gfdgd_xi <3025613752@qq.com>  Tue, 27 Oct 2026 09:34:54 +0800
 
 gxde-terminal (7.0.10) UNRELEASED; urgency=medium
 
