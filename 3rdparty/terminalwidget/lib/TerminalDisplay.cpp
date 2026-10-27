@@ -885,17 +885,25 @@ void TerminalDisplay::updateBackgroundImage()
         areaOffset = mapTo(_backgroundAreaWidget.data(), QPoint(0, 0));
     }
 
-    // 几何信息未变化时沿用已计算的图片，避免每次重绘都重新缩放
+    // 几何信息或缩放比例未变化时沿用已计算的图片，避免每次重绘都重新缩放
+    const qreal dpr = devicePixelRatioF();
     if (_bgCacheValid && _bgCacheAreaSize == areaSize && _bgCacheAreaOffset == areaOffset
-            && _bgCacheSelfSize == widgetSize)
+            && _bgCacheSelfSize == widgetSize && qFuzzyCompare(_bgCacheDpr, dpr))
         return;
 
-    // 保持宽高比缩放至覆盖整个区域，居中裁剪
-    QPixmap areaImage = _backgroundImageSource.scaled(areaSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-    if (areaImage.size() != areaSize)
-        areaImage = areaImage.copy(qMax(0, (areaImage.width() - areaSize.width()) / 2),
-                                   qMax(0, (areaImage.height() - areaSize.height()) / 2),
-                                   areaSize.width(), areaSize.height());
+    // 按设备像素(物理像素)缩放，保证高分屏缩放下壁纸依然清晰：
+    // 目标尺寸取 areaSize * dpr，再为结果 QPixmap 设置 devicePixelRatio，
+    // 后续所有裁剪/绘制均按逻辑坐标进行，由 QPixmap 的 dpr 自动映射到物理像素。
+    const QSize areaSizePhysical(qMax(1, qRound(areaSize.width() * dpr)),
+                                 qMax(1, qRound(areaSize.height() * dpr)));
+    // 保持宽高比缩放至覆盖整个区域(物理像素)，居中裁剪到精确物理尺寸
+    QPixmap areaImage = _backgroundImageSource.scaled(areaSizePhysical, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    if (areaImage.size() != areaSizePhysical)
+        areaImage = areaImage.copy(qMax(0, (areaImage.width() - areaSizePhysical.width()) / 2),
+                                   qMax(0, (areaImage.height() - areaSizePhysical.height()) / 2),
+                                   areaSizePhysical.width(), areaSizePhysical.height());
+    // 标记物理像素密度，绘制时 drawPixmap 会按物理像素输出，避免高分屏放大模糊
+    areaImage.setDevicePixelRatio(dpr);
 
     if (areaOffset.isNull() && areaSize == widgetSize) {
         // 未分屏：区域即自身，整幅即所需
@@ -911,6 +919,7 @@ void TerminalDisplay::updateBackgroundImage()
     _bgCacheAreaSize = areaSize;
     _bgCacheAreaOffset = areaOffset;
     _bgCacheSelfSize = widgetSize;
+    _bgCacheDpr = dpr;
 }
 
 void TerminalDisplay::drawBackground(QPainter& painter, const QRect& rect, const QColor& backgroundColor, bool useOpacitySetting )

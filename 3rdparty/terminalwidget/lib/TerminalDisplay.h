@@ -924,6 +924,7 @@ private:
     QSize _bgCacheAreaSize;
     QPoint _bgCacheAreaOffset;
     QSize _bgCacheSelfSize;
+    qreal _bgCacheDpr = 0;
     bool _bgCacheValid = false;
 
     // list of filters currently applied to the display.  used for links and
