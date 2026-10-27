@@ -172,6 +172,11 @@ int Pty::start(const QString &program,
 
     addEnvironmentVariables(environment);
 
+    // 移除从桌面会话继承的 QT_STYLE_OVERRIDE（dlight2/ddark2 等主题样式），避免污染 shell 子进程。
+    // 注意：KProcess::setEnv 在 QProcess 环境为空时会从 systemEnvironment() 全量继承，
+    // 因此仅从 environment 列表移除是不够的，必须在此显式 unsetEnv 才能确保 shell 不带该变量。
+    unsetEnv(QLatin1String("QT_STYLE_OVERRIDE"));
+
     setEnv(QLatin1String("WINDOWID"), QString::number(winid));
     setEnv(QLatin1String("COLORTERM"), QLatin1String("truecolor"));
 
