@@ -891,29 +891,36 @@ void TerminalDisplay::updateBackgroundImage()
             && _bgCacheSelfSize == widgetSize && qFuzzyCompare(_bgCacheDpr, dpr))
         return;
 
-    // 按设备像素(物理像素)缩放，保证高分屏缩放下壁纸依然清晰：
-    // 目标尺寸取 areaSize * dpr，再为结果 QPixmap 设置 devicePixelRatio，
-    // 后续所有裁剪/绘制均按逻辑坐标进行，由 QPixmap 的 dpr 自动映射到物理像素。
+    // 按设备像素(物理像素)缩放，保证高分屏缩放下壁纸依然清晰。
+    // 以下缩放/裁剪均在物理像素空间进行(dpr=1)，最后再统一设置 devicePixelRatio。
     const QSize areaSizePhysical(qMax(1, qRound(areaSize.width() * dpr)),
                                  qMax(1, qRound(areaSize.height() * dpr)));
+    const QSize widgetSizePhysical(qMax(1, qRound(widgetSize.width() * dpr)),
+                                   qMax(1, qRound(widgetSize.height() * dpr)));
     // 保持宽高比缩放至覆盖整个区域(物理像素)，居中裁剪到精确物理尺寸
     QPixmap areaImage = _backgroundImageSource.scaled(areaSizePhysical, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     if (areaImage.size() != areaSizePhysical)
         areaImage = areaImage.copy(qMax(0, (areaImage.width() - areaSizePhysical.width()) / 2),
                                    qMax(0, (areaImage.height() - areaSizePhysical.height()) / 2),
                                    areaSizePhysical.width(), areaSizePhysical.height());
-    // 标记物理像素密度，绘制时 drawPixmap 会按物理像素输出，避免高分屏放大模糊
-    areaImage.setDevicePixelRatio(dpr);
 
+    QPixmap finalImage;
     if (areaOffset.isNull() && areaSize == widgetSize) {
         // 未分屏：区域即自身，整幅即所需
-        _backgroundImage = areaImage;
+        finalImage = areaImage;
     } else {
-        // 分屏：截取本终端对应的部分(越界时裁剪，容忍布局过渡期)
-        QRect srcRect(areaOffset, widgetSize);
+        // 分屏：截取本终端对应的部分。区域与偏移需换算为物理像素，
+        // 因为 QPixmap::copy 以物理像素为坐标，否则高分屏下只会复制左上角 1/dpr 区域。
+        const QPoint srcTopLeft(qRound(areaOffset.x() * dpr), qRound(areaOffset.y() * dpr));
+        QRect srcRect(srcTopLeft, widgetSizePhysical);
         srcRect = srcRect.intersected(areaImage.rect());
-        _backgroundImage = srcRect.isEmpty() ? QPixmap() : areaImage.copy(srcRect);
+        finalImage = srcRect.isEmpty() ? QPixmap() : areaImage.copy(srcRect);
     }
+
+    // 标记物理像素密度，绘制时 drawPixmap 会按物理像素输出，避免高分屏放大模糊
+    if (!finalImage.isNull())
+        finalImage.setDevicePixelRatio(dpr);
+    _backgroundImage = finalImage;
 
     _bgCacheValid = true;
     _bgCacheAreaSize = areaSize;
