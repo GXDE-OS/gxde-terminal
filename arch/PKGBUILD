@@ -1,5 +1,5 @@
 # Maintainer: CharOfString <root@charofstring.cc>
-pkgname=gxde-terminal-git
+pkgname=gxde-terminal
 pkgver=7.0.12
 pkgrel=2
 pkgdesc='GXDE terminal emulator with tabs, split panes and Kitty graphics'
@@ -7,13 +7,14 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/GXDE-OS/gxde-terminal"
 license=('GPL-3.0-or-later' 'GPL-2.0-or-later' 'LGPL-3.0-or-later' 'BSD-3-Clause' 'CC-BY-4.0' 'CC0-1.0')
 
-depends=('dtk6core-git' 'dtk6gui-git' 'dtk6widget-git' 'qt6-base' 'qt6-5compat'
+depends=('gxde-dtk6core' 'gxde-dtk6gui' 'gxde-dtk6widget' 'qt6-base' 'qt6-5compat'
          'glib2' 'libsecret' 'libx11' 'libxcb' 'xcb-util-wm' 'libchardet' 'uchardet' 'icu' 'zlib'
          'kwindowsystem' 'hicolor-icon-theme' 'expect' 'zssh' 'openssh' 'libgcc' 'libstdc++' 'glibc')
 makedepends=('git' 'cmake' 'ninja' 'pkgconf' 'qt6-tools' 'lxqt-build-tools')
 optdepends=('qt6-wayland: native Wayland display support')
-provides=('gxde-terminal')
-conflicts=('gxde-terminal')
+provides=("gxde-terminal-git=$pkgver")
+conflicts=('gxde-terminal-git')
+replaces=('gxde-terminal-git')
 source=()
 sha512sums=()
 
